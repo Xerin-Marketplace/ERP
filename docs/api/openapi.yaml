@@ -20,6 +20,9 @@ tags:
   - name: Organization
   - name: Identity
   - name: Employee
+  - name: Ticketing
+  - name: Tasks
+  - name: Service Catalog
 
 paths:
   /health:
@@ -860,6 +863,250 @@ paths:
       responses:
         '200': { description: Grades, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
 
+  /tickets:
+    get:
+      tags: [Ticketing]
+      summary: List tickets scoped to the caller (own requests, assignments, company scope)
+      parameters:
+        - { name: status, in: query, schema: { type: string } }
+        - { name: priority, in: query, schema: { type: string } }
+        - { name: search, in: query, schema: { type: string } }
+        - { name: mine, in: query, schema: { type: boolean } }
+        - { name: unassigned, in: query, schema: { type: boolean } }
+        - { name: team_id, in: query, schema: { type: integer } }
+        - { name: page, in: query, schema: { type: integer } }
+      responses:
+        "200": { description: Ticket page, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "401": { $ref: '#/components/responses/Unauthenticated' }
+    post:
+      tags: [Ticketing]
+      summary: Create a ticket (requester context taken from the caller's employee record)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subject, description]
+              properties:
+                subject: { type: string, maxLength: 255 }
+                description: { type: string }
+                ticket_type_id: { type: integer, nullable: true }
+                category_id: { type: integer, nullable: true }
+                service_catalog_item_id: { type: integer, nullable: true }
+                priority: { type: string, enum: [low, normal, high, urgent, critical] }
+                severity: { type: string, nullable: true }
+                impact: { type: string, nullable: true }
+                urgency: { type: string, nullable: true }
+                due_at: { type: string, format: date-time, nullable: true }
+                asset_reference: { type: string, nullable: true }
+                custom_fields: { type: object, nullable: true }
+      responses:
+        "201": { description: Ticket created, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "401": { $ref: '#/components/responses/Unauthenticated' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /tickets/{ticket}:
+    get:
+      tags: [Ticketing]
+      summary: Show a ticket (ownership, assignment or scope-gated)
+      parameters: [{ name: ticket, in: path, required: true, schema: { type: integer } }]
+      responses:
+        "200": { description: Ticket detail, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "401": { $ref: '#/components/responses/Unauthenticated' }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "404": { description: Not found }
+    put:
+      tags: [Ticketing]
+      summary: Update ticket fields (ticket.update)
+      parameters: [{ name: ticket, in: path, required: true, schema: { type: integer } }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subject: { type: string }
+                description: { type: string }
+                priority: { type: string }
+                due_at: { type: string, format: date-time, nullable: true }
+                category_id: { type: integer, nullable: true }
+      responses:
+        "200": { description: Updated, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /tickets/{ticket}/assign:
+    post:
+      tags: [Ticketing]
+      summary: Assign or reassign to an agent, team and/or department (ticket.assign)
+      parameters: [{ name: ticket, in: path, required: true, schema: { type: integer } }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                agent_id: { type: integer, nullable: true }
+                team_id: { type: integer, nullable: true }
+                department_id: { type: integer, nullable: true }
+                reason: { type: string, nullable: true }
+      responses:
+        "200": { description: Assigned, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /tickets/{ticket}/comments:
+    post:
+      tags: [Ticketing]
+      summary: Post a comment; internal notes require ticket.internal_note
+      parameters: [{ name: ticket, in: path, required: true, schema: { type: integer } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body: { type: string }
+                internal: { type: boolean, default: false }
+      responses:
+        "201": { description: Comment added, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /tickets/{ticket}/approve:
+    post:
+      tags: [Ticketing]
+      summary: Approve the current pending approval step (ticket.approve)
+      parameters: [{ name: ticket, in: path, required: true, schema: { type: integer } }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { note: { type: string, nullable: true } }
+      responses:
+        "200": { description: Approved, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /tickets/{ticket}/reject:
+    post:
+      tags: [Ticketing]
+      summary: Reject the current pending approval step; note required
+      parameters: [{ name: ticket, in: path, required: true, schema: { type: integer } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [note]
+              properties: { note: { type: string } }
+      responses:
+        "200": { description: Rejected, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /tickets/{ticket}/resolve:
+    post:
+      tags: [Ticketing]
+      summary: Transition ticket to resolved (ticket.update)
+      parameters: [{ name: ticket, in: path, required: true, schema: { type: integer } }]
+      responses:
+        "200": { description: Resolved, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /tickets/{ticket}/close:
+    post:
+      tags: [Ticketing]
+      summary: Transition ticket to closed (ticket.close)
+      parameters: [{ name: ticket, in: path, required: true, schema: { type: integer } }]
+      responses:
+        "200": { description: Closed, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /tickets/{ticket}/reopen:
+    post:
+      tags: [Ticketing]
+      summary: Reopen a resolved/closed ticket (requester or ticket.reopen)
+      parameters: [{ name: ticket, in: path, required: true, schema: { type: integer } }]
+      responses:
+        "200": { description: Reopened, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /tasks:
+    get:
+      tags: [Tasks]
+      summary: List tasks (mine flag scopes to caller)
+      parameters: [{ name: mine, in: query, schema: { type: boolean } }]
+      responses:
+        "200": { description: Task list, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "401": { $ref: '#/components/responses/Unauthenticated' }
+    post:
+      tags: [Tasks]
+      summary: Create a task, optionally linked to a ticket (task.create)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                ticket_id: { type: integer, nullable: true }
+                parent_task_id: { type: integer, nullable: true }
+                title: { type: string }
+                description: { type: string, nullable: true }
+                assignee_employee_id: { type: integer, nullable: true }
+                assignee_team_id: { type: integer, nullable: true }
+                priority: { type: string }
+                due_date: { type: string, format: date, nullable: true }
+                estimated_minutes: { type: integer, nullable: true }
+                depends_on_ids: { type: array, items: { type: integer } }
+      responses:
+        "201": { description: Task created, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /tasks/{task}:
+    put:
+      tags: [Tasks]
+      summary: Update task status/progress (task.update or task.assign)
+      parameters: [{ name: task, in: path, required: true, schema: { type: integer } }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string, enum: [open, assigned, in_progress, blocked, pending_review, completed, cancelled] }
+                progress: { type: integer, minimum: 0, maximum: 100 }
+                note: { type: string, nullable: true }
+      responses:
+        "200": { description: Updated, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /service-catalog:
+    get:
+      tags: [Service Catalog]
+      summary: List active requestable services
+      responses:
+        "200": { description: Catalog items, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "401": { $ref: '#/components/responses/Unauthenticated' }
+  /ticketing/dashboard:
+    get:
+      tags: [Ticketing]
+      summary: Role-aware ticketing metrics (real database aggregates)
+      responses:
+        "200": { description: Metrics, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "401": { $ref: '#/components/responses/Unauthenticated' }
+  /ticketing/reports:
+    get:
+      tags: [Ticketing]
+      summary: Report aggregates — volume, SLA compliance, response/resolution times, agent workload (ticket_reports.view)
+      parameters:
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+      responses:
+        "200": { description: Report data, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "403": { $ref: '#/components/responses/Forbidden' }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -868,6 +1115,41 @@ components:
       bearerFormat: Token
 
   schemas:
+    Ticket:
+      type: object
+      properties:
+        id: { type: integer }
+        ticket_number: { type: string, example: XERIN-TKT-2026-000001 }
+        subject: { type: string }
+        description: { type: string }
+        type: { type: string, nullable: true }
+        priority: { type: string, enum: [low, normal, high, urgent, critical] }
+        status: { type: string, enum: [new, submitted, under_review, assigned, in_progress, pending, resolved, closed, reopened] }
+        requester: { type: string }
+        assigned_agent: { type: string, nullable: true }
+        assigned_team: { type: string, nullable: true }
+        due_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+    TicketTask:
+      type: object
+      properties:
+        id: { type: integer }
+        task_number: { type: string, example: XERIN-TSK-2026-000001 }
+        title: { type: string }
+        status: { type: string }
+        progress: { type: integer }
+        due_date: { type: string, format: date, nullable: true }
+    ServiceCatalogItem:
+      type: object
+      properties:
+        id: { type: integer }
+        code: { type: string }
+        name: { type: string }
+        description: { type: string }
+        requires_approval: { type: boolean }
+        approval_chain: { type: array, items: { type: string } }
+        expected_hours: { type: integer, nullable: true }
+
     Envelope:
       type: object
       properties:

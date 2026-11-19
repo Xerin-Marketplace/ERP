@@ -2,5 +2,6 @@
     "Core": true,
     "Organization": true,
     "Identity": true,
-    "Employee": true
+    "Employee": true,
+    "Ticketing": true
 }
