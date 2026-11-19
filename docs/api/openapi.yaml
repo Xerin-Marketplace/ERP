@@ -17,6 +17,7 @@ servers:
 tags:
   - name: Platform
   - name: Auth
+  - name: Organization
 
 paths:
   /health:
@@ -116,6 +117,317 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthenticated'
 
+  /organization/overview:
+    get:
+      tags: [Organization]
+      summary: Organization dashboard metrics
+      operationId: orgOverview
+      description: Database-driven counts and distributions for the org dashboard.
+      responses:
+        '200':
+          description: Metrics
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /organization/structure:
+    get:
+      tags: [Organization]
+      summary: Hierarchical organization tree
+      operationId: orgStructure
+      responses:
+        '200':
+          description: Nested tree of companies → subsidiaries/branches → departments
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /organization/audit-logs:
+    get:
+      tags: [Organization]
+      summary: Organization audit history
+      operationId: orgAuditLogs
+      parameters:
+        - { name: resource, in: query, schema: { type: string, enum: [company, branch, location, department] } }
+        - { name: action, in: query, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer } }
+      responses:
+        '200':
+          description: Paginated audit logs
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /organization/companies:
+    get:
+      tags: [Organization]
+      summary: List companies
+      operationId: listCompanies
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: type, in: query, schema: { type: string, enum: [holding, subsidiary, associate, entity] } }
+        - { name: status, in: query, schema: { type: string, enum: [active, suspended, archived] } }
+        - { name: parent_id, in: query, schema: { type: integer } }
+        - { name: per_page, in: query, schema: { type: integer, default: 15 } }
+      responses:
+        '200':
+          description: Paginated companies
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Organization]
+      summary: Create company
+      operationId: createCompany
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CompanyInput' }
+      responses:
+        '201':
+          description: Company created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /organization/companies/{company}:
+    get:
+      tags: [Organization]
+      summary: Company details (with subsidiaries, branches, departments)
+      operationId: getCompany
+      parameters:
+        - { name: company, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: Company
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404':
+          description: Not found
+    put:
+      tags: [Organization]
+      summary: Update company
+      operationId: updateCompany
+      parameters:
+        - { name: company, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CompanyInput' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /organization/branches:
+    get:
+      tags: [Organization]
+      summary: List branches
+      operationId: listBranches
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: company_id, in: query, schema: { type: integer } }
+        - { name: region, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string, enum: [active, suspended, archived] } }
+        - { name: per_page, in: query, schema: { type: integer, default: 15 } }
+      responses:
+        '200':
+          description: Paginated branches
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Organization]
+      summary: Create branch
+      operationId: createBranch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BranchInput' }
+      responses:
+        '201':
+          description: Branch created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /organization/branches/{branch}:
+    get:
+      tags: [Organization]
+      summary: Branch details
+      operationId: getBranch
+      parameters:
+        - { name: branch, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: Branch
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+    put:
+      tags: [Organization]
+      summary: Update branch
+      operationId: updateBranch
+      parameters:
+        - { name: branch, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BranchInput' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /organization/locations:
+    get:
+      tags: [Organization]
+      summary: List locations
+      operationId: listLocations
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: company_id, in: query, schema: { type: integer } }
+        - { name: type, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: Paginated locations
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+    post:
+      tags: [Organization]
+      summary: Create location
+      operationId: createLocation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LocationInput' }
+      responses:
+        '201':
+          description: Location created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /organization/departments:
+    get:
+      tags: [Organization]
+      summary: List departments
+      operationId: listDepartments
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: company_id, in: query, schema: { type: integer } }
+        - { name: branch_id, in: query, schema: { type: integer } }
+        - { name: status, in: query, schema: { type: string, enum: [active, suspended, archived] } }
+      responses:
+        '200':
+          description: Paginated departments
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+    post:
+      tags: [Organization]
+      summary: Create department
+      operationId: createDepartment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DepartmentInput' }
+      responses:
+        '201':
+          description: Department created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /organization/departments/{department}:
+    get:
+      tags: [Organization]
+      summary: Department details
+      operationId: getDepartment
+      parameters:
+        - { name: department, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: Department
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+    put:
+      tags: [Organization]
+      summary: Update department (supports parent transfers)
+      operationId: updateDepartment
+      parameters:
+        - { name: department, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DepartmentInput' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /organization/{entity}/{id}/status:
+    post:
+      tags: [Organization]
+      summary: Change entity status (activate / suspend / archive)
+      operationId: orgSetStatus
+      parameters:
+        - { name: entity, in: path, required: true, schema: { type: string, enum: [companies, branches, locations, departments] } }
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [active, suspended, archived] }
+      responses:
+        '200':
+          description: Status changed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -130,6 +442,84 @@ components:
         success: { type: boolean }
         message: { type: string }
         data: { type: object, nullable: true }
+
+    CompanyInput:
+      type: object
+      required: [code, legal_name, company_type]
+      properties:
+        code: { type: string, maxLength: 30 }
+        legal_name: { type: string }
+        trading_name: { type: string }
+        company_type: { type: string, enum: [holding, subsidiary, associate, entity] }
+        parent_company_id: { type: integer, nullable: true }
+        registration_number: { type: string }
+        tax_identification_number: { type: string }
+        vat_number: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        website: { type: string, format: uri }
+        country: { type: string }
+        region: { type: string }
+        district: { type: string }
+        city: { type: string }
+        physical_address: { type: string }
+        postal_address: { type: string }
+        currency: { type: string, minLength: 3, maxLength: 3 }
+        timezone: { type: string }
+        operational_start_date: { type: string, format: date }
+
+    BranchInput:
+      type: object
+      required: [company_id, name, code, branch_type]
+      properties:
+        company_id: { type: integer }
+        name: { type: string }
+        code: { type: string, maxLength: 30 }
+        branch_type: { type: string, enum: [head_office, regional_office, branch, warehouse, site] }
+        contact_person: { type: string }
+        phone: { type: string }
+        email: { type: string, format: email }
+        country: { type: string }
+        region: { type: string }
+        district: { type: string }
+        city: { type: string }
+        physical_address: { type: string }
+        postal_address: { type: string }
+        latitude: { type: number, minimum: -90, maximum: 90 }
+        longitude: { type: number, minimum: -180, maximum: 180 }
+        opening_date: { type: string, format: date }
+        description: { type: string }
+
+    LocationInput:
+      type: object
+      required: [company_id, name, code, location_type]
+      properties:
+        company_id: { type: integer }
+        branch_id: { type: integer, nullable: true }
+        name: { type: string }
+        code: { type: string, maxLength: 30 }
+        location_type: { type: string, enum: [head_office, regional_office, branch_office, warehouse, site, other] }
+        country: { type: string }
+        region: { type: string }
+        city: { type: string }
+        address: { type: string }
+        latitude: { type: number }
+        longitude: { type: number }
+
+    DepartmentInput:
+      type: object
+      required: [company_id, code, name]
+      properties:
+        department_definition_id: { type: integer, nullable: true }
+        company_id: { type: integer }
+        branch_id: { type: integer, nullable: true }
+        parent_id: { type: integer, nullable: true }
+        code: { type: string, maxLength: 30 }
+        name: { type: string }
+        description: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        effective_date: { type: string, format: date }
 
   responses:
     Unauthenticated:

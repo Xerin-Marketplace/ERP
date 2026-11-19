@@ -16,7 +16,24 @@ Route::get('/api-docs/openapi.yaml', fn () => response(
 Route::middleware(['auth', 'verified', 'account.active'])->group(function () {
 
     Route::get('/dashboard', function () {
-        return view('dashboard');
+        $stats = [
+            'companies' => \Modules\Organization\Models\Company::count(),
+            'active_companies' => \Modules\Organization\Models\Company::where('status', 'active')->count(),
+            'branches' => \Modules\Organization\Models\Branch::count(),
+            'active_branches' => \Modules\Organization\Models\Branch::where('status', 'active')->count(),
+            'suspended_branches' => \Modules\Organization\Models\Branch::where('status', 'suspended')->count(),
+            'departments' => \Modules\Organization\Models\Department::count(),
+            'active_departments' => \Modules\Organization\Models\Department::where('status', 'active')->count(),
+            'users' => \App\Models\User::count(),
+            'branches_by_status' => \Modules\Organization\Models\Branch::selectRaw('status, COUNT(*) as n')
+                ->groupBy('status')->pluck('n', 'status')->all(),
+            'departments_by_company' => \Modules\Organization\Models\Department::join('companies', 'departments.company_id', '=', 'companies.id')
+                ->selectRaw('companies.trading_name as name, COUNT(*) as n')
+                ->groupBy('companies.trading_name')->pluck('n', 'name')->all(),
+        ];
+        $activity = \App\Models\AuditLog::with('user:id,name')->latest()->limit(8)->get();
+
+        return view('dashboard', compact('stats', 'activity'));
     })->name('dashboard');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

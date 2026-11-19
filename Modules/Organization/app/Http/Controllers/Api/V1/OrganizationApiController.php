@@ -3,6 +3,7 @@
 namespace Modules\Organization\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\ApiController;
+use App\Support\ApiResponse;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -26,7 +27,7 @@ class OrganizationApiController extends ApiController
 
     public function overview()
     {
-        return $this->success($this->org->overview(), 'Organization overview');
+        return ApiResponse::success($this->org->overview(), 'Organization overview');
     }
 
     /* Companies */
@@ -38,23 +39,23 @@ class OrganizationApiController extends ApiController
             ->orderBy('legal_name')
             ->paginate(min((int) $request->input('per_page', 15), 100));
 
-        return $this->success($data, 'Companies');
+        return ApiResponse::success($data, 'Companies');
     }
 
     public function storeCompany(StoreCompanyRequest $request)
     {
         $company = $this->org->createCompany($request->validated(), $request->user()->id);
-        return $this->success($company->load('parent'), 'Company created', 201);
+        return ApiResponse::success($company->load('parent'), 'Company created', 201);
     }
 
     public function showCompany(Company $company)
     {
-        return $this->success($company->load(['parent', 'subsidiaries', 'branches', 'departments']), 'Company');
+        return ApiResponse::success($company->load(['parent', 'subsidiaries', 'branches', 'departments']), 'Company');
     }
 
     public function updateCompany(UpdateCompanyRequest $request, Company $company)
     {
-        return $this->success($this->org->updateCompany($company, $request->validated()), 'Company updated');
+        return ApiResponse::success($this->org->updateCompany($company, $request->validated()), 'Company updated');
     }
 
     /* Branches */
@@ -68,23 +69,23 @@ class OrganizationApiController extends ApiController
             ->orderBy('name')
             ->paginate(min((int) $request->input('per_page', 15), 100));
 
-        return $this->success($data, 'Branches');
+        return ApiResponse::success($data, 'Branches');
     }
 
     public function storeBranch(StoreBranchRequest $request)
     {
         $branch = $this->org->createBranch($request->validated(), $request->user()->id);
-        return $this->success($branch->load('company'), 'Branch created', 201);
+        return ApiResponse::success($branch->load('company'), 'Branch created', 201);
     }
 
     public function showBranch(Branch $branch)
     {
-        return $this->success($branch->load(['company', 'departments', 'locations']), 'Branch');
+        return ApiResponse::success($branch->load(['company', 'departments', 'locations']), 'Branch');
     }
 
     public function updateBranch(UpdateBranchRequest $request, Branch $branch)
     {
-        return $this->success($this->org->updateBranch($branch, $request->validated()), 'Branch updated');
+        return ApiResponse::success($this->org->updateBranch($branch, $request->validated()), 'Branch updated');
     }
 
     /* Locations */
@@ -95,12 +96,12 @@ class OrganizationApiController extends ApiController
             ->orderBy('name')
             ->paginate(min((int) $request->input('per_page', 15), 100));
 
-        return $this->success($data, 'Locations');
+        return ApiResponse::success($data, 'Locations');
     }
 
     public function storeLocation(StoreLocationRequest $request)
     {
-        return $this->success($this->org->createLocation($request->validated(), $request->user()->id), 'Location created', 201);
+        return ApiResponse::success($this->org->createLocation($request->validated(), $request->user()->id), 'Location created', 201);
     }
 
     /* Departments */
@@ -113,23 +114,23 @@ class OrganizationApiController extends ApiController
             ->orderBy('name')
             ->paginate(min((int) $request->input('per_page', 15), 100));
 
-        return $this->success($data, 'Departments');
+        return ApiResponse::success($data, 'Departments');
     }
 
     public function storeDepartment(StoreDepartmentRequest $request)
     {
         $department = $this->org->createDepartment($request->validated(), $request->user()->id);
-        return $this->success($department->load(['company', 'branch']), 'Department created', 201);
+        return ApiResponse::success($department->load(['company', 'branch']), 'Department created', 201);
     }
 
     public function showDepartment(Department $department)
     {
-        return $this->success($department->load(['company', 'branch', 'parent', 'children']), 'Department');
+        return ApiResponse::success($department->load(['company', 'branch', 'parent', 'children']), 'Department');
     }
 
     public function updateDepartment(UpdateDepartmentRequest $request, Department $department)
     {
-        return $this->success($this->org->updateDepartment($department, $request->validated()), 'Department updated');
+        return ApiResponse::success($this->org->updateDepartment($department, $request->validated()), 'Department updated');
     }
 
     /* Status transitions — shared for all entities */
@@ -159,13 +160,13 @@ class OrganizationApiController extends ApiController
             'department' => $this->org->setDepartmentStatus($record, $status),
         };
 
-        return $this->success($updated, ucfirst($domain)." {$status->value}");
+        return ApiResponse::success($updated, ucfirst($domain)." {$status->value}");
     }
 
     /* Structure + audit */
     public function structure()
     {
-        return $this->success($this->org->structureTree(), 'Organizational structure');
+        return ApiResponse::success($this->org->structureTree(), 'Organizational structure');
     }
 
     public function auditLogs(Request $request)
@@ -179,6 +180,6 @@ class OrganizationApiController extends ApiController
             ->latest()
             ->paginate(min((int) $request->input('per_page', 25), 100));
 
-        return $this->success($logs, 'Organization audit logs');
+        return ApiResponse::success($logs, 'Organization audit logs');
     }
 }

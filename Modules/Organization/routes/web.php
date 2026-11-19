@@ -1,11 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Organization\Http\Controllers\AuditController;
 use Modules\Organization\Http\Controllers\BranchController;
 use Modules\Organization\Http\Controllers\CompanyController;
 use Modules\Organization\Http\Controllers\DepartmentController;
 use Modules\Organization\Http\Controllers\LocationController;
 use Modules\Organization\Http\Controllers\OverviewController;
+use Modules\Organization\Http\Controllers\SettingsController;
 use Modules\Organization\Http\Controllers\StructureController;
 
 Route::middleware(['web', 'auth', 'verified', 'account.active'])
@@ -17,6 +19,14 @@ Route::middleware(['web', 'auth', 'verified', 'account.active'])
 
         Route::get('structure', [StructureController::class, 'index'])
             ->name('structure')->middleware('permission:organization.structure.view');
+
+        Route::get('audit', [AuditController::class, 'index'])
+            ->name('audit')->middleware('permission:organization.audit.view');
+
+        Route::get('settings', [SettingsController::class, 'edit'])
+            ->name('settings')->middleware('permission:organization.manage');
+        Route::put('settings', [SettingsController::class, 'update'])
+            ->name('settings.update')->middleware('permission:organization.manage');
 
         /* Companies */
         Route::get('companies', [CompanyController::class, 'index'])

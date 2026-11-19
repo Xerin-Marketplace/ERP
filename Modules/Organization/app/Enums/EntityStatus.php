@@ -17,4 +17,14 @@ enum EntityStatus: string
     {
         return array_column(self::cases(), 'value');
     }
+
+    /** Past-tense action name for audit logging. */
+    public function auditAction(): string
+    {
+        return match ($this) {
+            self::Active => 'activated',
+            self::Suspended => 'suspended',
+            self::Archived => 'archived',
+        };
+    }
 }

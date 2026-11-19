@@ -10,6 +10,7 @@ use Modules\Organization\Models\Branch;
 use Modules\Organization\Models\Company;
 use Modules\Organization\Models\Department;
 use Modules\Organization\Models\Location;
+use Modules\Organization\Events;
 
 class OrganizationService
 {
@@ -22,6 +23,8 @@ class OrganizationService
         return DB::transaction(function () use ($data, $actorId) {
             $company = Company::create([...$data, 'created_by' => $actorId]);
             $this->audit->log('company.created', $company, new: $data);
+            event(new Events\CompanyCreated($company, $data));
+            event(new Events\OrganizationalStructureChanged($company));
             return $company;
         });
     }
@@ -36,6 +39,10 @@ class OrganizationService
             $old = $company->only(array_keys($data));
             $company->update($data);
             $this->audit->log('company.updated', $company, old: $old, new: $data);
+            event(new Events\CompanyUpdated($company, $data));
+            if (($old['parent_company_id'] ?? null) !== ($data['parent_company_id'] ?? null)) {
+                event(new Events\OrganizationalStructureChanged($company));
+            }
             return $company;
         });
     }
@@ -45,8 +52,12 @@ class OrganizationService
         return DB::transaction(function () use ($company, $status) {
             $old = $company->status;
             $company->update(['status' => $status]);
-            $this->audit->log("company.{$status->value}d", $company,
+            $this->audit->log("company.".$status->auditAction(), $company,
                 old: ['status' => $old->value], new: ['status' => $status->value]);
+            event(new Events\CompanyStatusChanged($company, ['from' => $old->value, 'to' => $status->value]));
+            if ($status === EntityStatus::Archived) {
+                event(new Events\OrganizationalStructureChanged($company));
+            }
             return $company;
         });
     }
@@ -58,9 +69,6 @@ class OrganizationService
         }
         if ($parentId === $company->id) {
             throw ValidationException::withMessages(['parent_company_id' => 'A company cannot be its own parent.']);
-        }
-        if (in_array($parentId, $company->ancestorIds()) === false && $company->subsidiaries()->where('id', $parentId)->exists() === false) {
-            return; // parent not in subtree — safe
         }
         if (in_array($parentId, $this->descendantIds($company))) {
             throw ValidationException::withMessages(['parent_company_id' => 'Circular relationship detected — the selected parent is a descendant of this company.']);
@@ -86,6 +94,8 @@ class OrganizationService
         return DB::transaction(function () use ($data, $actorId) {
             $branch = Branch::create([...$data, 'created_by' => $actorId]);
             $this->audit->log('branch.created', $branch, new: $data);
+            event(new Events\BranchCreated($branch, $data));
+            event(new Events\OrganizationalStructureChanged($branch));
             return $branch;
         });
     }
@@ -96,6 +106,7 @@ class OrganizationService
             $old = $branch->only(array_keys($data));
             $branch->update($data);
             $this->audit->log('branch.updated', $branch, old: $old, new: $data);
+            event(new Events\BranchUpdated($branch, $data));
             return $branch;
         });
     }
@@ -105,8 +116,9 @@ class OrganizationService
         return DB::transaction(function () use ($branch, $status) {
             $old = $branch->status;
             $branch->update(['status' => $status]);
-            $this->audit->log("branch.{$status->value}d", $branch,
+            $this->audit->log("branch.".$status->auditAction(), $branch,
                 old: ['status' => $old->value], new: ['status' => $status->value]);
+            event(new Events\BranchStatusChanged($branch, ['from' => $old->value, 'to' => $status->value]));
             return $branch;
         });
     }
@@ -118,6 +130,19 @@ class OrganizationService
         return DB::transaction(function () use ($data, $actorId) {
             $location = Location::create([...$data, 'created_by' => $actorId]);
             $this->audit->log('location.created', $location, new: $data);
+            event(new Events\LocationCreated($location, $data));
+            return $location;
+        });
+    }
+
+    public function setLocationStatus(Location $location, EntityStatus $status): Location
+    {
+        return DB::transaction(function () use ($location, $status) {
+            $old = $location->status;
+            $location->update(['status' => $status]);
+            $this->audit->log("location.".$status->auditAction(), $location,
+                old: ['status' => $old->value], new: ['status' => $status->value]);
+            event(new Events\LocationStatusChanged($location, ['from' => $old->value, 'to' => $status->value]));
             return $location;
         });
     }
@@ -128,6 +153,7 @@ class OrganizationService
             $old = $location->only(array_keys($data));
             $location->update($data);
             $this->audit->log('location.updated', $location, old: $old, new: $data);
+            event(new Events\LocationUpdated($location, $data));
             return $location;
         });
     }
@@ -139,6 +165,8 @@ class OrganizationService
         return DB::transaction(function () use ($data, $actorId) {
             $department = Department::create([...$data, 'created_by' => $actorId]);
             $this->audit->log('department.created', $department, new: $data);
+            event(new Events\DepartmentCreated($department, $data));
+            event(new Events\OrganizationalStructureChanged($department));
             return $department;
         });
     }
@@ -155,6 +183,12 @@ class OrganizationService
             $transferred = array_key_exists('parent_id', $data)
                 && ($old['parent_id'] ?? null) !== ($data['parent_id'] ?? null);
             $this->audit->log($transferred ? 'department.transferred' : 'department.updated', $department, old: $old, new: $data);
+            if ($transferred) {
+                event(new Events\DepartmentTransferred($department, $data));
+                event(new Events\OrganizationalStructureChanged($department));
+            } else {
+                event(new Events\DepartmentUpdated($department, $data));
+            }
             return $department;
         });
     }
@@ -164,8 +198,9 @@ class OrganizationService
         return DB::transaction(function () use ($department, $status) {
             $old = $department->status;
             $department->update(['status' => $status]);
-            $this->audit->log("department.{$status->value}d", $department,
+            $this->audit->log("department.".$status->auditAction(), $department,
                 old: ['status' => $old->value], new: ['status' => $status->value]);
+            event(new Events\DepartmentStatusChanged($department, ['from' => $old->value, 'to' => $status->value]));
             return $department;
         });
     }
@@ -198,6 +233,11 @@ class OrganizationService
     /* ------------------------------ Overview ----------------------------- */
 
     public function overview(): array
+    {
+        return \Illuminate\Support\Facades\Cache::remember('organization.overview', 60, fn () => $this->computeOverview());
+    }
+
+    private function computeOverview(): array
     {
         return [
             'companies_total' => Company::count(),

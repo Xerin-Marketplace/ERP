@@ -3,9 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Organization\Http\Controllers\Api\V1\OrganizationApiController as Api;
 
-Route::middleware(['api', 'auth:sanctum', 'account.active'])
+Route::middleware(['auth:sanctum', 'account.active'])
     ->prefix('v1/organization')
-    ->name('api.organization.')
+    ->name('organization.')
     ->group(function () {
         Route::get('overview', [Api::class, 'overview'])
             ->name('overview')->middleware('permission:organization.view');

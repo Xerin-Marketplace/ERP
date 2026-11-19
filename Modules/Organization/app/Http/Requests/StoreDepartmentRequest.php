@@ -33,10 +33,11 @@ class StoreDepartmentRequest extends FormRequest
         $validator->after(function ($v) {
             // A branch-scoped department must reference a branch of the same company
             if ($this->branch_id && $this->company_id) {
-                $ok = \Modules\Organization\Models\Branch::where('id', $this->branch_id)
-                    ->where('company_id', $this->company_id)->exists();
-                if (! $ok) {
+                $branch = \Modules\Organization\Models\Branch::find($this->branch_id);
+                if (! $branch || $branch->company_id !== (int) $this->company_id) {
                     $v->errors()->add('branch_id', 'The selected branch does not belong to the selected company.');
+                } elseif ($branch->status !== \Modules\Organization\Enums\EntityStatus::Active) {
+                    $v->errors()->add('branch_id', 'A suspended or archived branch is not available for new organizational assignments.');
                 }
             }
         });

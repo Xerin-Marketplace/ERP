@@ -80,8 +80,12 @@ class CompanyController extends Controller
         $request->validate(['status' => ['required', \Illuminate\Validation\Rule::enum(EntityStatus::class)]]);
         $status = EntityStatus::from($request->input('status'));
 
-        // Granular permission per action
-        abort_unless($request->user()->can("company.{$status->value === 'active' ? 'activate' : ($status->value === 'suspended' ? 'suspend' : 'archive')}"), 403);
+        $action = match ($status) {
+            EntityStatus::Active => 'activate',
+            EntityStatus::Suspended => 'suspend',
+            EntityStatus::Archived => 'archive',
+        };
+        abort_unless($request->user()->can("company.{$action}"), 403);
 
         $this->org->setCompanyStatus($company, $status);
 
