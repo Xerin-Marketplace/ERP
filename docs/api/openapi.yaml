@@ -1,0 +1,158 @@
+openapi: 3.0.3
+
+info:
+  title: XERIN GROUP ERP — Platform API
+  version: 1.0.0
+  description: |
+    Central API for the XERIN GROUP ERP platform (Phase 0).
+    All responses follow the shared contract:
+    `{ "success": bool, "message": string, "data": mixed }`
+  contact:
+    name: Xerin Group Company Limited
+
+servers:
+  - url: https://xerinhub.com/api/v1
+  - url: http://localhost:8000/api/v1
+
+tags:
+  - name: Platform
+  - name: Auth
+
+paths:
+  /health:
+    get:
+      tags: [Platform]
+      summary: Platform health probe
+      operationId: getHealth
+      security: []
+      responses:
+        '200':
+          description: Service status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+              example:
+                success: true
+                message: Service healthy
+                data:
+                  status: healthy
+                  checks:
+                    database: { status: ok }
+                    cache: { status: ok }
+                    storage: { status: ok }
+
+  /auth/token:
+    post:
+      tags: [Auth]
+      summary: Issue an API token (Sanctum)
+      operationId: issueToken
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+                device_name: { type: string, default: api }
+      responses:
+        '200':
+          description: Token issued
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+              example:
+                success: true
+                message: Token issued
+                data: { token: "1|abc...", token_type: Bearer }
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Current authenticated user
+      operationId: getMe
+      responses:
+        '200':
+          description: User with roles and permissions
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /auth/revoke:
+    post:
+      tags: [Auth]
+      summary: Revoke current token
+      operationId: revokeToken
+      responses:
+        '200':
+          description: Token revoked
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+  /core/status:
+    get:
+      tags: [Platform]
+      summary: Module engine status
+      operationId: getModuleStatus
+      responses:
+        '200':
+          description: Registered modules
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Envelope' }
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Token
+
+  schemas:
+    Envelope:
+      type: object
+      properties:
+        success: { type: boolean }
+        message: { type: string }
+        data: { type: object, nullable: true }
+
+  responses:
+    Unauthenticated:
+      description: Not authenticated
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Envelope' }
+          example: { success: false, message: Unauthenticated. }
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Envelope' }
+          example: { success: false, message: Forbidden. }
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Envelope' }
+          example:
+            success: false
+            message: Validation failed.
+            errors: { email: ["The provided credentials are incorrect."] }
+
+security:
+  - bearerAuth: []

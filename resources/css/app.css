@@ -1,3 +1,44 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+[x-cloak] { display: none !important; }
+
+/* Top progress bar (Angular-style navigation loading) */
+#top-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    height: 2px;
+    width: 0;
+    background: #4f46e5;
+    opacity: 0;
+    transition: opacity .2s ease;
+}
+#top-progress.active {
+    width: 85%;
+    opacity: 1;
+    transition: width 4s cubic-bezier(0, 0, .2, 1), opacity .2s ease;
+}
+
+/* Skeleton shimmer loader */
+.skeleton {
+    position: relative;
+    overflow: hidden;
+    background: #e5e7eb;
+    border-radius: 4px;
+}
+.skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.75), transparent);
+    animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+
+/* Entrance animation */
+@keyframes fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-up { animation: fade-up .35s ease-out both; }
