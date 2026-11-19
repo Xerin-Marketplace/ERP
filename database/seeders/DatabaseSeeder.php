@@ -38,6 +38,8 @@ class DatabaseSeeder extends Seeder
             \Modules\Organization\Database\Seeders\OrganizationDatabaseSeeder::class,
             \Modules\Identity\Database\Seeders\IdentityDatabaseSeeder::class,
             \Modules\Employee\Database\Seeders\EmployeeDatabaseSeeder::class,
+            \Modules\Ticketing\Database\Seeders\TicketingDatabaseSeeder::class,
+            \Modules\HR\Database\Seeders\HRDatabaseSeeder::class,
         ]);
     }
 }

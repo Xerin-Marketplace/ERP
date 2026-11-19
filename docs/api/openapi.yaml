@@ -23,6 +23,7 @@ tags:
   - name: Ticketing
   - name: Tasks
   - name: Service Catalog
+  - name: HR
 
 paths:
   /health:
@@ -1107,6 +1108,179 @@ paths:
         "200": { description: Report data, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
         "403": { $ref: '#/components/responses/Forbidden' }
 
+  /hr/dashboard:
+    get:
+      tags: [HR]
+      summary: HR metrics — employees, today's attendance, pending queues, recruitment (hr.dashboard.view)
+      responses:
+        "200": { description: Metrics, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "401": { $ref: '#/components/responses/Unauthenticated' }
+        "403": { $ref: '#/components/responses/Forbidden' }
+  /hr/attendance:
+    get:
+      tags: [HR]
+      summary: Attendance records — own records for employees, company-scoped for HR
+      parameters:
+        - { name: status, in: query, schema: { type: string } }
+        - { name: date, in: query, schema: { type: string, format: date } }
+        - { name: page, in: query, schema: { type: integer } }
+      responses:
+        "200": { description: Records, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "401": { $ref: '#/components/responses/Unauthenticated' }
+  /hr/attendance/clock-in:
+    post:
+      tags: [HR]
+      summary: Clock in for today (server-side timestamp; duplicate rejected)
+      responses:
+        "201": { description: Clocked in, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /hr/attendance/clock-out:
+    post:
+      tags: [HR]
+      summary: Clock out of the open attendance session
+      responses:
+        "200": { description: Clocked out, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /hr/leave:
+    get:
+      tags: [HR]
+      summary: Leave requests scoped to the caller
+      responses:
+        "200": { description: Requests, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "401": { $ref: '#/components/responses/Unauthenticated' }
+  /hr/leave/request:
+    post:
+      tags: [HR]
+      summary: Submit a leave request — balance, eligibility and overlap validated
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [leave_type_id, start_date, end_date]
+              properties:
+                leave_type_id: { type: integer }
+                start_date: { type: string, format: date }
+                end_date: { type: string, format: date }
+                half_day: { type: boolean }
+                reason: { type: string }
+      responses:
+        "201": { description: Submitted, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /hr/leave/balances:
+    get:
+      tags: [HR]
+      summary: Caller leave balances for the current year
+      responses:
+        "200": { description: Balances, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "401": { $ref: '#/components/responses/Unauthenticated' }
+  /hr/leave/types:
+    get:
+      tags: [HR]
+      summary: Active leave types with entitlements and approval chains
+      responses:
+        "200": { description: Types, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "401": { $ref: '#/components/responses/Unauthenticated' }
+  /hr/leave/{leaveRequest}/approve:
+    post:
+      tags: [HR]
+      summary: Approve current leave approval step (leave.approve; self-approval blocked)
+      parameters: [{ name: leaveRequest, in: path, required: true, schema: { type: integer } }]
+      responses:
+        "200": { description: Decided, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /hr/leave/{leaveRequest}/reject:
+    post:
+      tags: [HR]
+      summary: Reject leave — note required; reserved balance released
+      parameters: [{ name: leaveRequest, in: path, required: true, schema: { type: integer } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [note]
+              properties: { note: { type: string } }
+      responses:
+        "200": { description: Decided, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /hr/shifts:
+    get:
+      tags: [HR]
+      summary: Active shift definitions
+      responses:
+        "200": { description: Shifts, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "401": { $ref: '#/components/responses/Unauthenticated' }
+    post:
+      tags: [HR]
+      summary: Create shift definition — overnight auto-detected (shift.create)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, name, start_time, end_time]
+              properties:
+                code: { type: string, maxLength: 30 }
+                name: { type: string }
+                start_time: { type: string, example: "18:00" }
+                end_time: { type: string, example: "06:00" }
+                break_minutes: { type: integer }
+                grace_minutes: { type: integer }
+                working_days: { type: array, items: { type: integer } }
+      responses:
+        "201": { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /hr/overtime:
+    get:
+      tags: [HR]
+      summary: Overtime requests scoped to the caller
+      responses:
+        "200": { description: Requests, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "401": { $ref: '#/components/responses/Unauthenticated' }
+  /hr/overtime/request:
+    post:
+      tags: [HR]
+      summary: Submit overtime request — two-step approval (manager → HR)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [work_date, planned_hours, reason]
+              properties:
+                work_date: { type: string, format: date }
+                planned_hours: { type: number }
+                reason: { type: string }
+      responses:
+        "201": { description: Submitted, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "422": { $ref: '#/components/responses/ValidationError' }
+  /hr/recruitment/vacancies:
+    get:
+      tags: [HR]
+      summary: Published job vacancies
+      responses:
+        "200": { description: Vacancies, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "401": { $ref: '#/components/responses/Unauthenticated' }
+  /hr/performance:
+    get:
+      tags: [HR]
+      summary: Performance reviews scoped to the caller (performance.view)
+      responses:
+        "200": { description: Reviews, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        "403": { $ref: '#/components/responses/Forbidden' }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1115,6 +1289,38 @@ components:
       bearerFormat: Token
 
   schemas:
+    AttendanceRecord:
+      type: object
+      properties:
+        id: { type: integer }
+        reference: { type: string, example: XERIN-ATT-2026-000001 }
+        work_date: { type: string, format: date }
+        clock_in_at: { type: string, format: date-time, nullable: true }
+        clock_out_at: { type: string, format: date-time, nullable: true }
+        worked_minutes: { type: integer }
+        late_minutes: { type: integer }
+        status: { type: string, enum: [present, absent, late, half_day, on_leave, holiday, rest_day, pending_verification] }
+    LeaveRequest:
+      type: object
+      properties:
+        id: { type: integer }
+        reference: { type: string, example: XERIN-LEV-2026-000001 }
+        type: { type: string }
+        start_date: { type: string, format: date }
+        end_date: { type: string, format: date }
+        days: { type: number }
+        status: { type: string, enum: [pending, approved, rejected, cancelled] }
+    LeaveBalance:
+      type: object
+      properties:
+        leave_type_id: { type: integer }
+        year: { type: integer }
+        entitled: { type: number }
+        carried_forward: { type: number }
+        used: { type: number }
+        pending: { type: number }
+        available: { type: number }
+
     Ticket:
       type: object
       properties:

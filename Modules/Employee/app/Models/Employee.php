@@ -81,4 +81,14 @@ class Employee extends Model
     public function scopeInCompany($q, ?int $companyId) { return $companyId ? $q->where('company_id', $companyId) : $q; }
     public function scopeInBranch($q, ?int $branchId) { return $branchId ? $q->where('branch_id', $branchId) : $q; }
     public function scopeInDepartment($q, ?int $deptId) { return $deptId ? $q->where('department_id', $deptId) : $q; }
+
+    public function leaveBalances(): HasMany
+    {
+        return $this->hasMany(\Modules\HR\Models\LeaveBalance::class);
+    }
+
+    public function attendanceRecords(): HasMany
+    {
+        return $this->hasMany(\Modules\HR\Models\AttendanceRecord::class);
+    }
 }

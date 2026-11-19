@@ -3,5 +3,6 @@
     "Organization": true,
     "Identity": true,
     "Employee": true,
-    "Ticketing": true
+    "Ticketing": true,
+    "HR": true
 }
