@@ -17,14 +17,7 @@
         <div id="top-progress"></div>
         <x-toasts />
 
-        @if (session('status') || session('success') || session('error'))
-            <script>
-                window.addEventListener('DOMContentLoaded', () => window.toast(
-                    @json(session('error') ?? session('success') ?? session('status')),
-                    {{ session('error') ? "'error'" : "'success'" }}
-                ));
-            </script>
-        @endif
+        @include('partials.flash-toasts')
 
         <div class="min-h-screen bg-gray-100"
              x-data="{ mobileOpen: false, collapsed: localStorage.getItem('xp_sidebar') === '1' }">

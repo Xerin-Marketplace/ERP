@@ -19,14 +19,7 @@
         <div id="top-progress"></div>
         <x-toasts />
 
-        @if (session('status') || session('success') || session('error'))
-            <script>
-                window.addEventListener('DOMContentLoaded', () => window.toast(
-                    @json(session('error') ?? session('success') ?? session('status')),
-                    {{ session('error') ? "'error'" : "'success'" }}
-                ));
-            </script>
-        @endif
+        @include('partials.flash-toasts')
 
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
             <div>
