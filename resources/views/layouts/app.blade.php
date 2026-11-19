@@ -6,6 +6,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
+        <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
@@ -41,8 +42,8 @@
                 <!-- Brand -->
                 <div class="flex items-center gap-2.5 h-14 px-4 border-b border-gray-200 shrink-0">
                     <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 min-w-0">
-                        <x-application-logo class="w-8 h-8 shrink-0" />
-                        <span class="font-bold text-gray-900 truncate" x-show="!collapsed">{{ config('app.name', 'XerinERP') }}</span>
+                        <img src="{{ asset('xerin-icon.webp') }}" alt="Xerin Group" class="w-8 h-8 shrink-0 rounded-sm" x-show="collapsed">
+                        <x-application-logo class="h-9 w-auto max-w-[150px]" x-show="!collapsed" />
                     </a>
                 </div>
 
