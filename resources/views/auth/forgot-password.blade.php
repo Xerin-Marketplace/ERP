@@ -1,6 +1,7 @@
 <x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
+    <div class="mb-6 text-center">
+        <h1 class="text-xl font-semibold text-gray-900">{{ __('Reset your password') }}</h1>
+        <p class="mt-1 text-sm text-gray-500">{{ __('Enter your email and we will send you a reset link') }}</p>
     </div>
 
     <!-- Session Status -->
@@ -18,15 +19,20 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                     </svg>
                 </span>
-                <x-text-input id="email" class="block w-full pl-10" type="email" name="email" :value="old('email')" required autofocus />
+                <x-text-input id="email" class="block w-full pl-10" type="email" name="email" :value="old('email')" required autofocus placeholder="name@xerinhub.com" />
             </div>
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
-        <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
-                {{ __('Email Password Reset Link') }}
-            </x-primary-button>
+        <x-primary-button class="mt-5 w-full justify-center">
+            {{ __('Send reset link') }}
+        </x-primary-button>
+
+        <div class="mt-6 pt-5 border-t border-gray-200 text-center">
+            <p class="text-sm text-gray-600">
+                {{ __('Remembered it?') }}
+                <a href="{{ route('login') }}" class="font-medium text-indigo-600 hover:text-indigo-500">{{ __('Back to sign in') }}</a>
+            </p>
         </div>
     </form>
 </x-guest-layout>
