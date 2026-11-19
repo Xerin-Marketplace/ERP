@@ -17,6 +17,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $hq = \App\Models\Branch::firstOrCreate(
+            ['code' => 'HQ'],
+            ['name' => 'Head Office', 'city' => 'Dar es Salaam', 'is_active' => true]
+        );
+
         User::updateOrCreate(
             ['email' => 'admin@xerinhub.com'],
             [
@@ -24,6 +29,7 @@ class DatabaseSeeder extends Seeder
                 'password' => Hash::make('XerinERP@2026'),
                 'email_verified_at' => now(),
                 'status' => AccountStatus::Active,
+                'branch_id' => $hq->id,
             ]
         );
 

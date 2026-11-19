@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -20,7 +21,9 @@ class RegisteredUserController extends Controller
      */
     public function create(): View
     {
-        return view('auth.register');
+        return view('auth.register', [
+            'branches' => Branch::active()->orderBy('name')->get(),
+        ]);
     }
 
     /**
@@ -33,12 +36,17 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'branch_id' => ['required', 'exists:branches,id'],
+            'phone_code' => ['required', 'string', 'regex:/^\+\d{1,4}$/'],
+            'phone' => ['required', 'string', 'regex:/^\d{6,14}$/'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'branch_id' => $request->branch_id,
+            'phone' => $request->phone_code.$request->phone,
             'password' => Hash::make($request->password),
         ]);
 
