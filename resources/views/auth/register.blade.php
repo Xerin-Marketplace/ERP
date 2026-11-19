@@ -142,7 +142,7 @@
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
 
-        <x-primary-button class="mt-5 w-full justify-center">
+        <x-primary-button class="mt-6 w-full justify-center">
             {{ __('Create account') }}
         </x-primary-button>
 
