@@ -14,6 +14,8 @@ class NavItem
         public string $group = 'Menu',
         public int $order = 100,
         public bool $visible = true,
+        /** @var NavItem[] */
+        public array $children = [],
     ) {}
 
     public function href(): ?string
@@ -25,12 +27,27 @@ class NavItem
 
     public function isActive(): bool
     {
-        return $this->route ? request()->routeIs($this->route) : false;
+        if ($this->route && request()->routeIs($this->route)) {
+            return true;
+        }
+
+        return collect($this->children)->contains->isActive();
+    }
+
+    /** @return NavItem[] */
+    public function visibleChildren(): array
+    {
+        return collect($this->children)->filter->canSee()->sortBy('order')->values()->all();
     }
 
     public function canSee(): bool
     {
         if (! $this->visible) {
+            return false;
+        }
+
+        // A parent item is only useful when at least one child is reachable.
+        if ($this->children !== [] && $this->visibleChildren() === []) {
             return false;
         }
 

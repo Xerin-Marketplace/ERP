@@ -48,15 +48,45 @@
                             <p class="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400" x-show="!collapsed">{{ $group }}</p>
                             <div class="space-y-1">
                                 @foreach ($items as $item)
-                                    <a href="{{ $item->href() ?? '#' }}"
-                                       title="{{ $item->label }}"
-                                       class="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors
-                                              {{ $item->isActive() ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
-                                        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="{{ $item->icon }}" />
-                                        </svg>
-                                        <span x-show="!collapsed" class="truncate">{{ $item->label }}</span>
-                                    </a>
+                                    @php $children = $item->visibleChildren(); @endphp
+                                    @if ($children === [])
+                                        <a href="{{ $item->href() ?? '#' }}"
+                                           title="{{ $item->label }}"
+                                           class="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors
+                                                  {{ $item->isActive() ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                                            <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="{{ $item->icon }}" />
+                                            </svg>
+                                            <span x-show="!collapsed" class="truncate">{{ $item->label }}</span>
+                                        </a>
+                                    @else
+                                        <div x-data="{ open: {{ $item->isActive() ? 'true' : 'false' }} }">
+                                            <button type="button" x-on:click="open = !open"
+                                                    title="{{ $item->label }}"
+                                                    class="w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors
+                                                           {{ $item->isActive() ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                                                <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="{{ $item->icon }}" />
+                                                </svg>
+                                                <span x-show="!collapsed" class="flex-1 text-left truncate">{{ $item->label }}</span>
+                                                <svg x-show="!collapsed" class="w-3.5 h-3.5 shrink-0 text-gray-400 transition-transform" :class="open ? 'rotate-180' : ''"
+                                                     fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                                                </svg>
+                                            </button>
+                                            <div x-show="open && !collapsed" x-cloak x-transition.opacity.duration.150ms class="mt-1 space-y-0.5">
+                                                @foreach ($children as $child)
+                                                    <a href="{{ $child->href() ?? '#' }}"
+                                                       title="{{ $child->label }}"
+                                                       class="flex items-center gap-2.5 rounded-md py-1.5 pl-[2.125rem] pr-3 text-[13px] font-medium transition-colors
+                                                              {{ $child->isActive() ? 'text-gray-900 bg-gray-100' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900' }}">
+                                                        <span class="w-1.5 h-1.5 rounded-full shrink-0 {{ $child->isActive() ? 'bg-indigo-500' : 'bg-gray-300' }}"></span>
+                                                        <span x-show="!collapsed" class="truncate">{{ $child->label }}</span>
+                                                    </a>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
                                 @endforeach
                             </div>
                         </div>

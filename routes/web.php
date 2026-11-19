@@ -57,6 +57,12 @@ Route::middleware(['auth', 'verified', 'account.active'])->group(function () {
     Route::get('/admin/system', [SystemController::class, 'index'])
         ->middleware('permission:system.view')
         ->name('admin.system');
+    Route::get('/admin/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'edit'])
+        ->middleware('permission:settings.view')
+        ->name('admin.settings');
+    Route::put('/admin/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update'])
+        ->middleware('permission:settings.manage')
+        ->name('admin.settings.update');
 });
 
 require __DIR__.'/auth.php';

@@ -36,7 +36,6 @@ class FinanceDatabaseSeeder extends Seeder
         }
 
         $roles = [
-            'super-admin' => self::PERMISSIONS,
             'group_finance_director' => self::PERMISSIONS,
             'finance_manager' => array_diff(self::PERMISSIONS, ['finance.periods.reopen', 'finance.settings.manage']),
             'accountant' => ['finance.dashboard.view', 'finance.accounts.view', 'finance.journals.view',
@@ -51,6 +50,10 @@ class FinanceDatabaseSeeder extends Seeder
             $role = Role::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
             $role->syncPermissions($perms);
         }
+
+        // super-admin accumulates grants across modules — never sync here,
+        // or this module's seeder would wipe permissions granted by others.
+        Role::where('name', 'super-admin')->first()?->givePermissionTo(self::PERMISSIONS);
 
         $company = Company::first();
         if (! $company) return;
