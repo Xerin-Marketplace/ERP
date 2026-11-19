@@ -1,0 +1,186 @@
+<?php
+
+namespace Modules\Identity\Http\Controllers;
+
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+use Modules\Identity\Services\AssignmentService;
+use Modules\Identity\Services\InvitationService;
+use Modules\Identity\Services\UserLifecycleService;
+use Modules\Identity\Notifications\AccountActivationInvitation;
+use Spatie\Permission\Models\Role;
+
+class UserManagementController extends Controller
+{
+    public function __construct(
+        private UserLifecycleService $lifecycle,
+        private AssignmentService $assignments,
+        private InvitationService $invitations,
+    ) {}
+
+    public function index(Request $request)
+    {
+        $users = User::with('branch:id,name', 'profile')
+            ->when($request->filled('search'), fn ($q) => $q->where(function ($q) use ($request) {
+                $s = $request->input('search');
+                $q->where('name', 'like', "%{$s}%")->orWhere('email', 'like', "%{$s}%");
+            }))
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->input('status')))
+            ->when($request->filled('role'), fn ($q) => $q->role($request->input('role')))
+            ->latest()
+            ->paginate(15)->withQueryString();
+
+        return view('identity::users.index', [
+            'users' => $users,
+            'roles' => Role::orderBy('name')->get(['id', 'name']),
+        ]);
+    }
+
+    public function show(User $user)
+    {
+        $user->load([
+            'profile', 'branch', 'roles.permissions',
+            'assignments.company:id,legal_name', 'assignments.branch:id,name',
+            'assignments.department:id,name', 'assignments.manager:id,name',
+            'assignments.assignedBy:id,name',
+            'loginHistories' => fn ($q) => $q->limit(15),
+            'securityEvents' => fn ($q) => $q->limit(15),
+            'registrationApplication',
+        ]);
+
+        return view('identity::users.show', [
+            'user' => $user,
+            'roles' => Role::whereNotIn('name', \Modules\Identity\Database\Seeders\IdentityDatabaseSeeder::PROTECTED_ROLES)->orderBy('name')->get(['id', 'name']),
+            'pendingInvitation' => \Modules\Identity\Models\AccessInvitation::where('user_id', $user->id)
+                ->whereNull('used_at')->whereNull('revoked_at')->where('expires_at', '>', now())->latest()->first(),
+            'companies' => \Modules\Organization\Models\Company::where('status', 'active')->orderBy('legal_name')->get(['id', 'legal_name']),
+            'branches' => \Modules\Organization\Models\Branch::where('status', 'active')->orderBy('name')->get(['id', 'name', 'company_id']),
+            'departments' => \Modules\Organization\Models\Department::where('status', 'active')->orderBy('name')->get(['id', 'name', 'company_id', 'branch_id']),
+            'managers' => User::where('id', '!=', $user->id)->orderBy('name')->get(['id', 'name']),
+        ]);
+    }
+
+    public function update(User $user, Request $request)
+    {
+        abort_unless($request->user()->can('user.update'), 403);
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'employee_number' => ['nullable', 'string', 'max:50'],
+            'job_title' => ['nullable', 'string', 'max:150'],
+        ]);
+
+        $user->update(collect($data)->only(['name', 'phone'])->toArray());
+        $user->profile()->updateOrCreate(['user_id' => $user->id],
+            collect($data)->only(['employee_number', 'job_title'])->toArray());
+
+        app(\App\Services\AuditService::class)->log('user.updated', $user, new: $data);
+
+        return back()->with('success', 'User updated.');
+    }
+
+    public function assignRole(User $user, Request $request)
+    {
+        abort_unless($request->user()->can('role.assign'), 403);
+        $request->validate(['role' => ['required', 'exists:roles,name']]);
+        abort_if(in_array($request->input('role'), \Modules\Identity\Database\Seeders\IdentityDatabaseSeeder::PROTECTED_ROLES, true),
+            403, 'This role cannot be assigned through this interface.');
+        abort_if($user->id === $request->user()->id && ! $request->user()->hasRole('super-admin'),
+            422, 'You cannot change your own role.');
+
+        $old = $user->getRoleNames()->toArray();
+        $user->syncRoles([$request->input('role')]);
+
+        app(\App\Services\AuditService::class)->log('user.role_changed', $user,
+            old: ['roles' => $old], new: ['roles' => [$request->input('role')]]);
+
+        return back()->with('success', "Role updated to {$request->input('role')}.");
+    }
+
+    public function suspend(User $user, Request $request)
+    {
+        abort_unless($request->user()->can('user.suspend'), 403);
+        abort_if($user->id === $request->user()->id, 422, 'You cannot suspend your own account.');
+        $request->validate(['reason' => ['nullable', 'string', 'max:500']]);
+
+        $this->lifecycle->suspend($user, $request->user()->id, $request->input('reason'));
+
+        return back()->with('success', "{$user->name} suspended — sessions and tokens revoked.");
+    }
+
+    public function activate(User $user, Request $request)
+    {
+        abort_unless($request->user()->can('user.activate'), 403);
+        $this->lifecycle->activate($user, $request->user()->id);
+
+        return back()->with('success', "{$user->name} activated.");
+    }
+
+    public function deactivate(User $user, Request $request)
+    {
+        abort_unless($request->user()->can('user.deactivate'), 403);
+        abort_if($user->id === $request->user()->id, 422, 'You cannot deactivate your own account.');
+        $request->validate(['reason' => ['nullable', 'string', 'max:500']]);
+
+        $this->lifecycle->deactivate($user, $request->user()->id, $request->input('reason'));
+
+        return back()->with('success', "{$user->name} deactivated.");
+    }
+
+    public function revokeSessions(User $user, Request $request)
+    {
+        abort_unless($request->user()->can('user.sessions.revoke'), 403);
+        $this->lifecycle->revokeAccess($user, $request->user()->id, 'manual_revocation');
+
+        return back()->with('success', 'All sessions and API tokens revoked.');
+    }
+
+    public function resendInvitation(User $user, Request $request)
+    {
+        abort_unless($request->user()->can('registration.provision'), 403);
+        abort_if($user->status === \App\Enums\AccountStatus::Active, 422, 'User is already active.');
+
+        ['token' => $token] = $this->invitations->generate($user, $user->registrationApplication, $request->user()->id);
+        $user->notify(new AccountActivationInvitation($token));
+
+        app(\App\Services\AuditService::class)->log('invitation.resent', $user);
+
+        return back()->with('success', 'Activation invitation resent.');
+    }
+
+    /* ---------------------- Assignment / transfers ---------------------- */
+
+    public function reassign(User $user, Request $request)
+    {
+        abort_unless($request->user()->can('user.assignments.manage'), 403);
+
+        $data = $request->validate([
+            'company_id' => ['required', 'exists:companies,id'],
+            'branch_id' => ['nullable', 'exists:branches,id'],
+            'department_id' => ['nullable', 'exists:departments,id'],
+            'position' => ['nullable', 'string', 'max:150'],
+            'manager_user_id' => ['nullable', 'exists:users,id'],
+            'assignment_type' => ['required', 'in:transfer,position_change,temporary,termination,new'],
+            'effective_start' => ['required', 'date'],
+            'reason' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $placement = $this->assignments->validatePlacement(
+            $data['company_id'], $data['branch_id'] ?? null, $data['department_id'] ?? null
+        );
+
+        $this->assignments->assign(
+            $user, $placement, $request->user()->id,
+            type: $data['assignment_type'],
+            position: $data['position'] ?? null,
+            managerId: $data['manager_user_id'] ?? null,
+            reason: $data['reason'] ?? null,
+            effectiveStart: $data['effective_start'],
+            status: $data['assignment_type'] === 'temporary' ? 'temporary' : 'active',
+        );
+
+        return back()->with('success', 'Organizational assignment recorded.');
+    }
+}

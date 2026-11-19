@@ -72,6 +72,61 @@
                 </div>
             </div>
 
+            <!-- Identity blocks: IT queue + personal placement -->
+            @if ($identity['registrations'] || $identity['my_assignment'])
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                    @if ($identity['registrations'])
+                        <div class="lg:col-span-2 rounded-sm border border-gray-200 bg-white shadow-sm">
+                            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+                                <h2 class="font-semibold text-gray-900">Registration queue</h2>
+                                <a href="{{ route('identity.registrations.index') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">View all</a>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-5">
+                                <div class="rounded-md bg-amber-50 border border-amber-200 p-3 text-center">
+                                    <p class="text-xl font-bold text-amber-700">{{ $identity['registrations']['pending_review'] }}</p>
+                                    <p class="text-xs text-amber-600">Pending review</p>
+                                </div>
+                                <div class="rounded-md bg-blue-50 border border-blue-200 p-3 text-center">
+                                    <p class="text-xl font-bold text-blue-700">{{ $identity['registrations']['under_review'] }}</p>
+                                    <p class="text-xs text-blue-600">In review</p>
+                                </div>
+                                <div class="rounded-md bg-green-50 border border-green-200 p-3 text-center">
+                                    <p class="text-xl font-bold text-green-700">{{ $identity['registrations']['approved'] }}</p>
+                                    <p class="text-xs text-green-600">Approved</p>
+                                </div>
+                                <div class="rounded-md bg-gray-50 border border-gray-200 p-3 text-center">
+                                    <p class="text-xl font-bold text-gray-700">{{ $identity['registrations']['active'] }}</p>
+                                    <p class="text-xs text-gray-500">Activated</p>
+                                </div>
+                            </div>
+                            @if ($identity['pending_apps']->isNotEmpty())
+                                <ul class="divide-y divide-gray-100 border-t border-gray-100">
+                                    @foreach ($identity['pending_apps'] as $app)
+                                        <li class="flex items-center gap-3 px-5 py-3">
+                                            <span class="font-mono text-xs text-gray-400">{{ $app->reference }}</span>
+                                            <span class="flex-1 text-sm text-gray-700">{{ $app->full_name }}</span>
+                                            <a href="{{ route('identity.registrations.show', $app) }}" class="text-sm font-medium text-indigo-600">Review</a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                        </div>
+                    @endif
+
+                    @if ($identity['my_assignment'])
+                        <div class="rounded-sm border border-gray-200 bg-white shadow-sm">
+                            <div class="px-5 py-4 border-b border-gray-200"><h2 class="font-semibold text-gray-900">My placement</h2></div>
+                            <dl class="p-5 space-y-2.5 text-sm">
+                                <div class="flex justify-between"><dt class="text-gray-500">Company</dt><dd class="font-medium">{{ $identity['my_assignment']->company->legal_name }}</dd></div>
+                                <div class="flex justify-between"><dt class="text-gray-500">Branch</dt><dd>{{ $identity['my_assignment']->branch?->name ?? '—' }}</dd></div>
+                                <div class="flex justify-between"><dt class="text-gray-500">Department</dt><dd>{{ $identity['my_assignment']->department?->name ?? '—' }}</dd></div>
+                                <div class="flex justify-between"><dt class="text-gray-500">Position</dt><dd>{{ $identity['my_assignment']->position ?? '—' }}</dd></div>
+                            </dl>
+                        </div>
+                    @endif
+                </div>
+            @endif
+
             <!-- Activity + actions -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div class="lg:col-span-2 rounded-sm border border-gray-200 bg-white shadow-sm">

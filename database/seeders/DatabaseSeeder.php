@@ -33,6 +33,10 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $this->call([RolePermissionSeeder::class, \Modules\Organization\Database\Seeders\OrganizationDatabaseSeeder::class]);
+        $this->call([
+            RolePermissionSeeder::class,
+            \Modules\Organization\Database\Seeders\OrganizationDatabaseSeeder::class,
+            \Modules\Identity\Database\Seeders\IdentityDatabaseSeeder::class,
+        ]);
     }
 }

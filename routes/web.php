@@ -33,7 +33,20 @@ Route::middleware(['auth', 'verified', 'account.active'])->group(function () {
         ];
         $activity = \App\Models\AuditLog::with('user:id,name')->latest()->limit(8)->get();
 
-        return view('dashboard', compact('stats', 'activity'));
+        // Personalized blocks — IT staff see the registration queue; every
+        // provisioned user sees their organizational placement.
+        $user = auth()->user();
+        $identity = [
+            'registrations' => $user->can('registration.view')
+                ? app(\Modules\Identity\Services\RegistrationService::class)->dashboardStats()
+                : null,
+            'pending_apps' => $user->can('registration.view')
+                ? \Modules\Identity\Models\RegistrationApplication::whereIn('status', ['submitted', 'pending_review', 'under_review'])->latest()->limit(5)->get()
+                : collect(),
+            'my_assignment' => $user->load('currentAssignment.company:id,legal_name', 'currentAssignment.branch:id,name', 'currentAssignment.department:id,name')->currentAssignment,
+        ];
+
+        return view('dashboard', compact('stats', 'activity', 'identity'));
     })->name('dashboard');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

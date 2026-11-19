@@ -1,4 +1,5 @@
 {
     "Core": true,
-    "Organization": true
+    "Organization": true,
+    "Identity": true
 }

@@ -49,4 +49,37 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->status === AccountStatus::Suspended;
     }
+
+    /* ------------------- Identity module relations ------------------- */
+
+    public function profile(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(\Modules\Identity\Models\UserProfile::class);
+    }
+
+    public function assignments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\Modules\Identity\Models\EmployeeAssignment::class);
+    }
+
+    public function currentAssignment(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(\Modules\Identity\Models\EmployeeAssignment::class)
+            ->whereIn('status', ['active', 'temporary'])->whereNull('effective_end');
+    }
+
+    public function loginHistories(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\Modules\Identity\Models\LoginHistory::class)->latest();
+    }
+
+    public function securityEvents(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\Modules\Identity\Models\AccountSecurityEvent::class)->latest();
+    }
+
+    public function registrationApplication(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(\Modules\Identity\Models\RegistrationApplication::class, 'provisioned_user_id');
+    }
 }

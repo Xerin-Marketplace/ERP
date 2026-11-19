@@ -2,66 +2,101 @@
 
 namespace Tests\Feature\Auth;
 
-use Modules\Organization\Models\Branch;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Modules\Identity\Models\RegistrationApplication;
+use Modules\Organization\Models\Branch;
+use Modules\Organization\Models\Company;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function branch(): Branch
+    protected function setUp(): void
     {
-        return Branch::create(['name' => 'Head Office', 'code' => 'HQ', 'city' => 'Dar es Salaam']);
+        parent::setUp();
+        $this->seed(\Database\Seeders\RolePermissionSeeder::class);
+        $this->seed(\Modules\Organization\Database\Seeders\OrganizationDatabaseSeeder::class);
+        $this->seed(\Modules\Identity\Database\Seeders\IdentityDatabaseSeeder::class);
     }
 
     private function payload(array $overrides = []): array
     {
         return array_merge([
-            'name' => 'Test User',
+            'first_name' => 'Test',
+            'last_name' => 'User',
             'email' => 'test@example.com',
-            'branch_id' => $this->branch()->id,
-            'phone_code' => '+255',
-            'phone' => '712345678',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'phone' => '+255712345678',
         ], $overrides);
     }
 
-    public function test_registration_screen_can_be_rendered(): void
+    public function test_registration_screen_renders(): void
     {
-        $this->branch();
-        $this->get('/register')->assertStatus(200);
+        $this->get('/register')->assertOk()->assertSee('Apply for ERP access');
     }
 
-    public function test_new_users_can_register(): void
+    public function test_public_registration_creates_application_not_user(): void
     {
-        $response = $this->post('/register', $this->payload());
+        $this->post('/register', $this->payload())->assertRedirect(route('register.track'));
 
-        $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
-
-        $user = \App\Models\User::where('email', 'test@example.com')->first();
-        $this->assertEquals('+255712345678', $user->phone);
-        $this->assertNotNull($user->branch_id);
+        $this->assertDatabaseHas('registration_applications', [
+            'email' => 'test@example.com',
+            'status' => 'submitted',
+        ]);
+        // CRITICAL: no internal access is created by registering
+        $this->assertDatabaseMissing('users', ['email' => 'test@example.com']);
     }
 
-    public function test_registration_requires_branch_and_phone(): void
-    {
-        $this->post('/register', [
-            'name' => 'T', 'email' => 't@e.com',
-            'password' => 'password', 'password_confirmation' => 'password',
-        ])->assertSessionHasErrors(['branch_id', 'phone', 'phone_code']);
-    }
-
-    public function test_unverified_user_sees_verification_notice(): void
+    public function test_application_gets_reference_number(): void
     {
         $this->post('/register', $this->payload());
 
-        $this->get('/dashboard')->assertRedirect(route('verification.notice'));
-        $this->get(route('verification.notice'))
-            ->assertOk()
-            ->assertSee('Verify your email')
-            ->assertSee('test@example.com');
+        $app = RegistrationApplication::firstOrFail();
+        $this->assertMatchesRegularExpression('/^XERIN-REG-\d{4}-\d{6}$/', $app->reference);
+    }
+
+    public function test_duplicate_open_application_is_rejected(): void
+    {
+        $this->post('/register', $this->payload());
+        $this->post('/register', $this->payload())->assertSessionHasErrors('email');
+    }
+
+    public function test_email_of_existing_user_is_rejected(): void
+    {
+        \App\Models\User::factory()->create(['email' => 'taken@example.com', 'status' => 'active']);
+
+        $this->post('/register', $this->payload(['email' => 'taken@example.com']))
+            ->assertSessionHasErrors('email');
+    }
+
+    public function test_applicant_can_track_status_with_reference_and_email(): void
+    {
+        $this->post('/register', $this->payload());
+        $app = RegistrationApplication::firstOrFail();
+
+        $this->post('/register/track', [
+            'reference' => $app->reference,
+            'email' => 'test@example.com',
+        ])->assertOk()->assertSee($app->reference);
+    }
+
+    public function test_tracking_rejects_wrong_email(): void
+    {
+        $this->post('/register', $this->payload());
+        $app = RegistrationApplication::firstOrFail();
+
+        $this->post('/register/track', [
+            'reference' => $app->reference,
+            'email' => 'wrong@example.com',
+        ])->assertSessionHasErrors('reference');
+    }
+
+    public function test_applicant_cannot_access_internal_erp(): void
+    {
+        $this->post('/register', $this->payload());
+
+        // No session exists — protected routes still demand authentication
+        $this->get('/dashboard')->assertRedirect('/login');
+        $this->getJson('/api/v1/organization/overview')->assertStatus(401);
     }
 }
