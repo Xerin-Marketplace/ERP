@@ -1,7 +1,7 @@
 <x-guest-layout>
-    <div class="mb-6 text-center">
-        <h1 class="text-xl font-semibold text-gray-900">{{ __('Reset your password') }}</h1>
-        <p class="mt-1 text-sm text-gray-500">{{ __('Enter your email and we will send you a reset link') }}</p>
+    <div class="mb-8 text-center">
+        <h1 class="text-2xl font-semibold text-gray-900">{{ __('Reset your password') }}</h1>
+        <p class="mt-2 text-sm text-gray-500">{{ __('Enter your email and we will send you a reset link') }}</p>
     </div>
 
     <!-- Session Status -->
@@ -28,7 +28,7 @@
             {{ __('Send reset link') }}
         </x-primary-button>
 
-        <div class="mt-6 pt-5 border-t border-gray-200 text-center">
+        <div class="mt-8 pt-6 border-t border-gray-200 text-center">
             <p class="text-sm text-gray-600">
                 {{ __('Remembered it?') }}
                 <a href="{{ route('login') }}" class="font-medium text-indigo-600 hover:text-indigo-500">{{ __('Back to sign in') }}</a>

@@ -1,7 +1,7 @@
 <x-guest-layout>
-    <div class="mb-6 text-center">
-        <h1 class="text-xl font-semibold text-gray-900">{{ __('Set a new password') }}</h1>
-        <p class="mt-1 text-sm text-gray-500">{{ __('Choose a strong password for your account') }}</p>
+    <div class="mb-8 text-center">
+        <h1 class="text-2xl font-semibold text-gray-900">{{ __('Set a new password') }}</h1>
+        <p class="mt-2 text-sm text-gray-500">{{ __('Choose a strong password for your account') }}</p>
     </div>
 
     <form method="POST" action="{{ route('password.store') }}" x-data="{ show: false }">

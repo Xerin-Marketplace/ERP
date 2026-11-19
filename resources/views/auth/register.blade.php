@@ -1,7 +1,7 @@
 <x-guest-layout>
-    <div class="mb-6 text-center">
-        <h1 class="text-xl font-semibold text-gray-900">{{ __('Create your account') }}</h1>
-        <p class="mt-1 text-sm text-gray-500">{{ __('Join Xerin Group ERP — it takes less than a minute') }}</p>
+    <div class="mb-8 text-center">
+        <h1 class="text-2xl font-semibold text-gray-900">{{ __('Create your account') }}</h1>
+        <p class="mt-2 text-sm text-gray-500">{{ __('Join Xerin Group ERP — it takes less than a minute') }}</p>
     </div>
 
     <form method="POST" action="{{ route('register') }}" x-data="{ show: false, showConfirm: false }">
@@ -22,7 +22,7 @@
         </div>
 
         <!-- Email Address -->
-        <div class="mt-4">
+        <div class="mt-5">
             <x-input-label for="email" :value="__('Email')" />
             <div class="relative mt-1">
                 <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
@@ -36,7 +36,7 @@
         </div>
 
         <!-- Password -->
-        <div class="mt-4">
+        <div class="mt-5">
             <x-input-label for="password" :value="__('Password')" />
             <div class="relative mt-1">
                 <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
@@ -64,7 +64,7 @@
         </div>
 
         <!-- Confirm Password -->
-        <div class="mt-4">
+        <div class="mt-5">
             <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
             <div class="relative mt-1">
                 <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
@@ -95,7 +95,7 @@
             {{ __('Create account') }}
         </x-primary-button>
 
-        <div class="mt-6 pt-5 border-t border-gray-200 text-center">
+        <div class="mt-8 pt-6 border-t border-gray-200 text-center">
             <p class="text-sm text-gray-600">
                 {{ __('Already have an account?') }}
                 <a href="{{ route('login') }}" class="font-medium text-indigo-600 hover:text-indigo-500">{{ __('Sign in') }}</a>
