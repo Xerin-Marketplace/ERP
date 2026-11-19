@@ -1281,6 +1281,154 @@ paths:
         "200": { description: Reviews, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
         "403": { $ref: '#/components/responses/Forbidden' }
 
+  /finance/dashboard:
+    get:
+      tags: [Finance]
+      summary: Finance dashboard metrics (posted GL-derived KPIs)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Metrics, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+  /finance/accounts:
+    get:
+      tags: [Finance]
+      summary: Chart of accounts for the authenticated company
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Account list, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+  /finance/journals:
+    get:
+      tags: [Finance]
+      summary: List journals (paginated)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Journals, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+    post:
+      tags: [Finance]
+      summary: Create draft journal (>=2 lines, one-sided debit/credit each)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [period_id, journal_date, lines]
+              properties:
+                period_id: { type: integer }
+                journal_date: { type: string, format: date }
+                type: { type: string }
+                memo: { type: string }
+                lines:
+                  type: array
+                  minItems: 2
+                  items:
+                    type: object
+                    required: [account_id]
+                    properties:
+                      account_id: { type: integer }
+                      debit: { type: number }
+                      credit: { type: number }
+                      description: { type: string }
+      responses:
+        '201': { description: Journal created, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        '422': { description: Validation error }
+  /finance/journals/{journal}/submit:
+    post:
+      tags: [Finance]
+      summary: Submit draft journal for approval
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: journal, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: Submitted }, '422': { description: Invalid state } }
+  /finance/journals/{journal}/approve:
+    post:
+      tags: [Finance]
+      summary: Approve submitted journal (self-approval blocked)
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: journal, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: Approved }, '422': { description: Invalid state or self-approval } }
+  /finance/journals/{journal}/post:
+    post:
+      tags: [Finance]
+      summary: Post journal to the general ledger (idempotent, balanced, period-gated)
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: journal, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: Posted }, '422': { description: Unbalanced / closed period / already posted } }
+  /finance/journals/{journal}/reverse:
+    post:
+      tags: [Finance]
+      summary: Reverse a posted journal via a posted counter-entry
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: journal, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: Reversal journal }, '422': { description: Not posted or already reversed } }
+  /finance/ledger:
+    get:
+      tags: [Finance]
+      summary: General ledger for an account with running balance
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: account_id, in: query, required: true, schema: { type: integer } }
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+      responses:
+        '200': { description: Ledger, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+  /finance/reports/trial-balance:
+    get:
+      tags: [Finance]
+      summary: Trial balance (must net to zero)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Trial balance, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+  /finance/payables:
+    get:
+      tags: [Finance]
+      summary: Supplier invoices
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Invoices, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+  /finance/payables/{invoice}/post:
+    post:
+      tags: [Finance]
+      summary: Post supplier invoice to GL (Dr expense lines, Cr AP)
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: invoice, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: Posted }, '422': { description: Invalid state } }
+  /finance/receivables:
+    get:
+      tags: [Finance]
+      summary: Customer invoices
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Invoices, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+  /finance/receivables/{invoice}/post:
+    post:
+      tags: [Finance]
+      summary: Post customer invoice to GL (Dr AR, Cr revenue + tax)
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: invoice, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: Posted }, '422': { description: Invalid state } }
+  /finance/payments:
+    post:
+      tags: [Finance]
+      summary: Record a payment and allocate to a document
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [direction, method, amount, payment_date, document_type, document_id]
+              properties:
+                direction: { type: string, enum: [in, out] }
+                method: { type: string }
+                amount: { type: number }
+                payment_date: { type: string, format: date }
+                bank_account_id: { type: integer }
+                document_type: { type: string, enum: [supplier_invoice, customer_invoice, expense_claim] }
+                document_id: { type: integer }
+      responses:
+        '201': { description: Payment recorded and allocated }
+        '422': { description: Overpayment or invalid document }
 components:
   securitySchemes:
     bearerAuth:

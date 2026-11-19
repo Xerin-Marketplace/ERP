@@ -4,5 +4,6 @@
     "Identity": true,
     "Employee": true,
     "Ticketing": true,
-    "HR": true
+    "HR": true,
+    "Finance": true
 }

@@ -40,6 +40,7 @@ class DatabaseSeeder extends Seeder
             \Modules\Employee\Database\Seeders\EmployeeDatabaseSeeder::class,
             \Modules\Ticketing\Database\Seeders\TicketingDatabaseSeeder::class,
             \Modules\HR\Database\Seeders\HRDatabaseSeeder::class,
+            \Modules\Finance\Database\Seeders\FinanceDatabaseSeeder::class,
         ]);
     }
 }
