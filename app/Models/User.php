@@ -37,7 +37,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function branch(): BelongsTo
     {
-        return $this->belongsTo(Branch::class);
+        return $this->belongsTo(\Modules\Organization\Models\Branch::class);
     }
 
     public function isActive(): bool

@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $hq = \App\Models\Branch::firstOrCreate(
+        $hq = \Modules\Organization\Models\Branch::firstOrCreate(
             ['code' => 'HQ'],
             ['name' => 'Head Office', 'city' => 'Dar es Salaam', 'is_active' => true]
         );
@@ -33,6 +33,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $this->call(RolePermissionSeeder::class);
+        $this->call([RolePermissionSeeder::class, \Modules\Organization\Database\Seeders\OrganizationDatabaseSeeder::class]);
     }
 }
