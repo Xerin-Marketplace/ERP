@@ -19,6 +19,7 @@ tags:
   - name: Auth
   - name: Organization
   - name: Identity
+  - name: Employee
 
 paths:
   /health:
@@ -670,6 +671,195 @@ paths:
       responses:
         '200': { description: Roles, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
 
+  /employees:
+    get:
+      tags: [Employee]
+      summary: Scoped employee directory
+      operationId: listEmployees
+      description: Results are scoped by the caller's permission and organizational placement.
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string, enum: [onboarding, active, suspended, separated] } }
+        - { name: company_id, in: query, schema: { type: integer } }
+        - { name: branch_id, in: query, schema: { type: integer } }
+        - { name: department_id, in: query, schema: { type: integer } }
+        - { name: position_id, in: query, schema: { type: integer } }
+        - { name: employment_type, in: query, schema: { type: string } }
+        - { name: per_page, in: query, schema: { type: integer, maximum: 100 } }
+      responses:
+        '200': { description: Paginated employees, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Employee]
+      summary: Create an employee record
+      operationId: createEmployee
+      description: Auto-generates `XERIN-EMP-YYYY-######`. Placement is validated against Organization rules.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EmployeeInput' }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /employees/dashboard:
+    get:
+      tags: [Employee]
+      summary: Workforce metrics (scoped)
+      operationId: employeeDashboard
+      responses:
+        '200': { description: Metrics + distributions, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+
+  /employees/{employee}:
+    get:
+      tags: [Employee]
+      summary: Employee profile
+      operationId: getEmployee
+      parameters: [{ name: employee, in: path, required: true, schema: { type: integer } }]
+      responses:
+        '200': { description: Profile + placement + contract, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    put:
+      tags: [Employee]
+      summary: Update employee (governed fields only)
+      operationId: updateEmployee
+      parameters: [{ name: employee, in: path, required: true, schema: { type: integer } }]
+      responses:
+        '200': { description: Updated, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+
+  /employees/{employee}/documents:
+    get:
+      tags: [Employee]
+      summary: List employee documents
+      operationId: listEmployeeDocuments
+      parameters: [{ name: employee, in: path, required: true, schema: { type: integer } }]
+      responses:
+        '200': { description: Documents, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+    post:
+      tags: [Employee]
+      summary: Upload an employee document (private storage)
+      operationId: uploadEmployeeDocument
+      parameters: [{ name: employee, in: path, required: true, schema: { type: integer } }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [category_id, title, file]
+              properties:
+                category_id: { type: integer }
+                title: { type: string }
+                expires_at: { type: string, format: date }
+                file: { type: string, format: binary }
+      responses:
+        '201': { description: Uploaded, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+
+  /employees/{employee}/history:
+    get:
+      tags: [Employee]
+      summary: Employee event timeline
+      operationId: employeeHistory
+      parameters: [{ name: employee, in: path, required: true, schema: { type: integer } }]
+      responses:
+        '200': { description: Events, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+
+  /employees/{employee}/reporting:
+    get:
+      tags: [Employee]
+      summary: Manager, direct reports and chain
+      operationId: employeeReporting
+      parameters: [{ name: employee, in: path, required: true, schema: { type: integer } }]
+      responses:
+        '200': { description: Reporting structure, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+
+  /employees/{employee}/transfer:
+    post:
+      tags: [Employee]
+      summary: Request a transfer (approval workflow)
+      operationId: requestTransfer
+      parameters: [{ name: employee, in: path, required: true, schema: { type: integer } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type]
+              properties:
+                type: { type: string, enum: [branch, department, company, position, manager, temporary] }
+                to_company_id: { type: integer }
+                to_branch_id: { type: integer }
+                to_department_id: { type: integer }
+                to_position_id: { type: integer }
+                to_manager_employee_id: { type: integer }
+                reason: { type: string }
+                effective_date: { type: string, format: date }
+      responses:
+        '201': { description: Requested — pending approval, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /employees/{employee}/promotion:
+    post:
+      tags: [Employee]
+      summary: Request a governed employment change
+      operationId: requestChange
+      parameters: [{ name: employee, in: path, required: true, schema: { type: integer } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, new_values]
+              properties:
+                type: { type: string, enum: [promotion, demotion, position_change, grade_change, type_change, confirmation, contract_renewal, salary_reference] }
+                new_values: { type: object }
+                reason: { type: string }
+                effective_date: { type: string, format: date }
+      responses:
+        '201': { description: Requested, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+
+  /employees/{employee}/offboarding:
+    post:
+      tags: [Employee]
+      summary: Initiate separation (approved completion revokes ERP access via Identity)
+      operationId: initiateOffboarding
+      parameters: [{ name: employee, in: path, required: true, schema: { type: integer } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason, separation_date]
+              properties:
+                reason: { type: string, enum: [resignation, termination, retirement, contract_expiry, death, other] }
+                separation_date: { type: string, format: date }
+                notice_date: { type: string, format: date }
+                handover_notes: { type: string }
+      responses:
+        '201': { description: Initiated — pending approval, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /employee-positions:
+    get:
+      tags: [Employee]
+      summary: Job positions
+      operationId: listPositions
+      responses:
+        '200': { description: Positions, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+
+  /employee-grades:
+    get:
+      tags: [Employee]
+      summary: Job grades
+      operationId: listGrades
+      responses:
+        '200': { description: Grades, content: { application/json: { schema: { $ref: '#/components/schemas/Envelope' } } } }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -797,6 +987,25 @@ components:
         employment_type: { type: string }
         effective_start: { type: string, format: date }
         role: { type: string, description: "Protected roles (super-admin) are rejected" }
+
+    EmployeeInput:
+      type: object
+      required: [first_name, last_name, employment_type]
+      properties:
+        first_name: { type: string, maxLength: 100 }
+        middle_name: { type: string, maxLength: 100 }
+        last_name: { type: string, maxLength: 100 }
+        employment_type: { type: string, enum: [permanent, contract, temporary, probation, intern, part_time, consultant] }
+        employee_number: { type: string, description: "Optional — auto-generated when omitted" }
+        user_id: { type: integer, nullable: true, description: "Link to a provisioned ERP account" }
+        company_id: { type: integer, nullable: true }
+        branch_id: { type: integer, nullable: true }
+        department_id: { type: integer, nullable: true }
+        job_position_id: { type: integer, nullable: true }
+        manager_employee_id: { type: integer, nullable: true }
+        start_date: { type: string, format: date }
+        official_email: { type: string, format: email }
+        phone: { type: string, maxLength: 30 }
 
   responses:
     Unauthenticated:

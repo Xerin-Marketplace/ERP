@@ -82,4 +82,11 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasOne(\Modules\Identity\Models\RegistrationApplication::class, 'provisioned_user_id');
     }
+
+    /* ------------------- Employee module relations ------------------- */
+
+    public function employee(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(\Modules\Employee\Models\Employee::class);
+    }
 }

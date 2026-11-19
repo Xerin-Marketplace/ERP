@@ -37,6 +37,7 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             \Modules\Organization\Database\Seeders\OrganizationDatabaseSeeder::class,
             \Modules\Identity\Database\Seeders\IdentityDatabaseSeeder::class,
+            \Modules\Employee\Database\Seeders\EmployeeDatabaseSeeder::class,
         ]);
     }
 }

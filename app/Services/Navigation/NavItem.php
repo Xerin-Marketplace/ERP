@@ -10,7 +10,7 @@ class NavItem
         public string $icon,
         public ?string $route = null,
         public ?string $url = null,
-        public ?string $permission = null,
+        public string|array|null $permission = null,
         public string $group = 'Menu',
         public int $order = 100,
         public bool $visible = true,
@@ -34,6 +34,14 @@ class NavItem
             return false;
         }
 
-        return ! $this->permission || auth()->user()?->can($this->permission);
+        if (! $this->permission) {
+            return true;
+        }
+
+        $user = auth()->user();
+
+        return is_array($this->permission)
+            ? (bool) $user?->canAny($this->permission)
+            : (bool) $user?->can($this->permission);
     }
 }

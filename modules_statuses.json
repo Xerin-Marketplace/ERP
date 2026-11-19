@@ -1,5 +1,6 @@
 {
     "Core": true,
     "Organization": true,
-    "Identity": true
+    "Identity": true,
+    "Employee": true
 }
