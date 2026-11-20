@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Modules\Organization\Models\Branch;
 use Modules\Organization\Models\Company;
+use Modules\Organization\Models\Department;
 use Modules\Organization\Models\DepartmentDefinition;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -118,6 +119,26 @@ class OrganizationDatabaseSeeder extends Seeder
         ['code' => 'CS', 'name' => 'Customer Service'],
         ['code' => 'LEGAL', 'name' => 'Legal & Compliance'],
         ['code' => 'PMO', 'name' => 'Project Management'],
+        ['code' => 'WH', 'name' => 'Warehouse Operations'],
+        ['code' => 'CUS', 'name' => 'Customs & Clearing'],
+        ['code' => 'FLT', 'name' => 'Fleet & Delivery'],
+        ['code' => 'QA', 'name' => 'Quality & Safety'],
+    ];
+
+    /** Departments seeded into every branch: [definition_code, name, description] */
+    public const DEFAULT_DEPARTMENTS = [
+        ['OPS',   'Operations',           'Branch operations coordination and service execution'],
+        ['WH',    'Warehouse Operations', 'Receiving, storage, picking, packing and dispatch'],
+        ['CUS',   'Customs & Clearing',   'Import/export documentation and customs clearance'],
+        ['FLT',   'Fleet & Delivery',     'Drivers, vehicles, last-mile delivery and returns'],
+        ['SALES', 'Sales & Commercial',   'Sales pipeline, quotations, contracts and agents'],
+        ['CS',    'Customer Service',     'Customer support, complaints and claims handling'],
+        ['FIN',   'Finance & Accounting', 'Invoicing, payments, accounts and reporting'],
+        ['PROC',  'Procurement',          'Supplier management and purchasing'],
+        ['HR',    'HR & Administration',  'People, payroll and office administration'],
+        ['IT',    'Information Technology','Systems, infrastructure and user support'],
+        ['QA',    'Quality & Safety',     'Quality assurance, HSE and compliance audits'],
+        ['LEGAL', 'Legal & Compliance',   'Contracts, regulatory and company secretarial'],
     ];
 
     public function run(): void
@@ -212,6 +233,24 @@ class OrganizationDatabaseSeeder extends Seeder
                     ]))->save();
                 }
             }
+            /* Default departments per branch — idempotent on {DEF}-{BRANCH} codes */
+            foreach (Branch::all() as $branch) {
+                foreach (self::DEFAULT_DEPARTMENTS as [$defCode, $name, $desc]) {
+                    Department::firstOrCreate(
+                        ['code' => "{$defCode}-{$branch->code}"],
+                        [
+                            'department_definition_id' => DepartmentDefinition::where('code', $defCode)->value('id'),
+                            'name' => $name,
+                            'description' => $desc,
+                            'company_id' => $branch->company_id ?: $group->id,
+                            'branch_id' => $branch->id,
+                            'status' => \Modules\Organization\Enums\EntityStatus::Active,
+                            'effective_date' => now()->toDateString(),
+                        ]
+                    );
+                }
+            }
+
         });
     }
 }

@@ -262,7 +262,7 @@ class OrganizationModuleTest extends TestCase
             'company_id' => $company->id, 'branch_id' => $b2->id,
         ], $admin->id);
 
-        $this->assertSame(2, Department::where('department_definition_id', $def->id)->count());
+        $this->assertSame(2, Department::where('department_definition_id', $def->id)->whereIn('code', ['HR-HQ','HR-DOD'])->count());
     }
 
     public function test_department_hierarchy_and_circular_prevention(): void
