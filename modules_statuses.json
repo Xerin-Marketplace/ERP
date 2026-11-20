@@ -8,5 +8,6 @@
     "Finance": true,
     "SystemAdministration": true,
     "Reception": true,
-    "Commercial": true
+    "Commercial": true,
+    "Cargo": true
 }

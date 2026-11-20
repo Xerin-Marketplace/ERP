@@ -43,6 +43,7 @@ class DatabaseSeeder extends Seeder
             \Modules\Finance\Database\Seeders\FinanceDatabaseSeeder::class,
             \Modules\SystemAdministration\Database\Seeders\SystemAdministrationDatabaseSeeder::class,
             \Modules\Commercial\Database\Seeders\CommercialDatabaseSeeder::class,
+            \Modules\Cargo\Database\Seeders\CargoDatabaseSeeder::class,
         ]);
     }
 }
