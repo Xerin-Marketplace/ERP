@@ -166,6 +166,7 @@ class OrganizationDatabaseSeeder extends Seeder
             $group = Company::firstOrCreate(
                 ['code' => 'XG'],
                 [
+                    'uuid' => (string) \Illuminate\Support\Str::uuid(),
                     'legal_name' => 'Xerin Group Company Limited',
                     'trading_name' => 'Xerin Group',
                     'company_type' => 'holding',

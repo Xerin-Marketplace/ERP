@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
     {
         $hq = \Modules\Organization\Models\Branch::firstOrCreate(
             ['code' => 'HQ'],
-            ['name' => 'Head Office', 'city' => 'Dar es Salaam', 'is_active' => true]
+            ['name' => 'Head Office', 'city' => 'Dar es Salaam', 'status' => 'active']
         );
 
         User::updateOrCreate(
