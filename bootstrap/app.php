@@ -33,6 +33,9 @@ return Application::configure(basePath: dirname(__DIR__))
         if (class_exists(\Modules\SystemAdministration\Http\Middleware\EnforceReadOnlyMode::class)) {
             $middleware->appendToGroup('web', \Modules\SystemAdministration\Http\Middleware\EnforceReadOnlyMode::class);
         }
+
+        // EN+SW bilingual foundation: resolves user/system locale per request.
+        $middleware->appendToGroup('web', \App\Http\Middleware\SetLocale::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

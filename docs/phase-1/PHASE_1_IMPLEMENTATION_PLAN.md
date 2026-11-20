@@ -1,0 +1,2 @@
+# Phase 1 Implementation Plan
+1. Reviewed Phase 0 deliverables (docs/phase-0/) — approved. 2. Verified git baseline (main @ 86a6212). 3. Mapped existing functionality → gap list. 4. Gaps found: i18n foundation, user preferences, phase-1 docs. 5. Implemented: user_preferences migration, SetLocale middleware, lang/en+sw packs, /locale route, header selector, 4 tests. 6. Full regression 306/306. 7. This report set.

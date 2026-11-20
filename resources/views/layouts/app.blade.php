@@ -156,6 +156,16 @@
                             {{ $header ?? __('Dashboard') }}
                         </span>
                     </nav>
+
+                    <!-- Language selector (EN/SW) -->
+                    <form method="POST" action="{{ route('locale.set') }}" class="ml-auto flex items-center">
+                        @csrf
+                        <select name="locale" onchange="this.form.submit()"
+                                class="rounded-sm border-gray-200 text-xs text-gray-600 py-1 pl-2 pr-6 focus:border-xerin-500 focus:ring-xerin-500">
+                            <option value="en" @selected(app()->getLocale() === 'en')>EN</option>
+                            <option value="sw" @selected(app()->getLocale() === 'sw')>SW</option>
+                        </select>
+                    </form>
                 </header>
 
                 <!-- Page Content -->

@@ -53,6 +53,14 @@ Route::middleware(['auth', 'verified', 'account.active'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // Language preference (EN/SW foundation)
+    Route::post('/locale', function (\Illuminate\Http\Request $request) {
+        $locale = $request->validate(['locale' => 'required|string|in:en,sw,fr'])['locale'];
+        $request->session()->put('locale', $locale);
+        $request->user()->profile()?->update(['preferred_language' => $locale]);
+        return back();
+    })->name('locale.set');
+
     // System administration — permission-protected
     Route::get('/admin/system', [SystemController::class, 'index'])
         ->middleware('permission:system.view')

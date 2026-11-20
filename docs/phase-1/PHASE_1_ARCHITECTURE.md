@@ -1,0 +1,2 @@
+# Phase 1 Architecture
+Laravel 12 modular monolith (nwidart). Modules: Core, Organization, Identity, Employee, HR, Finance, Ticketing, Reception, SystemAdministration. RBAC: Spatie (253 perms). Audit: AuditLog + Auditable trait. i18n: SetLocale → profile pref → session → system.locale → app.locale; packs in lang/{locale}/. Settings: SettingCatalog (global→branch→user layered). Branch isolation: service-level scopeFor/scopeBranch + permission middleware.
