@@ -34,14 +34,14 @@ class ControlCenterController extends Controller
                 'modules_disabled' => count(\Module::allDisabled()),
                 'sessions_active' => $health->activeSessions(),
                 'failed_logins_24h' => class_exists(LoginHistory::class)
-                    ? LoginHistory::where('success', false)->where('created_at', '>=', now()->subDay())->count() : 0,
+                    ? LoginHistory::where('event', 'failed')->where('created_at', '>=', now()->subDay())->count() : 0,
             ],
             'health' => $health->probes(),
             'security' => [
                 'recent_events' => class_exists(AccountSecurityEvent::class)
                     ? AccountSecurityEvent::with('user:id,name')->latest()->limit(8)->get() : collect(),
                 'failed_logins' => class_exists(LoginHistory::class)
-                    ? LoginHistory::where('success', false)->latest()->limit(8)->get() : collect(),
+                    ? LoginHistory::where('event', 'failed')->latest()->limit(8)->get() : collect(),
             ],
             'activity' => AuditLog::with('user:id,name')->latest()->limit(10)->get(),
             'flags' => FeatureFlag::count(),
