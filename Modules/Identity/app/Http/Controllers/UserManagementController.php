@@ -59,8 +59,11 @@ class UserManagementController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:30'],
+            'company_id' => ['nullable', 'exists:companies,id'],
             'branch_id' => ['nullable', 'exists:branches,id'],
+            'department_id' => ['nullable', 'exists:departments,id'],
             'role' => ['nullable', 'exists:roles,name'],
+            'activation_mode' => ['required', 'in:invite,manual'],
         ]);
 
         if ($data['role'] ?? null) {
@@ -85,18 +88,51 @@ class UserManagementController extends Controller
             if ($data['role'] ?? null) {
                 $user->assignRole($data['role']);
             }
+            if (($data['company_id'] ?? null) || ($data['department_id'] ?? null)) {
+                $branch = $data['branch_id'] ?? null ? \Modules\Organization\Models\Branch::find($data['branch_id']) : null;
+                $companyId = $data['company_id'] ?? $branch?->company_id
+                    ?? \Modules\Organization\Models\Department::find($data['department_id'] ?? 0)?->company_id;
+                if ($companyId) {
+                    $placement = $this->assignments->validatePlacement(
+                        $companyId, $data['branch_id'] ?? null, $data['department_id'] ?? null);
+                    $this->assignments->assign($user, $placement, $request->user()->id, type: 'new');
+                }
+            }
 
-            ['token' => $token] = $this->invitations->generate($user, null, $request->user()->id);
-            $user->notify(new AccountActivationInvitation($token));
-
-            app(\App\Services\AuditService::class)->log('user.invited', $user,
-                new: ['email' => $user->email, 'role' => $data['role'] ?? null]);
+            if (($data['activation_mode'] ?? 'invite') === 'invite') {
+                ['token' => $token] = $this->invitations->generate($user, null, $request->user()->id);
+                $user->notify(new AccountActivationInvitation($token));
+                app(\App\Services\AuditService::class)->log('user.invited', $user,
+                    new: ['email' => $user->email, 'role' => $data['role'] ?? null]);
+            } else {
+                app(\App\Services\AuditService::class)->log('user.created_manual', $user,
+                    new: ['email' => $user->email, 'mode' => 'manual']);
+            }
 
             return $user;
         });
 
-        return redirect()->route('identity.users.show', $user)
-            ->with('success', "Invitation sent to {$user->email}.");
+        return redirect()->route('identity.users.show', $user)->with('success',
+            ($data['activation_mode'] ?? 'invite') === 'invite'
+                ? "Invitation sent to {$user->email}."
+                : "User created as pending — verify & activate from this page.");
+    }
+
+    /** Admin marks the email verified and activates the account — no email link needed. */
+    public function verifyActivate(User $user, Request $request)
+    {
+        abort_unless($request->user()->can('users.activate'), 403);
+        $this->lifecycle->verifyAndActivate($user, $request->user()->id);
+        return back()->with('success', "{$user->email} verified & activated.");
+    }
+
+    /** Soft-delete a user (self & super-admin protected). */
+    public function destroy(User $user, Request $request)
+    {
+        abort_unless($request->user()->can('users.delete'), 403);
+        $this->lifecycle->delete($user, $request->user()->id, $request->input('reason'));
+        return redirect()->route('identity.users.index')
+            ->with('success', "Account {$user->email} deleted.");
     }
 
     /** Admin-triggered password reset via a fresh activation link. */
@@ -233,6 +269,7 @@ class UserManagementController extends Controller
 
         $data = $request->validate([
             'company_id' => ['required', 'exists:companies,id'],
+            'company_id' => ['nullable', 'exists:companies,id'],
             'branch_id' => ['nullable', 'exists:branches,id'],
             'department_id' => ['nullable', 'exists:departments,id'],
             'position' => ['nullable', 'string', 'max:150'],

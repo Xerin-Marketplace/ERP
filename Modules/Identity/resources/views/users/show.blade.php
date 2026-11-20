@@ -144,9 +144,13 @@
 
                 @if ($user->status !== \App\Enums\AccountStatus::Active)
                     @can('users.activate')
+                        <form method="POST" action="{{ route('identity.users.verify-activate', $user) }}">
+                            @csrf
+                            <button class="w-full rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-500">Verify email &amp; activate</button>
+                        </form>
                         <form method="POST" action="{{ route('identity.users.activate', $user) }}">
                             @csrf
-                            <button class="w-full rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-500">Activate account</button>
+                            <button class="w-full rounded-md bg-green-100 px-4 py-2 text-sm font-medium text-green-800 hover:bg-green-200">Activate (already verified)</button>
                         </form>
                     @endcan
                 @endif

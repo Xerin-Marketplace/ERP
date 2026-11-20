@@ -28,7 +28,7 @@ class IdentityDatabaseSeeder extends Seeder
         'registration.provision',
         'users.view', 'users.create', 'users.update', 'users.suspend',
         'users.activate', 'users.deactivate', 'users.sessions.revoke',
-        'users.invite', 'users.reset_password',
+        'users.invite', 'users.reset_password', 'users.delete',
         'users.assignments.view', 'users.assignments.manage',
         'users.assign_roles', 'users.assign_permissions',
         'roles.view', 'roles.create', 'roles.update', 'roles.delete', 'roles.assign',
@@ -65,7 +65,7 @@ class IdentityDatabaseSeeder extends Seeder
         ],
         'group-administrator' => [
             'identity.view', 'registration.view', 'users.view', 'roles.view',
-            'users.assign_roles', 'users.invite', 'users.reset_password',
+            'users.assign_roles', 'users.invite', 'users.reset_password', 'users.delete', 'users.delete',
             'permissions.view', 'access.audit.view', 'identity.audit.view',
         ],
         'company-administrator' => [

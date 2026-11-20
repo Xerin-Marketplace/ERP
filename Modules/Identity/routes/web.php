@@ -67,6 +67,10 @@ Route::middleware(['web', 'auth', 'verified', 'account.active'])
             ->name('users.suspend')->middleware('permission:users.suspend');
         Route::post('users/{user}/activate', [UserManagementController::class, 'activate'])
             ->name('users.activate')->middleware('permission:users.activate');
+        Route::post('users/{user}/verify-activate', [UserManagementController::class, 'verifyActivate'])
+            ->name('users.verify-activate')->middleware('permission:users.activate');
+        Route::delete('users/{user}', [UserManagementController::class, 'destroy'])
+            ->name('users.destroy')->middleware('permission:users.delete');
         Route::post('users/{user}/deactivate', [UserManagementController::class, 'deactivate'])
             ->name('users.deactivate')->middleware('permission:users.deactivate');
         Route::post('users/{user}/revoke-sessions', [UserManagementController::class, 'revokeSessions'])

@@ -16,6 +16,40 @@ class UserLifecycleService
 {
     public function __construct(private AuditService $audit) {}
 
+    /** Mark email verified + activate — for admin-verified accounts that skip the email link. */
+    public function verifyAndActivate(User $user, int $actorId): User
+    {
+        return DB::transaction(function () use ($user, $actorId) {
+            if (! $user->email_verified_at) {
+                $user->forceFill(['email_verified_at' => now()])->save();
+            }
+            if ($user->status !== \App\Enums\AccountStatus::Active) {
+                $user = $this->activate($user, $actorId);
+            }
+            $this->audit->log('user.verified_activated', $user, metadata: ['actor_id' => $actorId]);
+            return $user;
+        });
+    }
+
+    /** Soft-delete a user after revoking all access. Self + super-admin protected. */
+    public function delete(User $user, int $actorId, ?string $reason = null): void
+    {
+        abort_if($user->id === $actorId, 422, 'You cannot delete your own account.');
+        abort_if($user->hasRole('super-admin'), 422, 'super-admin accounts cannot be deleted.');
+        DB::transaction(function () use ($user, $actorId, $reason) {
+            $this->revokeAccess($user, $actorId, 'deleted');
+            $user->update(['status' => \App\Enums\AccountStatus::Deactivated]);
+            $this->audit->log('user.deleted', $user,
+                metadata: ['actor_id' => $actorId, 'reason' => $reason]);
+            $user->securityEvents()->create([
+                'type' => 'account_deleted', 'severity' => 'warning',
+                'metadata' => ['by' => $actorId, 'reason' => $reason],
+                'ip_address' => request()->ip(),
+            ]);
+            $user->delete();
+        });
+    }
+
     public function activate(User $user, int $actorId): User
     {
         return $this->transition($user, AccountStatus::Active, $actorId, 'user.activated');
