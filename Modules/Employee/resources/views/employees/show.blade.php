@@ -10,37 +10,88 @@
         ];
     @endphp
 
-    <div class="mb-4 flex flex-wrap gap-2 border-b border-gray-200">
+    @php
+        $initials = strtoupper(mb_substr($employee->personal?->first_name ?? 'E', 0, 1).mb_substr($employee->personal?->last_name ?? '', 0, 1));
+        $statusStyle = [
+            'active' => 'bg-green-100 text-green-700 ring-green-200',
+            'onboarding' => 'bg-blue-100 text-blue-700 ring-blue-200',
+            'on_probation' => 'bg-indigo-100 text-indigo-700 ring-indigo-200',
+            'on_leave' => 'bg-purple-100 text-purple-700 ring-purple-200',
+            'suspended' => 'bg-amber-100 text-amber-700 ring-amber-200',
+            'resigned' => 'bg-gray-100 text-gray-600 ring-gray-200',
+            'terminated' => 'bg-red-100 text-red-700 ring-red-200',
+            'pending_approval' => 'bg-sky-100 text-sky-700 ring-sky-200',
+        ][$employee->status] ?? 'bg-gray-100 text-gray-500 ring-gray-200';
+        $dotColor = [
+            'active' => 'bg-green-500', 'onboarding' => 'bg-blue-500', 'on_probation' => 'bg-indigo-500',
+            'on_leave' => 'bg-purple-500', 'suspended' => 'bg-amber-500', 'resigned' => 'bg-gray-400',
+            'terminated' => 'bg-red-500', 'pending_approval' => 'bg-sky-500',
+        ][$employee->status] ?? 'bg-gray-400';
+    @endphp
+
+    {{-- Profile header card --}}
+    <div class="mb-5 rounded-sm border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div class="h-1.5 bg-gradient-to-r from-xerin-600 via-xerin-500 to-xerin-400"></div>
+        <div class="flex flex-wrap items-center gap-4 p-5">
+            <span class="flex h-14 w-14 items-center justify-center rounded-full bg-xerin-100 text-lg font-bold text-xerin-700 ring-2 ring-xerin-200 shrink-0">{{ $initials }}</span>
+            <div class="min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <h2 class="text-lg font-bold text-gray-900 truncate">{{ $employee->full_name }}</h2>
+                    <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 {{ $statusStyle }}">
+                        <i class="w-1.5 h-1.5 rounded-full {{ $dotColor }}"></i>{{ ucwords(str_replace('_', ' ', $employee->status)) }}
+                    </span>
+                </div>
+                <p class="mt-0.5 text-xs text-gray-500">
+                    <span class="font-mono">{{ $employee->employee_number }}</span>
+                    <span class="mx-1.5 text-gray-300">·</span>{{ $employee->position?->title ?? 'No position' }}
+                    <span class="mx-1.5 text-gray-300">·</span>{{ $employee->branch?->name ?? '—' }} / {{ $employee->department?->name ?? '—' }}
+                </p>
+            </div>
+            <div class="ml-auto flex items-center gap-2">
+                @can('employee.update')
+                    <a href="{{ route('employee.edit', $employee) }}"
+                       class="rounded-sm border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition">Edit Profile</a>
+                @endcan
+                @canany(['employee.update', 'employee.suspend', 'employee.terminate', 'employee.approve'])
+                    <div x-data="{ open: false }" class="relative">
+                        <button @click="open = !open"
+                                class="inline-flex items-center gap-1.5 rounded-sm bg-xerin-600 px-4 py-2 text-sm font-semibold text-white hover:bg-xerin-700 transition">
+                            Change Status
+                            <svg class="w-3.5 h-3.5 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                            </svg>
+                        </button>
+                        <div x-show="open" x-cloak @click.away="open = false"
+                             x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+                             class="absolute right-0 z-20 mt-2 w-80 rounded-sm border border-gray-200 bg-white p-4 shadow-xl">
+                            <form method="POST" action="{{ route('employee.lifecycle.transition', $employee) }}">
+                                @csrf
+                                <label class="block text-xs font-medium text-gray-500 mb-1">New status</label>
+                                <select name="status" required class="w-full rounded-sm border-gray-300 text-sm mb-2">
+                                    @foreach (['active','on_probation','on_leave','suspended','resigned','terminated','pending_approval'] as $s)
+                                        <option value="{{ $s }}" @if($employee->status === $s) disabled @endif>{{ ucwords(str_replace('_',' ',$s)) }}</option>
+                                    @endforeach
+                                </select>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Reason (required, audited)</label>
+                                <textarea name="reason" required rows="2" class="w-full rounded-sm border-gray-300 text-sm mb-2"></textarea>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Effective date</label>
+                                <input type="date" name="effective_at" class="w-full rounded-sm border-gray-300 text-sm mb-3">
+                                <button type="submit" class="w-full rounded-sm bg-xerin-600 px-3 py-2 text-sm font-semibold text-white hover:bg-xerin-700">Apply Transition</button>
+                            </form>
+                        </div>
+                    </div>
+                @endcanany
+            </div>
+        </div>
+    </div>
+
+    {{-- Tab bar --}}
+    <div class="mb-4 flex flex-wrap gap-1 rounded-sm border border-gray-200 bg-white p-1.5 shadow-sm overflow-x-auto">
         @foreach ($tabs as $key => $label)
             <a href="{{ route('employee.show', [$employee, 'tab' => $key]) }}"
-               class="px-3 py-2 text-sm font-medium {{ $tab === $key ? 'border-b-2 border-xerin-600 text-xerin-700' : 'text-gray-500 hover:text-gray-700' }}">{{ $label }}</a>
+               class="rounded-sm px-3 py-1.5 text-sm font-medium whitespace-nowrap transition
+                      {{ $tab === $key ? 'bg-xerin-600 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700' }}">{{ $label }}</a>
         @endforeach
-        <span class="flex-1"></span>
-        @canany(['employee.update', 'employee.suspend', 'employee.terminate', 'employee.approve'])
-            <div x-data="{ open: false }" class="relative">
-                <button @click="open = !open" class="px-3 py-2 text-sm font-semibold text-xerin-700 hover:underline">Change status</button>
-                <div x-show="open" x-cloak @click.away="open = false"
-                     class="absolute right-0 z-10 mt-1 w-80 rounded-sm border border-gray-200 bg-white p-4 shadow-lg">
-                    <form method="POST" action="{{ route('employee.lifecycle.transition', $employee) }}">
-                        @csrf
-                        <label class="block text-xs font-medium text-gray-500 mb-1">New status</label>
-                        <select name="status" required class="w-full rounded-sm border-gray-300 text-sm mb-2">
-                            @foreach (['active','on_probation','on_leave','suspended','resigned','terminated','pending_approval'] as $s)
-                                <option value="{{ $s }}" @if($employee->status === $s) disabled @endif>{{ ucwords(str_replace('_',' ',$s)) }}</option>
-                            @endforeach
-                        </select>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Reason (required, audited)</label>
-                        <textarea name="reason" required rows="2" class="w-full rounded-sm border-gray-300 text-sm mb-2"></textarea>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Effective date</label>
-                        <input type="date" name="effective_at" class="w-full rounded-sm border-gray-300 text-sm mb-3">
-                        <button type="submit" class="w-full rounded-sm bg-xerin-600 px-3 py-2 text-sm font-semibold text-white hover:bg-xerin-700">Apply</button>
-                    </form>
-                </div>
-            </div>
-        @endcanany
-        @can('employee.update')
-            <a href="{{ route('employee.edit', $employee) }}" class="px-3 py-2 text-sm font-semibold text-xerin-700 hover:underline">Edit</a>
-        @endcan
     </div>
 
     @if ($tab === 'overview')
