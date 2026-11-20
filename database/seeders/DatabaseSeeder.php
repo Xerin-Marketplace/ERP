@@ -50,6 +50,9 @@ class DatabaseSeeder extends Seeder
             \Modules\Delivery\Database\Seeders\DeliveryDatabaseSeeder::class,
             \Modules\Portal\Database\Seeders\PortalDatabaseSeeder::class,
             \Modules\Sales\Database\Seeders\SalesDatabaseSeeder::class,
+            // Governance power-matrix — runs LAST so it picks up every
+            // permission defined by the module seeders above.
+            AdministrationRoleSeeder::class,
         ]);
     }
 }
