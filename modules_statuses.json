@@ -11,5 +11,6 @@
     "Commercial": true,
     "Cargo": true,
     "Shipment": true,
-    "Arrival": true
+    "Arrival": true,
+    "Delivery": true
 }
