@@ -258,7 +258,7 @@ class IdentityModuleTest extends TestCase
     {
         $admin = $this->admin();
         $admin->removeRole('super-admin');
-        $admin->givePermissionTo('role.assign');
+        $admin->givePermissionTo('roles.assign');
 
         $this->actingAs($admin)
             ->post("/identity/users/{$admin->id}/role", ['role' => 'employee'])

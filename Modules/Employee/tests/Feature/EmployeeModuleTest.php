@@ -94,7 +94,8 @@ class EmployeeModuleTest extends TestCase
         $e1 = $this->makeEmployee();
         $e2 = $this->makeEmployee();
 
-        $this->assertMatchesRegularExpression('/^XERIN-EMP-\d{4}-\d{6}$/', $e1->employee_number);
+        $code = $this->branch()->code;
+        $this->assertMatchesRegularExpression("/^EMP-{$code}-\d{6}$/", $e1->employee_number);
         $this->assertNotEquals($e1->employee_number, $e2->employee_number);
         $this->assertStringEndsWith('000001', $e1->employee_number);
         $this->assertStringEndsWith('000002', $e2->employee_number);
@@ -467,5 +468,84 @@ class EmployeeModuleTest extends TestCase
         $this->assertCount(9, JobGrade::all());
         $this->assertCount(11, DocumentCategory::all());
         $this->assertTrue(DocumentCategory::where('code', 'employment_contract')->first()->is_confidential);
+    }
+
+    /* ------------------- Phase 3: branch-scoped numbering ------------------- */
+
+    public function test_employee_numbers_are_scoped_per_branch(): void
+    {
+        $dxb = Branch::firstOrCreate(
+            ['company_id' => $this->company()->id, 'code' => 'DXB'],
+            ['name' => 'Dubai', 'status' => 'active']
+        );
+
+        $hqEmployee = $this->makeEmployee();
+        $dxbEmployee = $this->makeEmployee(['branch_id' => $dxb->id, 'department_id' => null]);
+
+        $this->assertStringStartsWith('EMP-HQ-', $hqEmployee->employee_number);
+        $this->assertStringStartsWith('EMP-DXB-', $dxbEmployee->employee_number);
+        $this->assertStringEndsWith('000001', $dxbEmployee->employee_number); // own sequence
+        $this->assertNotEquals($hqEmployee->employee_number, $dxbEmployee->employee_number);
+    }
+
+    public function test_employee_number_is_generated_server_side_not_from_input(): void
+    {
+        $admin = $this->admin();
+        $this->actingAs($admin)->post(route('employee.store'), [
+            'first_name' => 'A', 'last_name' => 'B',
+            'employment_type' => 'permanent',
+            'company_id' => $this->company()->id,
+            'branch_id' => $this->branch()->id,
+            'employee_number' => 'HACKED-999', // must be ignored
+        ]);
+
+        $this->assertDatabaseMissing('employees', ['employee_number' => 'HACKED-999']);
+    }
+
+    /* ------------------- Phase 3: lifecycle transitions ------------------- */
+
+    public function test_status_transition_is_audited_with_reason_and_actor(): void
+    {
+        $admin = $this->admin();
+        $admin->givePermissionTo('employee.suspend');
+        $e = $this->makeEmployee(['status' => 'active'], $admin);
+
+        $this->actingAs($admin)->post(route('employee.lifecycle.transition', $e), [
+            'status' => 'suspended',
+            'reason' => 'Disciplinary hold',
+        ])->assertSessionHas('success');
+
+        $e->refresh();
+        $this->assertSame('suspended', $e->status);
+        $this->assertDatabaseHas('employee_events', [
+            'employee_id' => $e->id,
+            'type' => 'status_changed',
+            'actor_user_id' => $admin->id,
+        ]);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'employee.status_changed']);
+    }
+
+    public function test_suspend_requires_suspend_permission(): void
+    {
+        $user = User::factory()->create(['status' => 'active']);
+        $user->assignRole('employee'); // only profile.update_own
+        $e = $this->makeEmployee();
+
+        $this->actingAs($user)->post(route('employee.lifecycle.transition', $e), [
+            'status' => 'suspended', 'reason' => 'x',
+        ])->assertForbidden();
+    }
+
+    /* ------------------- Phase 3: sensitive-field encryption ------------------- */
+
+    public function test_national_id_is_encrypted_at_rest(): void
+    {
+        $e = $this->makeEmployee();
+        app(EmployeeService::class)->update($e, ['national_id' => 'P1234567'], $this->admin()->id);
+
+        $raw = \Illuminate\Support\Facades\DB::table('employee_personal_details')
+            ->where('employee_id', $e->id)->value('national_id');
+        $this->assertNotSame('P1234567', $raw);
+        $this->assertSame('P1234567', $e->fresh()->personal->national_id); // decrypts on read
     }
 }

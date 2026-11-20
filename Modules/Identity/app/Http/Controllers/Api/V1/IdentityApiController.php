@@ -173,7 +173,7 @@ class IdentityApiController extends ApiController
 
     public function suspendUser(User $user, Request $request)
     {
-        abort_unless($request->user()->can('user.suspend'), 403);
+        abort_unless($request->user()->can('users.suspend'), 403);
         abort_if($user->id === $request->user()->id, 422, 'Cannot suspend your own account.');
         $request->validate(['reason' => ['nullable', 'string', 'max:500']]);
 
@@ -184,7 +184,7 @@ class IdentityApiController extends ApiController
 
     public function activateUser(User $user, Request $request)
     {
-        abort_unless($request->user()->can('user.activate'), 403);
+        abort_unless($request->user()->can('users.activate'), 403);
         $this->lifecycle->activate($user, $request->user()->id);
 
         return ApiResponse::success(['status' => $user->status->value], 'User activated.');

@@ -16,7 +16,12 @@ class SettingsService
     public function get(string $key, mixed $default = null): mixed
     {
         return Cache::rememberForever(self::CACHE_PREFIX.$key, function () use ($key, $default) {
-            $setting = SystemSetting::where('key', $key)->first();
+            try {
+                $setting = SystemSetting::where('key', $key)->first();
+            } catch (\Illuminate\Database\QueryException) {
+                // Table may not exist yet (fresh install, unmigrated test DB).
+                return $default;
+            }
 
             if (! $setting) {
                 return $default;

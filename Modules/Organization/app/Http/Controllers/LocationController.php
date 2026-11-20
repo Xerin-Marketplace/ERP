@@ -53,7 +53,7 @@ class LocationController extends Controller
 
     public function status(Request $request, Location $location)
     {
-        abort_unless($request->user()->can('location.update'), 403);
+        abort_unless($request->user()->can('organization.locations.update'), 403);
         $request->validate(['status' => ['required', \Illuminate\Validation\Rule::enum(EntityStatus::class)]]);
         $this->org->setLocationStatus($location, EntityStatus::from($request->input('status')));
 

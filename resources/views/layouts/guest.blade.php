@@ -6,7 +6,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
-        <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+        @include('partials.branding-head')
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -24,7 +24,8 @@
         <div class="min-h-screen flex flex-col sm:justify-center items-center px-4 pt-6 sm:pt-0 pb-6 bg-gray-100">
             <div>
                 <a href="/">
-                    <x-application-logo class="h-14 w-auto" />
+                    @php $__loginLogo = rescue(fn () => app(\Modules\SystemAdministration\Services\BrandingService::class)->currentUrl('logo_login') ?? app(\Modules\SystemAdministration\Services\BrandingService::class)->currentUrl('logo_primary'), null, report: false); @endphp
+                    <img src="{{ $__loginLogo ?? asset('xerin-logo.webp') }}" alt="{{ config('app.name') }}" class="h-14 w-auto object-contain">
                 </a>
             </div>
 

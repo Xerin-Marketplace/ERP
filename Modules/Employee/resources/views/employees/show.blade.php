@@ -15,6 +15,28 @@
                class="px-3 py-2 text-sm font-medium {{ $tab === $key ? 'border-b-2 border-xerin-600 text-xerin-700' : 'text-gray-500 hover:text-gray-700' }}">{{ $label }}</a>
         @endforeach
         <span class="flex-1"></span>
+        @canany(['employee.update', 'employee.suspend', 'employee.terminate', 'employee.approve'])
+            <div x-data="{ open: false }" class="relative">
+                <button @click="open = !open" class="px-3 py-2 text-sm font-semibold text-xerin-700 hover:underline">Change status</button>
+                <div x-show="open" x-cloak @click.away="open = false"
+                     class="absolute right-0 z-10 mt-1 w-80 rounded-sm border border-gray-200 bg-white p-4 shadow-lg">
+                    <form method="POST" action="{{ route('employee.lifecycle.transition', $employee) }}">
+                        @csrf
+                        <label class="block text-xs font-medium text-gray-500 mb-1">New status</label>
+                        <select name="status" required class="w-full rounded-sm border-gray-300 text-sm mb-2">
+                            @foreach (['active','on_probation','on_leave','suspended','resigned','terminated','pending_approval'] as $s)
+                                <option value="{{ $s }}" @if($employee->status === $s) disabled @endif>{{ ucwords(str_replace('_',' ',$s)) }}</option>
+                            @endforeach
+                        </select>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Reason (required, audited)</label>
+                        <textarea name="reason" required rows="2" class="w-full rounded-sm border-gray-300 text-sm mb-2"></textarea>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Effective date</label>
+                        <input type="date" name="effective_at" class="w-full rounded-sm border-gray-300 text-sm mb-3">
+                        <button type="submit" class="w-full rounded-sm bg-xerin-600 px-3 py-2 text-sm font-semibold text-white hover:bg-xerin-700">Apply</button>
+                    </form>
+                </div>
+            </div>
+        @endcanany
         @can('employee.update')
             <a href="{{ route('employee.edit', $employee) }}" class="px-3 py-2 text-sm font-semibold text-xerin-700 hover:underline">Edit</a>
         @endcan

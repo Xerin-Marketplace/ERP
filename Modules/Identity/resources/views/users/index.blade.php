@@ -26,6 +26,10 @@
             </select>
         </div>
         <button class="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800">Filter</button>
+        <a href="{{ route('identity.users.index', ['status' => 'suspended']) }}" class="rounded-md border border-amber-300 px-3 py-2 text-xs font-medium text-amber-700 hover:bg-amber-50">Suspended</a>
+        @can('users.create')
+            <a href="{{ route('identity.users.create') }}" class="ml-auto rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">+ Invite user</a>
+        @endcan
     </form>
 
     <div class="rounded-sm border border-gray-200 bg-white shadow-sm overflow-hidden">

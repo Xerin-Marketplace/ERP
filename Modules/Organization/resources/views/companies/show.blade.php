@@ -12,7 +12,7 @@
                     </div>
                     <div class="flex items-center gap-3">
                         @include('organization::partials.status-badge', ['status' => $company->status])
-                        @can('company.update')
+                        @can('organization.company.update')
                             <a href="{{ route('organization.companies.edit', $company) }}" class="text-xs font-medium text-indigo-600 hover:text-indigo-800">Edit</a>
                         @endcan
                     </div>
@@ -51,7 +51,7 @@
             <div class="rounded-sm border border-gray-200 bg-white">
                 <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                     <h3 class="text-sm font-semibold text-gray-900">Branches ({{ $company->branches->count() }})</h3>
-                    @can('branch.create')
+                    @can('organization.branches.create')
                         <a href="{{ route('organization.branches.create') }}" class="text-xs font-medium text-indigo-600">+ Add</a>
                     @endcan
                 </div>

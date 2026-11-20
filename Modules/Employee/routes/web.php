@@ -49,6 +49,7 @@ Route::middleware(['auth', 'verified', 'account.active'])->prefix('employee')->n
     Route::post('onboarding/tasks/{task}', [LifecycleController::class, 'updateTask'])->name('onboarding.task');
 
     Route::get('offboarding', [LifecycleController::class, 'offboardingIndex'])->name('offboarding.index');
+    Route::post('{employee}/status', [LifecycleController::class, 'transition'])->name('lifecycle.transition');
     Route::post('{employee}/offboarding', [LifecycleController::class, 'initiateOffboarding'])->name('offboarding.initiate');
     Route::post('offboarding/{record}/approve', [LifecycleController::class, 'approveOffboarding'])->name('offboarding.approve');
     Route::post('offboarding/{record}/complete', [LifecycleController::class, 'completeOffboarding'])->name('offboarding.complete');

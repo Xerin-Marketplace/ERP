@@ -27,6 +27,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
+
+        // Global read-only maintenance mode (System > Maintenance). Runs for
+        // every web request; privileged sysadmins keep a recovery path.
+        if (class_exists(\Modules\SystemAdministration\Http\Middleware\EnforceReadOnlyMode::class)) {
+            $middleware->appendToGroup('web', \Modules\SystemAdministration\Http\Middleware\EnforceReadOnlyMode::class);
+        }
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

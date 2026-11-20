@@ -37,7 +37,12 @@ class EmployeeService
 
         return DB::transaction(function () use ($data, $placement, $actorId) {
             $employee = new Employee;
-            $employee->employee_number = $data['employee_number'] ?? $this->numbers->next();
+            $employee->employee_number = $data['employee_number']
+                ?? $this->numbers->next(
+                    ($placement['branch_id'] ?? null)
+                        ? \Modules\Organization\Models\Branch::find($placement['branch_id'])
+                        : null
+                );
             $employee->fill([
                 'user_id' => $data['user_id'] ?? null,
                 'registration_application_id' => $data['registration_application_id'] ?? null,
@@ -108,6 +113,43 @@ class EmployeeService
 
             $this->record($employee, 'employee.updated', 'Employee profile updated', ['changed' => array_keys($data)], $actorId);
             $this->audit->log('employee.updated', $employee, old: $old, new: $employee->only(array_keys($old)));
+
+            return $employee->fresh();
+        });
+    }
+
+    /**
+     * Auditable lifecycle transition — records old/new status, the authorized
+     * actor, a mandatory reason and the effective date. Employees are never
+     * physically deleted; termination/resignation are statuses.
+     */
+    public function transitionStatus(
+        Employee $employee,
+        string $to,
+        int $actorId,
+        string $reason,
+        ?\DateTimeInterface $effectiveAt = null,
+    ): Employee {
+        abort_unless(in_array($to, Employee::STATUSES, true), 422, 'Unknown employee status.');
+        abort_if($reason === '', 422, 'A reason is required for status changes.');
+
+        return DB::transaction(function () use ($employee, $to, $actorId, $reason, $effectiveAt) {
+            $old = $employee->status;
+            abort_if($old === $to, 422, 'Employee is already in this status.');
+
+            $employee->update(['status' => $to] + ($to === Employee::STATUS_ACTIVE
+                ? ['start_date' => $effectiveAt ?? $employee->start_date] : []));
+
+            $this->audit->log('employee.status_changed', $employee,
+                old: ['status' => $old],
+                new: ['status' => $to],
+                metadata: ['reason' => $reason, 'effective_at' => ($effectiveAt ?? now())->format('Y-m-d'), 'actor' => $actorId]);
+
+            $this->record($employee, 'status_changed',
+                "Status changed from {$old} to {$to}",
+                ['from' => $old, 'to' => $to, 'reason' => $reason,
+                 'effective_at' => ($effectiveAt ?? now())->format('Y-m-d')],
+                $actorId);
 
             return $employee->fresh();
         });

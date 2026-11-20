@@ -37,6 +37,81 @@ class UserManagementController extends Controller
         ]);
     }
 
+    /** Admin-initiated user creation with activation invitation. */
+    public function create()
+    {
+        $guard = app(\Modules\Identity\Services\RoleAssignmentGuard::class);
+
+        return view('identity::users.create', [
+            'roles' => $guard->assignableRoles(request()->user(), Role::orderBy('name')->get()),
+            'branches' => \Modules\Organization\Models\Branch::active()->orderBy('name')->get(['id', 'name']),
+            'companies' => \Modules\Organization\Models\Company::active()->orderBy('legal_name')->get(['id', 'legal_name']),
+            'departments' => \Modules\Organization\Models\Department::where('status', 'active')->orderBy('name')->get(['id', 'name', 'branch_id']),
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        abort_unless($request->user()->can('users.create'), 403);
+        abort_unless($request->user()->can('users.invite'), 403);
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'branch_id' => ['nullable', 'exists:branches,id'],
+            'role' => ['nullable', 'exists:roles,name'],
+        ]);
+
+        if ($data['role'] ?? null) {
+            app(\Modules\Identity\Services\RoleAssignmentGuard::class)
+                ->assertCanAssign($request->user(), $data['role'], new User);
+        }
+        if ($data['branch_id'] ?? null) {
+            $branch = \Modules\Organization\Models\Branch::findOrFail($data['branch_id']);
+            abort_if($branch->status !== \Modules\Organization\Enums\EntityStatus::Active,
+                422, 'Cannot assign users to an inactive branch.');
+        }
+
+        $user = \DB::transaction(function () use ($data, $request) {
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'] ?? null,
+                'branch_id' => $data['branch_id'] ?? null,
+                'password' => \Hash::make(\Str::random(40)),
+                'status' => \App\Enums\AccountStatus::Pending,
+            ]);
+            if ($data['role'] ?? null) {
+                $user->assignRole($data['role']);
+            }
+
+            ['token' => $token] = $this->invitations->generate($user, null, $request->user()->id);
+            $user->notify(new AccountActivationInvitation($token));
+
+            app(\App\Services\AuditService::class)->log('user.invited', $user,
+                new: ['email' => $user->email, 'role' => $data['role'] ?? null]);
+
+            return $user;
+        });
+
+        return redirect()->route('identity.users.show', $user)
+            ->with('success', "Invitation sent to {$user->email}.");
+    }
+
+    /** Admin-triggered password reset via a fresh activation link. */
+    public function resetPassword(User $user, Request $request)
+    {
+        abort_unless($request->user()->can('users.reset_password'), 403);
+
+        ['token' => $token] = $this->invitations->generate($user, null, $request->user()->id);
+        $user->notify(new AccountActivationInvitation($token));
+
+        app(\App\Services\AuditService::class)->log('user.password_reset_sent', $user);
+
+        return back()->with('success', 'Password reset link sent.');
+    }
+
     public function show(User $user)
     {
         $user->load([
@@ -63,7 +138,7 @@ class UserManagementController extends Controller
 
     public function update(User $user, Request $request)
     {
-        abort_unless($request->user()->can('user.update'), 403);
+        abort_unless($request->user()->can('users.update'), 403);
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -76,24 +151,24 @@ class UserManagementController extends Controller
         $user->profile()->updateOrCreate(['user_id' => $user->id],
             collect($data)->only(['employee_number', 'job_title'])->toArray());
 
-        app(\App\Services\AuditService::class)->log('user.updated', $user, new: $data);
+        app(\App\Services\AuditService::class)->log('users.updated', $user, new: $data);
 
         return back()->with('success', 'User updated.');
     }
 
     public function assignRole(User $user, Request $request)
     {
-        abort_unless($request->user()->can('role.assign'), 403);
+        abort_unless($request->user()->can('roles.assign'), 403);
         $request->validate(['role' => ['required', 'exists:roles,name']]);
-        abort_if(in_array($request->input('role'), \Modules\Identity\Database\Seeders\IdentityDatabaseSeeder::PROTECTED_ROLES, true),
-            403, 'This role cannot be assigned through this interface.');
+        app(\Modules\Identity\Services\RoleAssignmentGuard::class)
+            ->assertCanAssign($request->user(), $request->input('role'), $user);
         abort_if($user->id === $request->user()->id && ! $request->user()->hasRole('super-admin'),
             422, 'You cannot change your own role.');
 
         $old = $user->getRoleNames()->toArray();
         $user->syncRoles([$request->input('role')]);
 
-        app(\App\Services\AuditService::class)->log('user.role_changed', $user,
+        app(\App\Services\AuditService::class)->log('users.role_changed', $user,
             old: ['roles' => $old], new: ['roles' => [$request->input('role')]]);
 
         return back()->with('success', "Role updated to {$request->input('role')}.");
@@ -101,7 +176,7 @@ class UserManagementController extends Controller
 
     public function suspend(User $user, Request $request)
     {
-        abort_unless($request->user()->can('user.suspend'), 403);
+        abort_unless($request->user()->can('users.suspend'), 403);
         abort_if($user->id === $request->user()->id, 422, 'You cannot suspend your own account.');
         $request->validate(['reason' => ['nullable', 'string', 'max:500']]);
 
@@ -112,7 +187,7 @@ class UserManagementController extends Controller
 
     public function activate(User $user, Request $request)
     {
-        abort_unless($request->user()->can('user.activate'), 403);
+        abort_unless($request->user()->can('users.activate'), 403);
         $this->lifecycle->activate($user, $request->user()->id);
 
         return back()->with('success', "{$user->name} activated.");
@@ -120,7 +195,7 @@ class UserManagementController extends Controller
 
     public function deactivate(User $user, Request $request)
     {
-        abort_unless($request->user()->can('user.deactivate'), 403);
+        abort_unless($request->user()->can('users.deactivate'), 403);
         abort_if($user->id === $request->user()->id, 422, 'You cannot deactivate your own account.');
         $request->validate(['reason' => ['nullable', 'string', 'max:500']]);
 
@@ -131,7 +206,7 @@ class UserManagementController extends Controller
 
     public function revokeSessions(User $user, Request $request)
     {
-        abort_unless($request->user()->can('user.sessions.revoke'), 403);
+        abort_unless($request->user()->can('users.sessions.revoke'), 403);
         $this->lifecycle->revokeAccess($user, $request->user()->id, 'manual_revocation');
 
         return back()->with('success', 'All sessions and API tokens revoked.');
@@ -154,7 +229,7 @@ class UserManagementController extends Controller
 
     public function reassign(User $user, Request $request)
     {
-        abort_unless($request->user()->can('user.assignments.manage'), 403);
+        abort_unless($request->user()->can('users.assignments.manage'), 403);
 
         $data = $request->validate([
             'company_id' => ['required', 'exists:companies,id'],

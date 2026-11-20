@@ -24,7 +24,7 @@
         </select>
         <button class="rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700">Filter</button>
 
-        @can('department.create')
+        @can('organization.departments.create')
             <a href="{{ route('organization.departments.create') }}" class="ml-auto rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500">+ New department</a>
         @endcan
     </form>
@@ -57,7 +57,7 @@
                     </tr>
                 @empty
                     <tr><td colspan="7" class="px-5 py-10 text-center text-sm text-gray-400">
-                        No departments found. @can('department.create')<a href="{{ route('organization.departments.create') }}" class="text-indigo-600">Create the first one</a>.@endcan
+                        No departments found. @can('organization.departments.create')<a href="{{ route('organization.departments.create') }}" class="text-indigo-600">Create the first one</a>.@endcan
                     </td></tr>
                 @endforelse
             </tbody>

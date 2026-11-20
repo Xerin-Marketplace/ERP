@@ -11,7 +11,7 @@
                     </div>
                     <div class="flex items-center gap-3">
                         @include('organization::partials.status-badge', ['status' => $department->status])
-                        @can('department.update')
+                        @can('organization.departments.update')
                             <a href="{{ route('organization.departments.edit', $department) }}" class="text-xs font-medium text-indigo-600 hover:text-indigo-800">Edit</a>
                         @endcan
                     </div>

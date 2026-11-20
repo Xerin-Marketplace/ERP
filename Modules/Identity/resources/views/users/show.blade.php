@@ -27,7 +27,7 @@
                     <div><p class="text-xs text-gray-500">Employment type</p><p>{{ $user->profile?->employment_type ?? '—' }}</p></div>
                     <div><p class="text-xs text-gray-500">Email verified</p><p>{{ $user->email_verified_at?->format('d M Y') ?? 'No' }}</p></div>
                 </div>
-                @can('user.update')
+                @can('users.update')
                     <form method="POST" action="{{ route('identity.users.update', $user) }}" class="px-5 py-4 border-t border-gray-100 grid grid-cols-2 gap-3">
                         @csrf @method('PUT')
                         <input name="name" value="{{ $user->name }}" required class="rounded-md border-gray-300 text-sm shadow-sm" placeholder="Name">
@@ -63,7 +63,7 @@
                         @endforelse
                     </tbody>
                 </table>
-                @can('user.assignments.manage')
+                @can('users.assignments.manage')
                     <form method="POST" action="{{ route('identity.users.assignments', $user) }}"
                           class="px-5 py-4 border-t border-gray-100 space-y-3"
                           x-data="{ company: '{{ $user->currentAssignment?->company_id }}', branches: @js($branches), departments: @js($departments),
@@ -143,7 +143,7 @@
                 <h2 class="font-semibold text-gray-900">Access control</h2>
 
                 @if ($user->status !== \App\Enums\AccountStatus::Active)
-                    @can('user.activate')
+                    @can('users.activate')
                         <form method="POST" action="{{ route('identity.users.activate', $user) }}">
                             @csrf
                             <button class="w-full rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-500">Activate account</button>
@@ -165,7 +165,7 @@
                 @endif
 
                 @if ($user->status === \App\Enums\AccountStatus::Active)
-                    @can('user.suspend')
+                    @can('users.suspend')
                         <form method="POST" action="{{ route('identity.users.suspend', $user) }}"
                               onsubmit="return confirm('Suspend {{ $user->name }}? All sessions and tokens will be revoked.')">
                             @csrf
@@ -175,7 +175,7 @@
                     @endcan
                 @endif
 
-                @can('user.sessions.revoke')
+                @can('users.sessions.revoke')
                     <form method="POST" action="{{ route('identity.users.revoke-sessions', $user) }}"
                           onsubmit="return confirm('Revoke all sessions and API tokens for this user?')">
                         @csrf
@@ -183,7 +183,7 @@
                     </form>
                 @endcan
 
-                @can('user.deactivate')
+                @can('users.deactivate')
                     <form method="POST" action="{{ route('identity.users.deactivate', $user) }}"
                           onsubmit="return confirm('Deactivate this account permanently?')">
                         @csrf
@@ -202,7 +202,7 @@
                         <p class="text-sm text-gray-400">No roles assigned.</p>
                     @endforelse
                 </div>
-                @can('role.assign')
+                @can('roles.assign')
                     <form method="POST" action="{{ route('identity.users.role', $user) }}" class="flex gap-2">
                         @csrf
                         <select name="role" required class="flex-1 rounded-md border-gray-300 text-sm shadow-sm">

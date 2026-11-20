@@ -13,7 +13,12 @@ use Spatie\Permission\PermissionRegistrar;
 
 class OrganizationDatabaseSeeder extends Seeder
 {
-    public const PERMISSIONS = [
+    /**
+     * Legacy permission names — kept in the database for backward compatibility
+     * with grants issued before the `organization.*` naming convention was
+     * adopted. Routes no longer reference these; do not add new usages.
+     */
+    public const LEGACY_PERMISSIONS = [
         'organization.view', 'organization.manage',
         'organization.structure.view', 'organization.audit.view',
         'company.view', 'company.create', 'company.update',
@@ -23,6 +28,82 @@ class OrganizationDatabaseSeeder extends Seeder
         'location.view', 'location.create', 'location.update', 'location.delete',
         'department.view', 'department.create', 'department.update',
         'department.activate', 'department.suspend', 'department.archive',
+    ];
+
+    /** Canonical permission set (see docs/phase-1/PHASE_1_RBAC_MATRIX.md). */
+    public const PERMISSIONS = [
+        'organization.dashboard.view',
+        'organization.structure.view',
+        'organization.audit.view',
+        'organization.settings.manage',
+        'organization.company.view',
+        'organization.company.create',
+        'organization.company.update',
+        'organization.company.activate',
+        'organization.company.suspend',
+        'organization.company.archive',
+        'organization.branches.view',
+        'organization.branches.create',
+        'organization.branches.update',
+        'organization.branches.activate',
+        'organization.branches.deactivate',
+        'organization.branches.manage',
+        'organization.locations.view',
+        'organization.locations.create',
+        'organization.locations.update',
+        'organization.locations.delete',
+        'organization.departments.view',
+        'organization.departments.create',
+        'organization.departments.update',
+        'organization.departments.deactivate',
+        'organization.departments.manage',
+        'organization.positions.view',
+        'organization.positions.create',
+        'organization.positions.update',
+        'organization.positions.manage',
+        'organization.branch_administrators.view',
+        'organization.branch_administrators.assign',
+        'organization.branch_administrators.revoke',
+    ];
+
+    /** Everything a Group Admin may do inside the organization domain. */
+    public const GROUP_ADMIN_PERMISSIONS = self::PERMISSIONS;
+
+    /** Branch-scoped view + permitted branch-level resources (no branch management). */
+    public const BRANCH_ADMIN_PERMISSIONS = [
+        'organization.dashboard.view',
+        'organization.branches.view',
+        'organization.departments.view',
+        'organization.departments.create',
+        'organization.departments.update',
+        'organization.departments.deactivate',
+        'organization.positions.view',
+    ];
+
+    /** Default branches required by the multi-branch architecture. */
+    public const DEFAULT_BRANCHES = [
+        [
+            'code' => 'DXB',
+            'name' => 'Dubai Branch',
+            'branch_type' => 'regional_office',
+            'country' => 'United Arab Emirates',
+            'country_code' => 'AE',
+            'city' => 'Dubai',
+            'region' => 'Dubai',
+            'currency' => 'AED',
+            'timezone' => 'Asia/Dubai',
+        ],
+        [
+            'code' => 'TZ',
+            'name' => 'Tanzania Branch',
+            'branch_type' => 'head_office',
+            'country' => 'Tanzania',
+            'country_code' => 'TZ',
+            'city' => 'Dar es Salaam',
+            'region' => 'Dar es Salaam',
+            'currency' => 'TZS',
+            'timezone' => 'Africa/Dar_es_Salaam',
+        ],
     ];
 
     public const DEFINITIONS = [
@@ -42,26 +123,38 @@ class OrganizationDatabaseSeeder extends Seeder
     public function run(): void
     {
         DB::transaction(function () {
-            /* Permissions — idempotent */
-            foreach (self::PERMISSIONS as $name) {
+            /* Permissions — idempotent (legacy names kept for existing grants) */
+            foreach (array_merge(self::LEGACY_PERMISSIONS, self::PERMISSIONS) as $name) {
                 Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
             }
             app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-            if ($super = Role::where('name', 'super-admin')->first()) {
-                $super->givePermissionTo(self::PERMISSIONS);
-            }
-            if ($admin = Role::where('name', 'admin')->first()) {
-                $admin->givePermissionTo([
-                    'organization.view', 'organization.structure.view',
-                    'company.view', 'branch.view', 'location.view', 'department.view',
-                ]);
-            }
-            if ($manager = Role::where('name', 'manager')->first()) {
-                $manager->givePermissionTo([
-                    'organization.view', 'organization.structure.view',
-                    'company.view', 'branch.view', 'department.view',
-                ]);
+            $grantMap = [
+                'super-admin' => array_merge(self::LEGACY_PERMISSIONS, self::PERMISSIONS),
+                'group-administrator' => self::GROUP_ADMIN_PERMISSIONS,
+                'company-administrator' => self::GROUP_ADMIN_PERMISSIONS,
+                'branch-manager' => self::BRANCH_ADMIN_PERMISSIONS,
+                'department-manager' => [
+                    'organization.dashboard.view', 'organization.branches.view',
+                    'organization.departments.view', 'organization.positions.view',
+                ],
+                'admin' => [
+                    'organization.dashboard.view', 'organization.structure.view',
+                    'organization.company.view', 'organization.branches.view',
+                    'organization.locations.view', 'organization.departments.view',
+                    'organization.positions.view',
+                ],
+                'manager' => [
+                    'organization.dashboard.view', 'organization.structure.view',
+                    'organization.company.view', 'organization.branches.view',
+                    'organization.departments.view', 'organization.positions.view',
+                ],
+            ];
+
+            foreach ($grantMap as $role => $permissions) {
+                if ($r = Role::where('name', $role)->first()) {
+                    $r->givePermissionTo($permissions);
+                }
             }
 
             /* Department definitions — reusable classifications */
@@ -91,9 +184,32 @@ class OrganizationDatabaseSeeder extends Seeder
                     'company_id' => $group->id,
                     'branch_type' => 'head_office',
                     'country' => 'Tanzania',
+                    'country_code' => 'TZ',
+                    'currency' => 'TZS',
+                    'timezone' => 'Africa/Dar_es_Salaam',
                     'region' => 'Dar es Salaam',
                     'city' => 'Dar es Salaam',
                 ]);
+            }
+
+            /* Default branches — idempotent on stable global codes */
+            foreach (self::DEFAULT_BRANCHES as $data) {
+                $branch = Branch::firstOrNew(['code' => $data['code']]);
+                if (! $branch->exists) {
+                    $branch->fill($data + [
+                        'company_id' => $group->id,
+                        'status' => \Modules\Organization\Enums\EntityStatus::Active->value,
+                        'activated_at' => now(),
+                    ])->save();
+                } else {
+                    // Backfill operational fields only; never overwrite admin edits.
+                    $branch->fill(array_filter([
+                        'company_id' => $branch->company_id ?: $group->id,
+                        'country_code' => $branch->country_code ?: ($data['country_code'] ?? null),
+                        'currency' => $branch->currency ?: ($data['currency'] ?? null),
+                        'timezone' => $branch->timezone ?: ($data['timezone'] ?? null),
+                    ]))->save();
+                }
             }
         });
     }

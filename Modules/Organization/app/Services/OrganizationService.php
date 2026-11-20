@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Modules\Organization\Enums\EntityStatus;
 use Modules\Organization\Models\Branch;
+use Modules\Organization\Models\BranchAdministrator;
+use Modules\Organization\Models\BranchSetting;
 use Modules\Organization\Models\Company;
 use Modules\Organization\Models\Department;
 use Modules\Organization\Models\Location;
@@ -123,7 +125,108 @@ class OrganizationService
         });
     }
 
-    /* ----------------------------- Locations ----------------------------- */
+    /**
+     * Activate a branch — records activated_at, clears deactivated_at.
+     * New operational assignments are only accepted while active.
+     */
+    public function activateBranch(Branch $branch): Branch
+    {
+        return DB::transaction(function () use ($branch) {
+            $old = $branch->status;
+            $branch->update([
+                'status' => EntityStatus::Active,
+                'activated_at' => now(),
+                'deactivated_at' => null,
+            ]);
+            $this->audit->log('branch.activated', $branch,
+                old: ['status' => $old->value], new: ['status' => EntityStatus::Active->value]);
+            event(new Events\BranchStatusChanged($branch, ['from' => $old->value, 'to' => EntityStatus::Active->value]));
+            return $branch;
+        });
+    }
+
+    /**
+     * Soft-deactivate a branch (status → suspended). Never destructive:
+     * employees, attendance, tickets and history keep their branch reference.
+     */
+    public function deactivateBranch(Branch $branch): Branch
+    {
+        return DB::transaction(function () use ($branch) {
+            $old = $branch->status;
+            $branch->update([
+                'status' => EntityStatus::Suspended,
+                'deactivated_at' => now(),
+            ]);
+            $this->audit->log('branch.deactivated', $branch,
+                old: ['status' => $old->value], new: ['status' => EntityStatus::Suspended->value]);
+            event(new Events\BranchStatusChanged($branch, ['from' => $old->value, 'to' => EntityStatus::Suspended->value]));
+            return $branch;
+        });
+    }
+
+    /* ------------------------- Branch administrators ---------------------- */
+
+    public function assignBranchAdministrator(Branch $branch, int $userId, int $actorId): BranchAdministrator
+    {
+        return DB::transaction(function () use ($branch, $userId, $actorId) {
+            $existing = BranchAdministrator::where('branch_id', $branch->id)
+                ->where('user_id', $userId)->first();
+
+            if ($existing) {
+                $existing->update(['revoked_at' => null, 'revoked_by' => null, 'assigned_by' => $actorId]);
+                $admin = $existing;
+            } else {
+                $admin = BranchAdministrator::create([
+                    'branch_id' => $branch->id,
+                    'user_id' => $userId,
+                    'assigned_by' => $actorId,
+                ]);
+            }
+
+            $this->audit->log('branch.administrator_assigned', $branch,
+                new: ['user_id' => $userId]);
+
+            return $admin;
+        });
+    }
+
+    public function revokeBranchAdministrator(BranchAdministrator $admin, int $actorId): void
+    {
+        DB::transaction(function () use ($admin, $actorId) {
+            $admin->update(['revoked_at' => now(), 'revoked_by' => $actorId]);
+            $this->audit->log('branch.administrator_revoked', $admin->branch,
+                old: ['user_id' => $admin->user_id]);
+        });
+    }
+
+    /** Branch IDs a user actively administrates (empty for non-branch admins). */
+    public function administratedBranchIds(\App\Models\User $user): array
+    {
+        return BranchAdministrator::active()->where('user_id', $user->id)
+            ->pluck('branch_id')->all();
+    }
+
+    /* ---------------------------- Branch settings ------------------------- */
+
+    public function branchSettings(Branch $branch): array
+    {
+        return $branch->settings->mapWithKeys(fn ($s) => [$s->key => $s->typedValue()])->all();
+    }
+
+    public function setBranchSetting(Branch $branch, string $key, mixed $value, int $actorId, string $type = 'string'): void
+    {
+        DB::transaction(function () use ($branch, $key, $value, $actorId, $type) {
+            $stored = $type === 'json' ? json_encode($value) : (string) $value;
+            BranchSetting::updateOrCreate(
+                ['branch_id' => $branch->id, 'key' => $key],
+                ['value' => $stored, 'type' => $type, 'updated_by' => $actorId]
+            );
+            $this->audit->log('branch.setting_updated', $branch,
+                new: ['key' => $key, 'value' => $stored]);
+        });
+    }
+
+    /* ------------------------------ Locations ----------------------------- */
 
     public function createLocation(array $data, int $actorId): Location
     {

@@ -16,10 +16,23 @@ class Employee extends Model
 {
     use SoftDeletes;
 
-    public const STATUS_ONBOARDING = 'onboarding';
+    public const STATUS_ONBOARDING = 'onboarding';   // legacy — kept for existing rows
+    public const STATUS_DRAFT = 'draft';
+    public const STATUS_PENDING = 'pending_approval';
     public const STATUS_ACTIVE = 'active';
+    public const STATUS_PROBATION = 'on_probation';
+    public const STATUS_LEAVE = 'on_leave';
     public const STATUS_SUSPENDED = 'suspended';
-    public const STATUS_SEPARATED = 'separated';
+    public const STATUS_RESIGNED = 'resigned';
+    public const STATUS_TERMINATED = 'terminated';
+    public const STATUS_SEPARATED = 'separated';     // legacy umbrella for resigned/terminated
+
+    public const STATUSES = [
+        self::STATUS_DRAFT, self::STATUS_PENDING, self::STATUS_ONBOARDING,
+        self::STATUS_ACTIVE, self::STATUS_PROBATION, self::STATUS_LEAVE,
+        self::STATUS_SUSPENDED, self::STATUS_RESIGNED, self::STATUS_TERMINATED,
+        self::STATUS_SEPARATED,
+    ];
 
     public const TYPES = ['permanent', 'contract', 'temporary', 'probation', 'intern', 'part_time', 'consultant'];
 

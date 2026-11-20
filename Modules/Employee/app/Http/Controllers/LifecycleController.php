@@ -96,4 +96,35 @@ class LifecycleController extends Controller
 
         return back()->with('success', 'Separation completed — ERP access revoked.');
     }
+
+    /* ------------------- Lifecycle status transitions ------------------- */
+
+    /**
+     * Auditable status change — reason + actor + effective date are recorded
+     * on every transition (suspend / reinstate / resign / terminate / retire).
+     */
+    public function transition(Request $request, Employee $employee)
+    {
+        $data = $request->validate([
+            'status' => 'required|in:suspended,on_leave,active,on_probation,resigned,terminated,separated,pending_approval',
+            'reason' => 'required|string|max:500',
+            'effective_at' => 'nullable|date',
+        ]);
+
+        $permission = match ($data['status']) {
+            'suspended', 'on_leave' => 'employee.suspend',
+            'resigned', 'terminated', 'separated' => 'employee.terminate',
+            'pending_approval' => 'employee.approve',
+            default => 'employee.update',
+        };
+        abort_unless($request->user()->can($permission), 403);
+
+        $this->employees->transitionStatus(
+            $employee, $data['status'], $request->user()->id,
+            $data['reason'],
+            isset($data['effective_at']) ? new \DateTime($data['effective_at']) : null,
+        );
+
+        return back()->with('success', "Employee status changed to {$data['status']}.");
+    }
 }

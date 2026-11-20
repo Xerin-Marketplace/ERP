@@ -16,7 +16,11 @@ class StoreDepartmentRequest extends FormRequest
     {
         return [
             'department_definition_id' => ['nullable', 'exists:department_definitions,id'],
-            'code' => ['required', 'string', 'max:30', 'alpha_dash'],
+            'code' => ['required', 'string', 'max:30', 'alpha_dash',
+                       \Illuminate\Validation\Rule::unique('departments', 'code')
+                           ->where(fn ($q) => $this->branch_id
+                               ? $q->where('branch_id', $this->branch_id)
+                               : $q->whereNull('branch_id'))],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:2000'],
             'company_id' => ['required', 'exists:companies,id'],

@@ -422,7 +422,7 @@ class OrganizationModuleTest extends TestCase
         $data = $this->getJson('/api/v1/organization/overview')->assertOk()->json('data');
 
         $this->assertSame(1, $data['companies_total']);
-        $this->assertSame(2, $data['branches_total']);
+        $this->assertSame(Branch::count(), $data['branches_total']);
         $this->assertSame(Department::count(), $data['departments_total']);
     }
 

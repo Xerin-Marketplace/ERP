@@ -22,7 +22,7 @@
             <a href="{{ route('organization.companies.index') }}" class="text-sm text-gray-500 hover:text-gray-700">Clear</a>
         @endif
 
-        @can('company.create')
+        @can('organization.company.create')
             <a href="{{ route('organization.companies.create') }}" class="ml-auto rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500">+ New company</a>
         @endcan
     </form>
@@ -59,7 +59,7 @@
                     </tr>
                 @empty
                     <tr><td colspan="7" class="px-5 py-10 text-center text-sm text-gray-400">
-                        No companies found. @can('company.create')<a href="{{ route('organization.companies.create') }}" class="text-indigo-600">Create the first one</a>.@endcan
+                        No companies found. @can('organization.company.create')<a href="{{ route('organization.companies.create') }}" class="text-indigo-600">Create the first one</a>.@endcan
                     </td></tr>
                 @endforelse
             </tbody>

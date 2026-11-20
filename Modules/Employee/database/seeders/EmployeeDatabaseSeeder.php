@@ -15,6 +15,7 @@ class EmployeeDatabaseSeeder extends Seeder
     public const PERMISSIONS = [
         'employee.view', 'employee.view_all', 'employee.create', 'employee.update',
         'employee.archive', 'employee.export',
+        'employee.approve', 'employee.suspend', 'employee.terminate',
         'employee.profile.view', 'employee.profile.update', 'employee.profile.update_own',
         'employee.document.view', 'employee.document.upload', 'employee.document.delete',
         'employee.position.manage', 'employee.grade.manage',
@@ -28,6 +29,7 @@ class EmployeeDatabaseSeeder extends Seeder
         'it-administrator' => self::PERMISSIONS,
         'group-administrator' => [
             'employee.view_all', 'employee.create', 'employee.update', 'employee.export',
+            'employee.approve', 'employee.suspend', 'employee.terminate',
             'employee.profile.view', 'employee.profile.update',
             'employee.document.view', 'employee.document.upload', 'employee.document.delete',
             'employee.position.manage', 'employee.grade.manage',
@@ -38,6 +40,7 @@ class EmployeeDatabaseSeeder extends Seeder
         ],
         'company-administrator' => [
             'employee.view', 'employee.create', 'employee.update', 'employee.export',
+            'employee.suspend',
             'employee.profile.view', 'employee.profile.update',
             'employee.document.view', 'employee.document.upload',
             'employee.transfer.request', 'employee.promotion.request',

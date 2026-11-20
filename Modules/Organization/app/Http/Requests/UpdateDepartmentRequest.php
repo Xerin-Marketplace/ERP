@@ -18,7 +18,12 @@ class UpdateDepartmentRequest extends FormRequest
 
         return [
             'department_definition_id' => ['nullable', 'exists:department_definitions,id'],
-            'code' => ['sometimes', 'string', 'max:30', 'alpha_dash'],
+            'code' => ['sometimes', 'string', 'max:30', 'alpha_dash',
+                       \Illuminate\Validation\Rule::unique('departments', 'code')
+                           ->ignore($this->route('department')?->id)
+                           ->where(fn ($q) => ($this->branch_id ?? $this->route('department')?->branch_id)
+                               ? $q->where('branch_id', $this->branch_id ?? $this->route('department')?->branch_id)
+                               : $q->whereNull('branch_id'))],
             'name' => ['sometimes', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:2000'],
             'company_id' => ['sometimes', 'exists:companies,id'],

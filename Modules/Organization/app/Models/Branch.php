@@ -14,9 +14,11 @@ class Branch extends Model
 {
     protected $fillable = [
         'company_id', 'name', 'code', 'branch_type', 'manager_id', 'contact_person',
-        'phone', 'email', 'country', 'region', 'district', 'city',
-        'physical_address', 'postal_address', 'latitude', 'longitude',
-        'opening_date', 'description', 'status', 'created_by',
+        'phone', 'email', 'country', 'country_code', 'currency', 'timezone',
+        'region', 'district', 'city',
+        'physical_address', 'postal_address', 'postal_code', 'latitude', 'longitude',
+        'opening_date', 'description', 'status', 'activated_at', 'deactivated_at',
+        'created_by', 'updated_by',
     ];
 
     public const TYPES = ['head_office', 'regional_office', 'branch', 'warehouse', 'site'];
@@ -28,6 +30,8 @@ class Branch extends Model
             'opening_date' => 'date',
             'latitude' => 'float',
             'longitude' => 'float',
+            'activated_at' => 'datetime',
+            'deactivated_at' => 'datetime',
         ];
     }
 
@@ -54,6 +58,28 @@ class Branch extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function settings(): HasMany
+    {
+        return $this->hasMany(BranchSetting::class);
+    }
+
+    public function administrators(): HasMany
+    {
+        return $this->hasMany(BranchAdministrator::class);
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === EntityStatus::Active;
+    }
+
+    /** Convert a UTC timestamp into this branch's local timezone. */
+    public function toLocalTime(\DateTimeInterface $at): \DateTimeImmutable
+    {
+        return \Carbon\CarbonImmutable::instance($at)
+            ->setTimezone($this->timezone ?: config('app.timezone'));
     }
 
     #[Scope]

@@ -98,7 +98,7 @@ class EmployeeController extends Controller
             'alt_phone' => 'nullable|string|max:30',
             'residential_address' => 'nullable|string',
             'user_id' => 'nullable|exists:users,id|unique:employees,user_id',
-            'employee_number' => 'nullable|string|max:40|unique:employees,employee_number',
+            // employee_number is never accepted from input — EmployeeNumberService generates it.
             'employment_type' => 'required|in:'.implode(',', Employee::TYPES),
             'employee_category' => 'nullable|string|max:50',
             'start_date' => 'nullable|date',
@@ -110,8 +110,10 @@ class EmployeeController extends Controller
             'department_id' => 'nullable|integer',
             'job_position_id' => 'nullable|exists:job_positions,id',
             'manager_employee_id' => 'nullable|exists:employees,id',
-            'status' => 'nullable|in:onboarding,active',
+            'status' => 'nullable|in:draft,pending_approval,onboarding,active',
         ]);
+
+        unset($data['employee_number']);
 
         $employee = $this->employees->create($data, $request->user()->id);
 
@@ -181,7 +183,7 @@ class EmployeeController extends Controller
             'contract_end_date' => 'nullable|date',
             'work_location' => 'nullable|string|max:255',
             'official_email' => 'nullable|email',
-            'status' => 'sometimes|in:onboarding,active,suspended',
+            // Status changes go through the auditable lifecycle endpoint, not profile edits.
         ]);
 
         $this->employees->update($employee, $data, $request->user()->id);

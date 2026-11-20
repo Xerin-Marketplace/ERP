@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <span>{{ __('Roles & Access') }}</span>
-            @can('role.create')
+            @can('roles.create')
                 <a href="{{ route('identity.roles.create') }}" class="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800">New role</a>
             @endcan
         </div>
@@ -34,17 +34,17 @@
                         </td>
                         <td class="px-4 py-3 text-right space-x-2 whitespace-nowrap">
                             @unless (in_array($role->name, $protected))
-                                @can('role.update')
+                                @can('roles.update')
                                     <a href="{{ route('identity.roles.edit', $role) }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">Edit</a>
                                 @endcan
-                                @can('role.create')
+                                @can('roles.create')
                                     <form method="POST" action="{{ route('identity.roles.clone', $role) }}" class="inline">
                                         @csrf
                                         <input type="hidden" name="name" value="{{ $role->name }}-copy">
                                         <button class="text-sm font-medium text-gray-600 hover:text-gray-800">Clone</button>
                                     </form>
                                 @endcan
-                                @can('role.delete')
+                                @can('roles.delete')
                                     @if ($role->users_count === 0)
                                         <form method="POST" action="{{ route('identity.roles.destroy', $role) }}" class="inline"
                                               onsubmit="return confirm('Delete role {{ $role->name }}?')">

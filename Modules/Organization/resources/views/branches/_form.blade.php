@@ -51,8 +51,33 @@
         <x-text-input id="country" name="country" class="block mt-1.5 w-full" :value="old('country', $b?->country ?? 'Tanzania')" />
     </div>
     <div>
+        <x-input-label for="country_code" value="Country code (ISO-2)" />
+        <x-text-input id="country_code" name="country_code" class="block mt-1.5 w-full uppercase" :value="old('country_code', $b?->country_code)" maxlength="2" placeholder="TZ" />
+        <x-input-error :messages="$errors->get('country_code')" class="mt-1" />
+    </div>
+    <div>
         <x-input-label for="region" value="Region" />
         <x-text-input id="region" name="region" class="block mt-1.5 w-full" :value="old('region', $b?->region)" />
+    </div>
+    <div>
+        <x-input-label for="currency" value="Currency (ISO-3)" />
+        <select id="currency" name="currency" class="block mt-1.5 w-full rounded-md border-gray-300 text-sm shadow-sm">
+            <option value="">Select currency…</option>
+            @foreach ($currencies ?? ['AED','TZS','USD','EUR','KES','GBP'] as $code => $label)
+                <option value="{{ is_string($code) ? $code : $label }}" @selected(old('currency', $b?->currency) === (is_string($code) ? $code : $label))>{{ $label }}</option>
+            @endforeach
+        </select>
+        <x-input-error :messages="$errors->get('currency')" class="mt-1" />
+    </div>
+    <div>
+        <x-input-label for="timezone" value="Timezone" />
+        <select id="timezone" name="timezone" class="block mt-1.5 w-full rounded-md border-gray-300 text-sm shadow-sm">
+            <option value="">Select timezone…</option>
+            @foreach ($timezones ?? [] as $tz)
+                <option value="{{ $tz }}" @selected(old('timezone', $b?->timezone) === $tz)>{{ $tz }}</option>
+            @endforeach
+        </select>
+        <x-input-error :messages="$errors->get('timezone')" class="mt-1" />
     </div>
     <div>
         <x-input-label for="district" value="District" />
@@ -69,6 +94,10 @@
     <div>
         <x-input-label for="postal_address" value="Postal address" />
         <x-text-input id="postal_address" name="postal_address" class="block mt-1.5 w-full" :value="old('postal_address', $b?->postal_address)" />
+    </div>
+    <div>
+        <x-input-label for="postal_code" value="Postal code" />
+        <x-text-input id="postal_code" name="postal_code" class="block mt-1.5 w-full" :value="old('postal_code', $b?->postal_code)" />
     </div>
     <div>
         <x-input-label for="latitude" value="Latitude" />

@@ -2,9 +2,10 @@
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
+    @php $__bs = app(\App\Services\SettingsService::class); @endphp
     <div class="mb-8 text-center">
-        <h1 class="text-2xl font-semibold text-gray-900">{{ __('Welcome back') }}</h1>
-        <p class="mt-2 text-sm text-gray-500">{{ __('Sign in to your Xerin Group ERP account') }}</p>
+        <h1 class="text-2xl font-semibold text-gray-900">{{ $__bs->get('branding.login_heading', __('Welcome back')) }}</h1>
+        <p class="mt-2 text-sm text-gray-500">{{ $__bs->get('branding.login_subtext', __('Sign in to your Xerin Group ERP account')) }}</p>
     </div>
 
     <form method="POST" action="{{ route('login') }}" x-data="{ show: false }">
@@ -71,7 +72,7 @@
             {{ __('Sign in') }}
         </x-primary-button>
 
-        @if (Route::has('register'))
+        @if (Route::has('register') && $__bs->get('branding.registration_enabled', true))
             <div class="mt-8 pt-6 border-t border-gray-200 text-center">
                 <p class="text-sm text-gray-600">
                     {{ __("Don't have an account?") }}
