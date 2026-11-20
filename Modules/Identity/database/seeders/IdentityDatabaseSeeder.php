@@ -35,6 +35,8 @@ class IdentityDatabaseSeeder extends Seeder
         'permissions.view', 'permissions.manage',
         'access.audit.view',
         'identity.audit.view',
+        'admin.console.view', 'admin.branch.manage', 'admin.delegation.manage',
+        'admin.settings.global', 'admin.settings.branch', 'admin.audit.view',
     ];
 
     /** Forward-looking groups seeded now so the permission matrix is complete. */
@@ -76,6 +78,17 @@ class IdentityDatabaseSeeder extends Seeder
         ],
         'department-manager' => [
             'identity.view', 'users.view',
+        ],
+        'branch-admin' => [
+            'identity.view', 'users.view', 'users.assignments.view', 'roles.view',
+            'admin.console.view', 'admin.settings.branch', 'admin.audit.view',
+            'users.assign_roles',
+        ],
+        'department-admin' => [
+            'identity.view', 'users.view',
+        ],
+        'system-auditor' => [
+            'access.audit.view', 'identity.audit.view', 'admin.audit.view',
         ],
         'employee' => [],
         'hr-administrator' => [

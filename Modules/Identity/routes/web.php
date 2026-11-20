@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Identity\Http\Controllers\AdminConsoleController;
 use Modules\Identity\Http\Controllers\ActivationController;
 use Modules\Identity\Http\Controllers\ProfileController;
 use Modules\Identity\Http\Controllers\PublicRegistrationController;
@@ -49,6 +50,20 @@ Route::middleware(['web', 'auth', 'verified', 'account.active'])
             ->name('registrations.provision')->middleware('permission:registration.review');
         Route::get('documents/{document}/download', [RegistrationAdminController::class, 'downloadDocument'])
             ->name('documents.download')->middleware('permission:registration.review');
+
+        /* Admin console — global governance & delegation */
+        Route::get('admin-console', [AdminConsoleController::class, 'dashboard'])
+            ->name('admin.dashboard')->middleware('permission:admin.console.view');
+        Route::get('admin-console/branch-admins', [AdminConsoleController::class, 'branchAdmins'])
+            ->name('admin.branch-admins');
+        Route::post('admin-console/branch-admins', [AdminConsoleController::class, 'assignBranchAdmin'])
+            ->name('admin.branch-admins.assign');
+        Route::post('admin-console/branch-admins/{delegation}/suspend', [AdminConsoleController::class, 'suspendBranchAdmin'])
+            ->name('admin.branch-admins.suspend');
+        Route::post('admin-console/branch-admins/{delegation}/reactivate', [AdminConsoleController::class, 'reactivateBranchAdmin'])
+            ->name('admin.branch-admins.reactivate');
+        Route::post('admin-console/branch-admins/{delegation}/revoke', [AdminConsoleController::class, 'revokeBranchAdmin'])
+            ->name('admin.branch-admins.revoke');
 
         /* User management */
         Route::get('users', [UserManagementController::class, 'index'])

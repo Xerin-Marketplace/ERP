@@ -89,6 +89,7 @@ class AppServiceProvider extends ServiceProvider
             children: [
                 new NavItem(module: 'SystemAdministration', label: 'Control Center', icon: '', route: 'systemadmin.dashboard', permission: 'sysadmin.dashboard.view', group: 'Administration', order: 5),
                 new NavItem(module: 'Core', label: 'System Overview', icon: '', route: 'admin.system', permission: 'system.view', group: 'Administration', order: 10),
+                new NavItem(module: 'Identity', label: 'Admin Console', icon: '', route: 'identity.admin.dashboard', permission: 'admin.console.view', group: 'Administration', order: 18),
                 new NavItem(module: 'Identity', label: 'User Management', icon: '', route: 'identity.users.index', permission: 'users.view', group: 'Administration', order: 20),
                 new NavItem(module: 'Identity', label: 'Roles & Permissions', icon: '', route: 'identity.roles.index', permission: 'roles.view', group: 'Administration', order: 30),
                 new NavItem(module: 'Identity', label: 'Permission Matrix', icon: '', route: 'identity.permissions.matrix', permission: 'permissions.view', group: 'Administration', order: 32),

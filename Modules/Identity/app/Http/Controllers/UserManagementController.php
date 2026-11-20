@@ -21,7 +21,12 @@ class UserManagementController extends Controller
 
     public function index(Request $request)
     {
+        $adminBranch = app(\Modules\Identity\Services\AdminDelegationService::class)
+            ->adminBranchId($request->user());
+        $scoped = ! $request->user()->hasRole('super-admin') && $adminBranch !== null;
+
         $users = User::with('branch:id,name', 'profile')
+            ->when($scoped, fn ($q) => $q->where('branch_id', $adminBranch))
             ->when($request->filled('search'), fn ($q) => $q->where(function ($q) use ($request) {
                 $s = $request->input('search');
                 $q->where('name', 'like', "%{$s}%")->orWhere('email', 'like', "%{$s}%");
@@ -220,10 +225,13 @@ class UserManagementController extends Controller
     {
         abort_unless($request->user()->can('roles.assign'), 403);
         $request->validate(['role' => ['required', 'exists:roles,name']]);
-        app(\Modules\Identity\Services\RoleAssignmentGuard::class)
-            ->assertCanAssign($request->user(), $request->input('role'), $user);
         abort_if($user->id === $request->user()->id && ! $request->user()->hasRole('super-admin'),
             422, 'You cannot change your own role.');
+        $delegation = app(\Modules\Identity\Services\AdminDelegationService::class);
+        $delegation->assertCanAssignRole($request->user(), $request->input('role'), $user);
+        if ($user->hasRole('super-admin') && $request->input('role') !== 'super-admin') {
+            $delegation->assertNotLastSuperAdmin($user);
+        }
 
         $old = $user->getRoleNames()->toArray();
         $user->syncRoles([$request->input('role')]);
