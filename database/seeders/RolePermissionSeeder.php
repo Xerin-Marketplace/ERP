@@ -26,6 +26,7 @@ class RolePermissionSeeder extends Seeder
             'settings.manage',
             'users.view',
             'users.manage',
+            'users.delete',
             'files.view',
             'files.manage',
         ];
