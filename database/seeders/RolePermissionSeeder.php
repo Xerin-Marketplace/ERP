@@ -29,6 +29,7 @@ class RolePermissionSeeder extends Seeder
             'users.delete',
             'files.view',
             'files.manage',
+            'executive.command.view',
         ];
 
         foreach ($permissions as $permission) {
@@ -45,6 +46,7 @@ class RolePermissionSeeder extends Seeder
         $admin->syncPermissions([
             'system.view', 'audit.view', 'settings.view',
             'users.view', 'users.manage', 'users.delete', 'files.view', 'files.manage',
+            'executive.command.view',
         ]);
 
         Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web'])->syncPermissions(['files.view']);

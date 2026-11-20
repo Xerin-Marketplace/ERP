@@ -133,6 +133,15 @@ return [
         'warehouses' => 'Maghala',
         'welfare' => 'Fidia',
         'workflows' => 'Mtiririko wa Kazi',
+        'executive' => 'Kitendawili',
+        'financial_intelligence' => 'Uchanganuzi wa Fedha',
+        'sales_intelligence' => 'Uchanganuzi wa Mauzo',
+        'branch_performance' => 'Utendaji wa Matawi',
+        'department_performance' => 'Utendaji wa Idara',
+        'employee_intelligence' => 'Uchanganuzi wa Wafanyakazi',
+        'tasks_workload' => 'Kazi na Mizigo',
+        'tender_pipeline' => 'Mtiririko wa Zabuni',
+        'activity_audit' => 'Shughuli na Ukaguzi',
     ],
     'nav_group' => [
         'menu' => 'Menyu',
@@ -151,6 +160,7 @@ return [
         'shipment_airline' => 'Usafirishaji na Ndege',
         'reception' => 'Mapokezi',
         'organization' => 'Shirika',
+        'executive' => 'Kitendawili',
     ],
     'common' => [
         'save' => 'Hifadhi',

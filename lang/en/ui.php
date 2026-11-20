@@ -134,6 +134,15 @@ return [
         'warehouses' => 'Warehouses',
         'welfare' => 'Welfare',
         'workflows' => 'Workflows',
+        'executive' => 'Executive',
+        'financial_intelligence' => 'Financial Intelligence',
+        'sales_intelligence' => 'Sales Intelligence',
+        'branch_performance' => 'Branch Performance',
+        'department_performance' => 'Department Performance',
+        'employee_intelligence' => 'Employee Intelligence',
+        'tasks_workload' => 'Tasks & Workload',
+        'tender_pipeline' => 'Tender Pipeline',
+        'activity_audit' => 'Activity & Audit',
     ],
     'nav_group' => [
         'menu' => 'Menu',
@@ -152,6 +161,7 @@ return [
         'shipment_airline' => 'Shipment & Airline',
         'reception' => 'Reception',
         'organization' => 'Organization',
+        'executive' => 'Executive',
     ],
     'common' => [
         'save' => 'Save',

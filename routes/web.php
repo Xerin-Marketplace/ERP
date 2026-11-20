@@ -80,6 +80,20 @@ Route::middleware(['auth', 'verified', 'account.active'])->group(function () {
         return back();
     })->name('locale.set');
 
+    // Executive Command Center — group-wide BI for CEO/Super Admin.
+    Route::prefix('executive')->name('executive.')->middleware('permission:executive.command.view')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ExecutiveController::class, 'dashboard'])->name('dashboard');
+        Route::get('financial', [\App\Http\Controllers\ExecutiveController::class, 'financial'])->name('financial');
+        Route::get('branches', [\App\Http\Controllers\ExecutiveController::class, 'branches'])->name('branches');
+        Route::get('branches/{branch}', [\App\Http\Controllers\ExecutiveController::class, 'branch'])->name('branch');
+        Route::get('departments', [\App\Http\Controllers\ExecutiveController::class, 'departments'])->name('departments');
+        Route::get('sales', [\App\Http\Controllers\ExecutiveController::class, 'sales'])->name('sales');
+        Route::get('employees', [\App\Http\Controllers\ExecutiveController::class, 'employees'])->name('employees');
+        Route::get('tasks', [\App\Http\Controllers\ExecutiveController::class, 'tasks'])->name('tasks');
+        Route::get('tenders', [\App\Http\Controllers\ExecutiveController::class, 'tenders'])->name('tenders');
+        Route::get('activity', [\App\Http\Controllers\ExecutiveController::class, 'activity'])->name('activity');
+    });
+
     // System administration — permission-protected
     Route::get('/admin/system', [SystemController::class, 'index'])
         ->middleware('permission:system.view')

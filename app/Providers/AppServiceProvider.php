@@ -78,6 +78,26 @@ class AppServiceProvider extends ServiceProvider
             order: 1,
         ));
 
+        // Executive Command Center — group-wide BI for CEO / Super Admin.
+        $nav->register(new NavItem(
+            module: 'Core',
+            label: 'Executive',
+            icon: 'M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941',
+            group: 'Executive',
+            order: 5,
+            children: [
+                new NavItem(module: 'Core', label: 'Command Center', icon: '', route: 'executive.dashboard', permission: 'executive.command.view', group: 'Executive', order: 1),
+                new NavItem(module: 'Core', label: 'Financial Intelligence', icon: '', route: 'executive.financial', permission: 'executive.command.view', group: 'Executive', order: 5),
+                new NavItem(module: 'Core', label: 'Sales Intelligence', icon: '', route: 'executive.sales', permission: 'executive.command.view', group: 'Executive', order: 10),
+                new NavItem(module: 'Core', label: 'Branch Performance', icon: '', route: 'executive.branches', permission: 'executive.command.view', group: 'Executive', order: 15),
+                new NavItem(module: 'Core', label: 'Department Performance', icon: '', route: 'executive.departments', permission: 'executive.command.view', group: 'Executive', order: 20),
+                new NavItem(module: 'Core', label: 'Employee Intelligence', icon: '', route: 'executive.employees', permission: 'executive.command.view', group: 'Executive', order: 25),
+                new NavItem(module: 'Core', label: 'Tasks & Workload', icon: '', route: 'executive.tasks', permission: 'executive.command.view', group: 'Executive', order: 30),
+                new NavItem(module: 'Core', label: 'Tender Pipeline', icon: '', route: 'executive.tenders', permission: 'executive.command.view', group: 'Executive', order: 35),
+                new NavItem(module: 'Core', label: 'Activity & Audit', icon: '', route: 'executive.activity', permission: 'executive.command.view', group: 'Executive', order: 40),
+            ]
+        ));
+
         // System menu — single collapsible parent whose children are gated
         // by their own permissions (admin sees the full set).
         $nav->register(new NavItem(
