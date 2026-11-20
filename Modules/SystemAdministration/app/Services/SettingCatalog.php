@@ -24,6 +24,12 @@ class SettingCatalog
      */
     public static function definitions(): array
     {
+        return array_merge(self::coreDefinitions(), SettingRegistry::definitions());
+    }
+
+    /** Built-in platform settings (owned by this catalog). */
+    private static function coreDefinitions(): array
+    {
         return [
             /* ------------------------- General ------------------------- */
             'system.app_name' => ['group' => 'General', 'label' => 'Application name', 'type' => 'string', 'default' => 'XERIN GROUP ERP', 'rules' => 'required|string|max:100', 'risk' => 'low'],
