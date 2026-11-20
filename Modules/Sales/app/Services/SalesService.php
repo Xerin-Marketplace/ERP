@@ -306,7 +306,7 @@ class SalesService
         return [
             'pipeline_value'   => (float) SalesOpportunity::forBranch($branchId)->where('status', 'open')->sum('expected_revenue'),
             'weighted_pipeline'=> $this->weightedPipeline($branchId),
-            'quoted_value'     => (float) Quotation::when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('total_price'),
+            'quoted_value'     => (float) Quotation::when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('total'),
             'invoiced'         => (float) (clone $inv)->sum('total'),
             'collected'        => (float) (clone $inv)->sum('received_amount'),
             'outstanding'      => (float) (clone $inv)->sum('total') - (float) (clone $inv)->sum('received_amount'),
