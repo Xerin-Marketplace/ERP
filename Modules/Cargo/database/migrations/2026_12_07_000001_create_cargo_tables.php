@@ -76,7 +76,7 @@ return new class extends Migration
             $t->string('handling', 40)->nullable();             // fragile|liquid|battery|perishable|dangerous|normal
             $t->string('inspection_status', 30)->default('pending');   // pending|in_progress|passed|passed_conditions|info_required|repack_required|compliance_review|rejected|on_hold
             $t->string('packaging_status', 30)->default('original');   // original|repack_required|repack_in_progress|repacked
-            $t->foreignId('location_id')->nullable()->constrained('warehouse_locations')->nullOnDelete();
+            $t->unsignedBigInteger('location_id')->nullable()->index();  // FK added after warehouse_locations (Postgres ordering)
             $t->string('status', 30)->default('received');      // expected|received|identified|weighed|inspection_passed|on_hold|stored|ready|allocated|dispatched|cancelled
             $t->boolean('unidentified')->default(false);
             $t->text('notes')->nullable();
@@ -161,6 +161,10 @@ return new class extends Migration
             $t->string('status', 20)->default('active');
             $t->timestamps();
             $t->unique(['warehouse_id', 'code']);
+        });
+
+        Schema::table('cargo_packages', function (Blueprint $t) {
+            $t->foreign('location_id')->references('id')->on('warehouse_locations')->nullOnDelete();
         });
 
         Schema::create('warehouse_movements', function (Blueprint $t) {
