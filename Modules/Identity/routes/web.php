@@ -75,6 +75,8 @@ Route::middleware(['web', 'auth', 'verified', 'account.active'])
             ->name('users.deactivate')->middleware('permission:users.deactivate');
         Route::post('users/{user}/revoke-sessions', [UserManagementController::class, 'revokeSessions'])
             ->name('users.revoke-sessions')->middleware('permission:users.sessions.revoke');
+        Route::post('users/{user}/generate-password', [UserManagementController::class, 'generatePassword'])
+            ->name('users.generate-password')->middleware('permission:users.reset_password');
         Route::post('users/{user}/reset-password', [UserManagementController::class, 'resetPassword'])
             ->name('users.reset-password')->middleware('permission:users.reset_password');
         Route::post('users/{user}/resend-invitation', [UserManagementController::class, 'resendInvitation'])

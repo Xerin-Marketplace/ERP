@@ -34,6 +34,9 @@ return Application::configure(basePath: dirname(__DIR__))
             $middleware->appendToGroup('web', \Modules\SystemAdministration\Http\Middleware\EnforceReadOnlyMode::class);
         }
 
+        // Users flagged must_change_password are confined to the change screen.
+        $middleware->appendToGroup('web', \App\Http\Middleware\ForcePasswordChange::class);
+
         // EN+SW bilingual foundation: resolves user/system locale per request.
         $middleware->appendToGroup('web', \App\Http\Middleware\SetLocale::class);
     })

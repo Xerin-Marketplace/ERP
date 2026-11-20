@@ -148,7 +148,13 @@
                             @csrf
                             <button class="w-full rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-500">Verify email &amp; activate</button>
                         </form>
-                        <form method="POST" action="{{ route('identity.users.activate', $user) }}">
+                        @if(session('generated_password'))
+                    <div class="rounded-md bg-purple-50 border border-purple-200 px-4 py-3 mb-3">
+                        <p class="text-xs text-purple-700 font-medium">Temporary password — shown once, share securely:</p>
+                        <p class="font-mono text-lg text-purple-900 select-all">{{ session('generated_password') }}</p>
+                    </div>
+                    @endif
+                    <form method="POST" action="{{ route('identity.users.activate', $user) }}">
                             @csrf
                             <button class="w-full rounded-md bg-green-100 px-4 py-2 text-sm font-medium text-green-800 hover:bg-green-200">Activate (already verified)</button>
                         </form>
@@ -157,7 +163,12 @@
 
                 @if ($user->status === \App\Enums\AccountStatus::Pending && ! $pendingInvitation)
                     @can('registration.provision')
-                        <form method="POST" action="{{ route('identity.users.resend-invitation', $user) }}">
+                        <form method="POST" action="{{ route('identity.users.generate-password', $user) }}"
+                          onsubmit="return confirm('Generate a temporary password? Current sessions are revoked and the user must change it on login.');">
+                        @csrf
+                        <button class="w-full rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-500">Generate temporary password</button>
+                    </form>
+                    <form method="POST" action="{{ route('identity.users.resend-invitation', $user) }}">
                             @csrf
                             <button class="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500">Send activation invitation</button>
                         </form>

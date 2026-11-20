@@ -63,7 +63,7 @@ class UserManagementController extends Controller
             'branch_id' => ['nullable', 'exists:branches,id'],
             'department_id' => ['nullable', 'exists:departments,id'],
             'role' => ['nullable', 'exists:roles,name'],
-            'activation_mode' => ['required', 'in:invite,manual'],
+            'activation_mode' => ['sometimes', 'in:invite,manual'],
         ]);
 
         if ($data['role'] ?? null) {
@@ -133,6 +133,22 @@ class UserManagementController extends Controller
         $this->lifecycle->delete($user, $request->user()->id, $request->input('reason'));
         return redirect()->route('identity.users.index')
             ->with('success', "Account {$user->email} deleted.");
+    }
+
+    /** Admin generates a temporary password; user is forced to change it on next login. */
+    public function generatePassword(User $user, Request $request)
+    {
+        abort_unless($request->user()->can('users.reset_password'), 403);
+        abort_if($user->hasRole('super-admin'), 422, 'Cannot set a password for super-admin.');
+
+        $plain = \Str::password(12);
+        $user->update(['password' => \Hash::make($plain), 'must_change_password' => true]);
+        $this->lifecycle->revokeAccess($user, $request->user()->id, 'password_generated');
+        app(\App\Services\AuditService::class)->log('user.password_generated', $user,
+            metadata: ['actor_id' => $request->user()->id]);
+
+        return back()->with('generated_password', $plain)
+            ->with('success', 'Temporary password generated — user must change it on first login.');
     }
 
     /** Admin-triggered password reset via a fresh activation link. */
