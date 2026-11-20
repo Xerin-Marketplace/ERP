@@ -43,7 +43,7 @@ class RolePermissionSeeder extends Seeder
         $admin = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         $admin->syncPermissions([
             'system.view', 'audit.view', 'settings.view',
-            'users.view', 'users.manage', 'files.view', 'files.manage',
+            'users.view', 'users.manage', 'users.delete', 'files.view', 'files.manage',
         ]);
 
         Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web'])->syncPermissions(['files.view']);
