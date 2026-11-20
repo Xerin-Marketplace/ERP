@@ -2,7 +2,7 @@
     <x-slot name="header">Executive Command Center</x-slot>
 
     {{-- Hero strip --}}
-    <div class="mb-5 overflow-hidden rounded-xl bg-gradient-to-r from-gray-950 via-gray-800 to-gray-950 p-5 text-white shadow-md border-l-4 border-xerin-500">
+    <div class="mb-5 overflow-hidden rounded bg-gradient-to-r from-gray-950 via-gray-800 to-gray-950 p-5 text-white shadow-md border-l-4 border-xerin-500">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
                 <h2 class="text-lg font-bold tracking-tight">Xerin Group — Command Center</h2>
@@ -24,45 +24,45 @@
     {{-- ── FINANCIAL PULSE ──────────────────────────── --}}
     <p class="mb-2 text-[11px] font-bold uppercase tracking-widest text-gray-400">Financial pulse</p>
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
-        @include('executive._kpi', ['title' => 'Revenue', 'kpi' => $kpis['revenue'], 'money' => true, 'bg' => 'from-xerin-500 to-xerin-700', 'spark' => 'revenue', 'href' => route('executive.financial', request()->query())])
-        @include('executive._kpi', ['title' => 'Expenses', 'kpi' => $kpis['expenses'], 'money' => true, 'bg' => 'from-gray-700 to-gray-900', 'spark' => 'expenses', 'invert' => true])
-        @include('executive._kpi', ['title' => 'Net Profit', 'kpi' => $kpis['net_profit'], 'money' => true, 'bg' => 'from-xerin-600 to-xerin-800', 'spark' => 'profit', 'href' => route('executive.financial', request()->query())])
-        @include('executive._kpi', ['title' => 'Profit Margin', 'kpi' => $kpis['margin'], 'percent' => true, 'bg' => 'from-gray-500 to-gray-700'])
-        @include('executive._kpi', ['title' => 'Cash Collected', 'kpi' => $kpis['cash_collected'], 'money' => true, 'bg' => 'from-xerin-400 to-xerin-600'])
-        @include('executive._kpi', ['title' => 'A/R Outstanding', 'kpi' => $kpis['ar_outstanding'], 'money' => true, 'bg' => 'from-gray-500 to-gray-700', 'invert' => true, 'href' => route('executive.financial', request()->query())])
-        @include('executive._kpi', ['title' => 'A/R Overdue', 'kpi' => $kpis['ar_overdue'], 'money' => true, 'bg' => 'from-gray-800 to-gray-950', 'invert' => true])
-        @include('executive._kpi', ['title' => 'A/P Outstanding', 'kpi' => $kpis['ap_outstanding'], 'money' => true, 'bg' => 'from-gray-600 to-gray-800', 'invert' => true])
+        @include('executive._kpi', ['title' => 'Revenue', 'kpi' => $kpis['revenue'], 'money' => true, 'color' => 'text-emerald-700', 'spark' => 'revenue', 'href' => route('executive.financial', request()->query())])
+        @include('executive._kpi', ['title' => 'Expenses', 'kpi' => $kpis['expenses'], 'money' => true, 'color' => 'text-red-700', 'spark' => 'expenses', 'sparkColor' => '#41464D', 'invert' => true])
+        @include('executive._kpi', ['title' => 'Net Profit', 'kpi' => $kpis['net_profit'], 'money' => true, 'color' => $kpis['net_profit']['value'] >= 0 ? 'text-emerald-700' : 'text-red-700', 'spark' => 'profit', 'href' => route('executive.financial', request()->query())])
+        @include('executive._kpi', ['title' => 'Profit Margin', 'kpi' => $kpis['margin'], 'percent' => true])
+        @include('executive._kpi', ['title' => 'Cash Collected', 'kpi' => $kpis['cash_collected'], 'money' => true])
+        @include('executive._kpi', ['title' => 'A/R Outstanding', 'kpi' => $kpis['ar_outstanding'], 'money' => true, 'invert' => true, 'href' => route('executive.financial', request()->query())])
+        @include('executive._kpi', ['title' => 'A/R Overdue', 'kpi' => $kpis['ar_overdue'], 'money' => true, 'color' => 'text-red-700', 'invert' => true])
+        @include('executive._kpi', ['title' => 'A/P Outstanding', 'kpi' => $kpis['ap_outstanding'], 'money' => true, 'invert' => true])
     </div>
 
     {{-- ── OPERATIONS PULSE ─────────────────────────── --}}
     <p class="mb-2 text-[11px] font-bold uppercase tracking-widest text-gray-400">Operations pulse</p>
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-        @include('executive._kpi', ['title' => 'Pkgs Received', 'kpi' => $ops['packages_received'], 'bg' => 'from-xerin-500 to-xerin-700', 'spark' => 'packages'])
-        @include('executive._kpi', ['title' => 'In Warehouse', 'kpi' => $ops['in_warehouse'], 'bg' => 'from-gray-500 to-gray-700'])
-        @include('executive._kpi', ['title' => 'Active Bookings', 'kpi' => $ops['active_bookings'], 'bg' => 'from-xerin-600 to-xerin-800'])
-        @include('executive._kpi', ['title' => 'Pending Releases', 'kpi' => $ops['pending_releases'], 'bg' => 'from-gray-600 to-gray-800', 'invert' => true])
-        @include('executive._kpi', ['title' => 'Delivered', 'kpi' => $ops['deliveries_completed'], 'bg' => 'from-xerin-400 to-xerin-600'])
-        @include('executive._kpi', ['title' => 'Active Deliveries', 'kpi' => $ops['deliveries_active'], 'bg' => 'from-gray-700 to-gray-900'])
+        @include('executive._kpi', ['title' => 'Pkgs Received', 'kpi' => $ops['packages_received'], 'spark' => 'packages'])
+        @include('executive._kpi', ['title' => 'In Warehouse', 'kpi' => $ops['in_warehouse']])
+        @include('executive._kpi', ['title' => 'Active Bookings', 'kpi' => $ops['active_bookings']])
+        @include('executive._kpi', ['title' => 'Pending Releases', 'kpi' => $ops['pending_releases'], 'invert' => true])
+        @include('executive._kpi', ['title' => 'Delivered', 'kpi' => $ops['deliveries_completed'], 'color' => 'text-emerald-700'])
+        @include('executive._kpi', ['title' => 'Active Deliveries', 'kpi' => $ops['deliveries_active']])
     </div>
 
     {{-- ── BUSINESS PULSE ───────────────────────────── --}}
     <p class="mb-2 text-[11px] font-bold uppercase tracking-widest text-gray-400">Business pulse</p>
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-        @include('executive._kpi', ['title' => 'Customers', 'kpi' => $kpis['customers'], 'bg' => 'from-xerin-500 to-xerin-700', 'href' => route('executive.sales', request()->query())])
-        @include('executive._kpi', ['title' => 'New Customers', 'kpi' => $kpis['new_customers'], 'bg' => 'from-gray-500 to-gray-700'])
-        @include('executive._kpi', ['title' => 'Employees', 'kpi' => $kpis['employees'], 'bg' => 'from-xerin-600 to-xerin-800', 'href' => route('executive.employees', request()->query())])
-        @include('executive._kpi', ['title' => 'Open Tasks', 'kpi' => $kpis['tasks_open'], 'bg' => 'from-gray-600 to-gray-800', 'href' => route('executive.tasks', request()->query())])
-        @include('executive._kpi', ['title' => 'Overdue Tasks', 'kpi' => $kpis['tasks_overdue'], 'bg' => 'from-gray-800 to-gray-950', 'invert' => true, 'href' => route('executive.tasks', request()->query())])
-        @include('executive._kpi', ['title' => 'Tenders Won', 'kpi' => $kpis['tenders_won'], 'bg' => 'from-xerin-400 to-xerin-600', 'href' => route('executive.tenders', request()->query())])
+        @include('executive._kpi', ['title' => 'Customers', 'kpi' => $kpis['customers'], 'href' => route('executive.sales', request()->query())])
+        @include('executive._kpi', ['title' => 'New Customers', 'kpi' => $kpis['new_customers']])
+        @include('executive._kpi', ['title' => 'Employees', 'kpi' => $kpis['employees'], 'href' => route('executive.employees', request()->query())])
+        @include('executive._kpi', ['title' => 'Open Tasks', 'kpi' => $kpis['tasks_open'], 'href' => route('executive.tasks', request()->query())])
+        @include('executive._kpi', ['title' => 'Overdue Tasks', 'kpi' => $kpis['tasks_overdue'], 'color' => 'text-red-700', 'invert' => true, 'href' => route('executive.tasks', request()->query())])
+        @include('executive._kpi', ['title' => 'Tenders Won', 'kpi' => $kpis['tenders_won'], 'color' => 'text-emerald-700', 'href' => route('executive.tenders', request()->query())])
     </div>
 
     {{-- ── CHARTS ROW 1: trend + branch mix ─────────── --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-        <div class="lg:col-span-2 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div class="lg:col-span-2 rounded border border-gray-200 bg-white p-4 shadow-sm">
             <h3 class="text-sm font-semibold mb-3">Revenue vs Expenses — {{ $from }} → {{ $to }}</h3>
             <div class="relative h-72"><canvas id="trendChart"></canvas></div>
         </div>
-        <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div class="rounded border border-gray-200 bg-white p-4 shadow-sm">
             <h3 class="text-sm font-semibold mb-1">Revenue by Branch</h3>
             <p class="text-[11px] text-gray-400 mb-2">Each branch in its own posting currency</p>
             <div class="relative h-64"><canvas id="branchDonut"></canvas></div>
@@ -71,15 +71,15 @@
 
     {{-- ── CHARTS ROW 2: pipeline + tasks + activity ── --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-        <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div class="rounded border border-gray-200 bg-white p-4 shadow-sm">
             <h3 class="text-sm font-semibold mb-3">Cargo → Delivery Pipeline</h3>
             <div class="relative h-56"><canvas id="funnelChart"></canvas></div>
         </div>
-        <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div class="rounded border border-gray-200 bg-white p-4 shadow-sm">
             <h3 class="text-sm font-semibold mb-3">Tasks by Status</h3>
             <div class="relative h-56"><canvas id="taskDonut"></canvas></div>
         </div>
-        <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div class="rounded border border-gray-200 bg-white p-4 shadow-sm">
             <h3 class="text-sm font-semibold mb-3">Live Activity</h3>
             <ul class="space-y-2 text-xs max-h-56 overflow-y-auto pr-1">
                 @forelse ($activity as $a)
@@ -95,7 +95,7 @@
     </div>
 
     {{-- Branch comparison --}}
-    <div class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-x-auto">
+    <div class="rounded border border-gray-200 bg-white shadow-sm overflow-x-auto">
         <h3 class="p-4 pb-0 text-sm font-semibold">Branch Performance</h3>
         <table class="w-full text-sm">
             <thead class="text-left"><tr class="border-b text-xs text-gray-500">
