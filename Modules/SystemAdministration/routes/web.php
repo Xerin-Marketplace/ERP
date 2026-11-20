@@ -51,6 +51,18 @@ Route::middleware(['web', 'auth', 'verified', 'account.active'])
         Route::post('navigation/reset', [Controllers\NavigationController::class, 'reset'])
             ->name('navigation.reset')->middleware('permission:sysadmin.navigation.manage');
 
+        /* Command Center */
+        Route::get('command-center', [Controllers\CommandCenterController::class, 'index'])
+            ->name('commands.index')->middleware('permission:sysadmin.commands.view');
+        Route::post('command-center/{id}/execute', [Controllers\CommandCenterController::class, 'execute'])
+            ->name('commands.execute')->middleware('permission:sysadmin.commands.execute');
+        Route::get('command-history', [Controllers\CommandCenterController::class, 'history'])
+            ->name('commands.history')->middleware('permission:sysadmin.commands.view');
+        Route::post('command-executions/{execution}/approve', [Controllers\CommandCenterController::class, 'approve'])
+            ->name('commands.approve')->middleware('permission:sysadmin.commands.approve');
+        Route::post('command-executions/{execution}/reject', [Controllers\CommandCenterController::class, 'reject'])
+            ->name('commands.reject')->middleware('permission:sysadmin.commands.approve');
+
         // Feature flags
         Route::get('feature-flags', [Controllers\FeatureFlagController::class, 'index'])
             ->name('flags')->middleware('permission:sysadmin.flags.manage');

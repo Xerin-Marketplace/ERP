@@ -100,6 +100,7 @@ class AppServiceProvider extends ServiceProvider
                 new NavItem(module: 'SystemAdministration', label: 'General Settings', icon: '', route: 'systemadmin.settings', permission: 'sysadmin.settings.manage', group: 'Administration', order: 55),
                 new NavItem(module: 'SystemAdministration', label: 'System Rules', icon: '', route: 'systemadmin.rules', permission: 'sysadmin.rules.manage', group: 'Administration', order: 60),
                 new NavItem(module: 'SystemAdministration', label: 'Module Management', icon: '', route: 'systemadmin.modules', permission: 'sysadmin.modules.manage', group: 'Administration', order: 65),
+                new NavItem(module: 'SystemAdministration', label: 'Command Center', icon: '', route: 'systemadmin.commands.index', permission: 'sysadmin.commands.view', group: 'Administration', order: 67),
                 new NavItem(module: 'SystemAdministration', label: 'Navigation', icon: '', route: 'systemadmin.navigation', permission: 'sysadmin.navigation.manage', group: 'Administration', order: 70),
                 new NavItem(module: 'SystemAdministration', label: 'Feature Flags', icon: '', route: 'systemadmin.flags', permission: 'sysadmin.flags.manage', group: 'Administration', order: 75),
                 new NavItem(module: 'SystemAdministration', label: 'Announcements', icon: '', route: 'systemadmin.announcements', permission: 'sysadmin.announcements.manage', group: 'Administration', order: 80),

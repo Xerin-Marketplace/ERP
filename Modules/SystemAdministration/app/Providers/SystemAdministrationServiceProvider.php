@@ -18,6 +18,9 @@ class SystemAdministrationServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         $this->loadViewsFrom(module_path($this->name, 'resources/views'), $this->nameLower);
+        if ($this->app->runningInConsole()) {
+            $this->commands([\Modules\SystemAdministration\Console\Commands\XerinCommand::class]);
+        }
         // Navigation: control-center entries are children of the core
         // System menu registered in AppServiceProvider.
     }
