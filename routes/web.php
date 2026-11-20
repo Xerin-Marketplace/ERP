@@ -35,6 +35,10 @@ Route::middleware(['auth', 'verified', 'account.active'])->group(function () {
     Route::post('/mfa/challenge', [\App\Http\Controllers\MfaChallengeController::class, 'verify'])->name('mfa.verify');
 
     Route::get('/dashboard', function () {
+        // CEO lands on the Executive Command Center, not the staff dashboard.
+        if (auth()->user()->hasRole('ceo')) {
+            return redirect()->route('executive.dashboard');
+        }
         $stats = [
             'companies' => \Modules\Organization\Models\Company::count(),
             'active_companies' => \Modules\Organization\Models\Company::where('status', 'active')->count(),

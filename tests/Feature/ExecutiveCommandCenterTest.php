@@ -73,6 +73,17 @@ class ExecutiveCommandCenterTest extends TestCase
             ->assertOk()->assertSee('Executive Command Center')->assertSee('Branch Performance');
     }
 
+    public function test_ceo_lands_on_command_center_not_staff_dashboard(): void
+    {
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'ceo', 'guard_name' => 'web'])
+            ->givePermissionTo('executive.command.view');
+        $ceo = User::factory()->create(['status' => AccountStatus::Active]);
+        $ceo->assignRole('ceo');
+
+        $this->actingAs($ceo)->get('/dashboard')->assertRedirect(route('executive.dashboard'));
+        $this->actingAs($ceo)->get('/executive')->assertOk();
+    }
+
     public function test_kpis_trace_to_gl_and_branch_scope_works(): void
     {
         $this->postRevenue(1000.0, $this->dxb->id);
