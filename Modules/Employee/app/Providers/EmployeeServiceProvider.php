@@ -27,7 +27,7 @@ class EmployeeServiceProvider extends ModuleServiceProvider
 
         $items = [
             ['Dashboard', 'employee.dashboard', ['employee.view', 'employee.view_all'], 10],
-            ['Directory', 'employee.index', ['employee.view', 'employee.view_all'], 20],
+            ['All Employees', 'employee.index', ['employee.view', 'employee.view_all'], 20],
             ['Positions & Grades', 'employee.structure.index', ['employee.position.manage', 'employee.grade.manage'], 30],
             ['Transfers', 'employee.transfers.index', ['employee.transfer.request', 'employee.transfer.approve'], 40],
             ['Promotions & Changes', 'employee.changes.index', ['employee.promotion.request', 'employee.promotion.approve'], 50],
@@ -36,16 +36,18 @@ class EmployeeServiceProvider extends ModuleServiceProvider
             ['My Employment', 'employee.me', [], 5],
         ];
 
+        $children = [];
         foreach ($items as [$label, $route, $permissions, $order]) {
-            $nav->register(new \App\Services\Navigation\NavItem(
-                module: 'Employee',
-                label: $label,
-                icon: $icon,
-                route: $route,
-                permission: $permissions ?: null,
-                group: 'Workforce',
-                order: $order,
-            ));
+            $children[] = new \App\Services\Navigation\NavItem(
+                module: 'Employee', label: $label, icon: '',
+                route: $route, permission: $permissions ?: null,
+                group: 'Workforce', order: $order,
+            );
         }
+
+        $nav->register(new \App\Services\Navigation\NavItem(
+            module: 'Employee', label: 'Employees', icon: $icon,
+            group: 'Workforce', order: 10, children: $children,
+        ));
     }
 }

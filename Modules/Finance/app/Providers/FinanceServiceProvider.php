@@ -41,11 +41,17 @@ class FinanceServiceProvider extends ModuleServiceProvider
             ['Finance Settings', 'finance.settings', ['finance.settings.manage'], 95],
         ];
 
+        $children = [];
         foreach ($items as [$label, $route, $permission, $order]) {
-            $nav->register(new \App\Services\Navigation\NavItem(
-                module: 'Finance', label: $label, icon: $icon,
+            $children[] = new \App\Services\Navigation\NavItem(
+                module: 'Finance', label: $label, icon: '',
                 route: $route, permission: $permission, group: 'Finance', order: $order,
-            ));
+            );
         }
+
+        $nav->register(new \App\Services\Navigation\NavItem(
+            module: 'Finance', label: 'Finance', icon: $icon,
+            group: 'Finance', order: 10, children: $children,
+        ));
     }
 }

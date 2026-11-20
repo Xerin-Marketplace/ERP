@@ -36,11 +36,17 @@ class ReceptionServiceProvider extends ModuleServiceProvider
             ['IT Technicians', 'reception.technicians', ['reception.it_availability.view'], 50],
         ];
 
+        $children = [];
         foreach ($items as [$label, $route, $permission, $order]) {
-            $nav->register(new \App\Services\Navigation\NavItem(
-                module: 'Reception', label: $label, icon: $icon,
+            $children[] = new \App\Services\Navigation\NavItem(
+                module: 'Reception', label: $label, icon: '',
                 route: $route, permission: $permission, group: 'Reception', order: $order,
-            ));
+            );
         }
+
+        $nav->register(new \App\Services\Navigation\NavItem(
+            module: 'Reception', label: 'Reception', icon: $icon,
+            group: 'Reception', order: 10, children: $children,
+        ));
     }
 }

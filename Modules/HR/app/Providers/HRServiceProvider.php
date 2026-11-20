@@ -44,11 +44,17 @@ class HRServiceProvider extends ModuleServiceProvider
             ['HR Reports', 'hr.reports', ['attendance.reports.view', 'hr.dashboard.view'], 90],
         ];
 
+        $children = [];
         foreach ($items as [$label, $route, $permission, $order]) {
-            $nav->register(new \App\Services\Navigation\NavItem(
-                module: 'HR', label: $label, icon: $icon,
+            $children[] = new \App\Services\Navigation\NavItem(
+                module: 'HR', label: $label, icon: '',
                 route: $route, permission: $permission, group: 'Human Resources', order: $order,
-            ));
+            );
         }
+
+        $nav->register(new \App\Services\Navigation\NavItem(
+            module: 'HR', label: 'Human Resources', icon: $icon,
+            group: 'Human Resources', order: 10, children: $children,
+        ));
     }
 }

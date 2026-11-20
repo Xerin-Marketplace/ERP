@@ -60,95 +60,31 @@ class OrganizationServiceProvider extends ModuleServiceProvider
     private function registerNavigation(): void
     {
         $nav = $this->app->make(\App\Services\Navigation\NavigationRegistry::class);
+        $icon = 'M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z';
+
+        $items = [
+            ['Overview', 'organization.index', 'organization.dashboard.view', 10],
+            ['Companies', 'organization.companies.index', 'organization.company.view', 11],
+            ['Branches', 'organization.branches.index', 'organization.branches.view', 12],
+            ['Departments', 'organization.departments.index', 'organization.departments.view', 13],
+            ['Positions', 'organization.positions.index', 'organization.positions.view', 14],
+            ['Locations', 'organization.locations.index', 'organization.locations.view', 15],
+            ['Structure', 'organization.structure', 'organization.structure.view', 16],
+            ['Audit History', 'organization.audit', 'organization.audit.view', 17],
+            ['Org Settings', 'organization.settings', 'organization.settings.manage', 18],
+        ];
+
+        $children = [];
+        foreach ($items as [$label, $route, $permission, $order]) {
+            $children[] = new \App\Services\Navigation\NavItem(
+                module: 'Organization', label: $label, icon: '',
+                route: $route, permission: $permission, group: 'Organization', order: $order,
+            );
+        }
 
         $nav->register(new \App\Services\Navigation\NavItem(
-            module: 'Organization',
-            label: 'Overview',
-            icon: 'M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z',
-            route: 'organization.index',
-            permission: 'organization.dashboard.view',
-            group: 'Organization',
-            order: 10,
-        ));
-
-        $nav->register(new \App\Services\Navigation\NavItem(
-            module: 'Organization',
-            label: 'Companies',
-            icon: 'M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21',
-            route: 'organization.companies.index',
-            permission: 'organization.company.view',
-            group: 'Organization',
-            order: 11,
-        ));
-
-        $nav->register(new \App\Services\Navigation\NavItem(
-            module: 'Organization',
-            label: 'Branches',
-            icon: 'M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z',
-            route: 'organization.branches.index',
-            permission: 'organization.branches.view',
-            group: 'Organization',
-            order: 12,
-        ));
-
-        $nav->register(new \App\Services\Navigation\NavItem(
-            module: 'Organization',
-            label: 'Positions',
-            icon: 'M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0',
-            route: 'organization.positions.index',
-            permission: 'organization.positions.view',
-            group: 'Organization',
-            order: 14,
-        ));
-
-        $nav->register(new \App\Services\Navigation\NavItem(
-            module: 'Organization',
-            label: 'Departments',
-            icon: 'M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z',
-            route: 'organization.departments.index',
-            permission: 'organization.departments.view',
-            group: 'Organization',
-            order: 13,
-        ));
-
-        $nav->register(new \App\Services\Navigation\NavItem(
-            module: 'Organization',
-            label: 'Locations',
-            icon: 'M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z',
-            route: 'organization.locations.index',
-            permission: 'organization.locations.view',
-            group: 'Organization',
-            order: 15,
-        ));
-
-        $nav->register(new \App\Services\Navigation\NavItem(
-            module: 'Organization',
-            label: 'Structure',
-            icon: 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z',
-            route: 'organization.structure',
-            permission: 'organization.structure.view',
-            group: 'Organization',
-            order: 16,
-        ));
-
-        $nav->register(new \App\Services\Navigation\NavItem(
-            module: 'Organization',
-            label: 'Audit History',
-            icon: 'M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z',
-            route: 'organization.audit',
-            permission: 'organization.audit.view',
-            group: 'Organization',
-            order: 17,
-        ));
-
-        $nav->register(new \App\Services\Navigation\NavItem(
-            module: 'Organization',
-            label: 'Org Settings',
-            icon: 'M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z M15 12a3 3 0 11-6 0 3 3 0 016 0z',
-            route: 'organization.settings',
-            permission: 'organization.settings.manage',
-            group: 'Organization',
-            order: 17,
+            module: 'Organization', label: 'Organization', icon: $icon,
+            group: 'Organization', order: 10, children: $children,
         ));
     }
 

@@ -43,11 +43,17 @@ class TicketingServiceProvider extends ModuleServiceProvider
             ['Reports', 'ticketing.admin.reports', ['ticket_reports.view'], 90],
         ];
 
+        $children = [];
         foreach ($items as [$label, $route, $permission, $order]) {
-            $nav->register(new \App\Services\Navigation\NavItem(
-                module: 'Ticketing', label: $label, icon: $icon,
+            $children[] = new \App\Services\Navigation\NavItem(
+                module: 'Ticketing', label: $label, icon: '',
                 route: $route, permission: $permission, group: 'Service Desk', order: $order,
-            ));
+            );
         }
+
+        $nav->register(new \App\Services\Navigation\NavItem(
+            module: 'Ticketing', label: 'Service Desk', icon: $icon,
+            group: 'Service Desk', order: 10, children: $children,
+        ));
     }
 }
