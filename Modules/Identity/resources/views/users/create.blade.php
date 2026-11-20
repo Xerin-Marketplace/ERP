@@ -43,7 +43,7 @@
                 <select id="department_id" name="department_id" class="block mt-1.5 w-full rounded-md border-gray-300 text-sm shadow-sm">
                     <option value="">—</option>
                     @foreach ($departments as $d)
-                        <option value="{{ $d->id }}" @selected(old('department_id') == $d->id)>{{ $d->name }}</option>
+                        <option value="{{ $d->id }}" @selected(old('department_id') == $d->id)>{{ $d->name }}{{ $d->branch?->code ? ' ('.$d->branch->code.')' : '' }}</option>
                     @endforeach
                 </select>
             </div>

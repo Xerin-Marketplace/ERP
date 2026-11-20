@@ -46,7 +46,7 @@ class UserManagementController extends Controller
             'roles' => $guard->assignableRoles(request()->user(), Role::orderBy('name')->get()),
             'branches' => \Modules\Organization\Models\Branch::active()->orderBy('name')->get(['id', 'name']),
             'companies' => \Modules\Organization\Models\Company::active()->orderBy('legal_name')->get(['id', 'legal_name']),
-            'departments' => \Modules\Organization\Models\Department::where('status', 'active')->orderBy('name')->get(['id', 'name', 'branch_id']),
+            'departments' => \Modules\Organization\Models\Department::where('status', 'active')->with('branch:id,code')->orderBy('name')->get(['id', 'name', 'branch_id']),
         ]);
     }
 
@@ -167,7 +167,7 @@ class UserManagementController extends Controller
                 ->whereNull('used_at')->whereNull('revoked_at')->where('expires_at', '>', now())->latest()->first(),
             'companies' => \Modules\Organization\Models\Company::where('status', 'active')->orderBy('legal_name')->get(['id', 'legal_name']),
             'branches' => \Modules\Organization\Models\Branch::where('status', 'active')->orderBy('name')->get(['id', 'name', 'company_id']),
-            'departments' => \Modules\Organization\Models\Department::where('status', 'active')->orderBy('name')->get(['id', 'name', 'company_id', 'branch_id']),
+            'departments' => \Modules\Organization\Models\Department::where('status', 'active')->with('branch:id,code')->orderBy('name')->get(['id', 'name', 'company_id', 'branch_id']),
             'managers' => User::where('id', '!=', $user->id)->orderBy('name')->get(['id', 'name']),
         ]);
     }

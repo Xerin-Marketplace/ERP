@@ -34,7 +34,7 @@
                     <label class="block text-xs font-semibold text-gray-600">Department</label>
                     <select name="department_id" class="mt-1 w-full rounded-sm border-gray-300 text-sm">
                         <option value="">—</option>
-                        @foreach ($departments as $d) <option value="{{ $d->id }}" @selected(old('department_id') == $d->id)>{{ $d->name }}</option> @endforeach
+                        @foreach ($departments as $d) <option value="{{ $d->id }}" @selected(old('department_id') == $d->id)>{{ $d->name }}{{ $d->branch?->code ? ' ('.$d->branch->code.')' : '' }}</option> @endforeach
                     </select>
                 </div>
                 @if ($type !== 'external')

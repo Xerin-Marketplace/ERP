@@ -25,7 +25,7 @@ class PublicAccessController extends Controller
         return view('reception::access.public.form', [
             'type' => $type,
             'branches' => Branch::active()->orderBy('name')->get(['id', 'name']),
-            'departments' => Department::where('status', 'active')->orderBy('name')->get(['id', 'name', 'branch_id']),
+            'departments' => Department::where('status', 'active')->with('branch:id,code')->orderBy('name')->get(['id', 'name', 'branch_id']),
         ]);
     }
 
