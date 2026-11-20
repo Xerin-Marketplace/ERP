@@ -89,6 +89,15 @@ class ExecutiveAnalyticsService
             : 'COALESCE(SUM(general_ledger_entries.debit - general_ledger_entries.credit),0) as agg';
     }
 
+    /** Cross-DB date truncation (sqlite/mysql SUBSTR, pgsql TO_CHAR). */
+    private function datePart(string $column, int $len): string
+    {
+        if (DB::connection()->getDriverName() === 'pgsql') {
+            return "TO_CHAR({$column}::date, '" . ($len === 7 ? 'YYYY-MM' : 'YYYY-MM-DD') . "')";
+        }
+        return "SUBSTR({$column},1,{$len})";
+    }
+
     /** Monthly buckets for trend charts. */
     public function financeTrend(int $companyId, string $from, string $to, ?int $branchId): array
     {
@@ -97,7 +106,7 @@ class ExecutiveAnalyticsService
             ->whereBetween('general_ledger_entries.entry_date', [$from, $to])
             ->when($branchId, fn ($q) => $q->where('general_ledger_entries.branch_id', $branchId))
             ->whereIn('chart_of_accounts.type', ['revenue', 'expense'])
-            ->selectRaw("SUBSTR(general_ledger_entries.entry_date,1,7) as bucket, chart_of_accounts.type, SUM(general_ledger_entries.credit - general_ledger_entries.debit) as amt")
+            ->selectRaw("{$this->datePart('general_ledger_entries.entry_date', 7)} as bucket, chart_of_accounts.type, SUM(general_ledger_entries.credit - general_ledger_entries.debit) as amt")
             ->groupBy('bucket', 'chart_of_accounts.type')
             ->orderBy('bucket')->get();
 
@@ -230,7 +239,7 @@ class ExecutiveAnalyticsService
             'by_customer' => (clone $cur)->selectRaw('customer_id, SUM(total) as amt, COUNT(*) as n')
                 ->groupBy('customer_id')->orderByDesc('amt')->limit(10)->get()
                 ->map(fn ($r) => ['customer' => \Modules\Commercial\Models\Customer::find($r->customer_id), 'amt' => (float) $r->amt, 'n' => $r->n]),
-            'by_month' => (clone $cur)->selectRaw("SUBSTR(invoice_date,1,7) as m, SUM(total) as amt")
+            'by_month' => (clone $cur)->selectRaw("{$this->datePart('invoice_date', 7)} as m, SUM(total) as amt")
                 ->groupBy('m')->orderBy('m')->pluck('amt', 'm'),
         ];
     }
@@ -323,12 +332,12 @@ class ExecutiveAnalyticsService
             ->whereBetween('general_ledger_entries.entry_date', [$from, $to])
             ->when($branchId, fn ($q) => $q->where('general_ledger_entries.branch_id', $branchId))
             ->whereIn('chart_of_accounts.type', ['revenue', 'expense'])
-            ->selectRaw("SUBSTR(general_ledger_entries.entry_date,1,10) as day, chart_of_accounts.type, SUM(general_ledger_entries.credit - general_ledger_entries.debit) as amt")
+            ->selectRaw("{$this->datePart('general_ledger_entries.entry_date', 10)} as day, chart_of_accounts.type, SUM(general_ledger_entries.credit - general_ledger_entries.debit) as amt")
             ->groupBy('day', 'chart_of_accounts.type')->get();
 
         $pkgDays = CargoPackage::when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->whereBetween('created_at', [$from, $to . ' 23:59:59'])
-            ->selectRaw("SUBSTR(created_at,1,10) as day, COUNT(*) as n")->groupBy('day')->pluck('n', 'day');
+            ->selectRaw("{$this->datePart('created_at', 10)} as day, COUNT(*) as n")->groupBy('day')->pluck('n', 'day');
 
         $days = [];
         for ($c = Carbon::parse($from); $c <= Carbon::parse($to); $c->addDay()) { $days[] = $c->toDateString(); }
