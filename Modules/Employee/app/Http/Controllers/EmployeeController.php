@@ -28,17 +28,25 @@ class EmployeeController extends Controller
     {
         abort_unless($request->user()->canAny(['employee.view', 'employee.view_all']), 403);
 
-        $employees = $this->employees->directory($request->user(), $request->only([
-            'search', 'status', 'company_id', 'branch_id', 'department_id', 'position_id', 'employment_type',
-        ]))->paginate(20)->withQueryString();
+        $filters = $request->only(['search', 'status', 'company_id', 'branch_id', 'department_id', 'position_id', 'employment_type']);
+        $employees = $this->employees->directory($request->user(), $filters)->paginate(20)->withQueryString();
+
+        $base = $this->employees->directory($request->user(), []);
+        $stats = [
+            'total' => (clone $base)->count(),
+            'active' => (clone $base)->where('status', 'active')->count(),
+            'onboarding' => (clone $base)->where('status', 'onboarding')->count(),
+            'suspended' => (clone $base)->where('status', 'suspended')->count(),
+        ];
 
         return view('employee::employees.index', [
             'employees' => $employees,
+            'stats' => $stats,
             'companies' => Company::where('status', 'active')->orderBy('legal_name')->get(['id', 'legal_name']),
             'branches' => Branch::where('status', 'active')->orderBy('name')->get(['id', 'name', 'company_id']),
             'departments' => Department::where('status', 'active')->orderBy('name')->get(['id', 'name', 'company_id']),
             'positions' => JobPosition::orderBy('title')->get(['id', 'title']),
-            'filters' => $request->only(['search', 'status', 'company_id', 'branch_id', 'department_id', 'position_id', 'employment_type']),
+            'filters' => $filters,
         ]);
     }
 
