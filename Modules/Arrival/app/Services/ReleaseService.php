@@ -32,6 +32,11 @@ class ReleaseService
                     "Invoice {$invoice->reference} is not fully paid — release cannot be requested."]);
             }
         }
+
+        // §15.5: cargo on credit cannot be released over the credit limit.
+        if ($package->customer_id) {
+            $this->assertWithinCreditLimit($package->customer);
+        }
         return ReleaseApproval::create([
             'reference' => $this->nextRef(), 'package_id' => $package->id,
             'invoice_id' => $invoiceId, 'branch_id' => $branchId, 'status' => 'pending',
@@ -73,6 +78,22 @@ class ReleaseService
         $a->update(['status' => 'released', 'code_used_at' => now()]);
         $this->audit->log('release.code_used', $a);
         return true;
+    }
+
+    /** Outstanding (posted, unpaid) balance must stay under the credit limit. */
+    private function assertWithinCreditLimit($customer): void
+    {
+        if (! $customer || ! $customer->credit_limit || (float) $customer->credit_limit <= 0) {
+            return; // no limit configured → no restriction
+        }
+        $outstanding = (float) \Modules\Finance\Models\CustomerInvoice::where('customer_id', $customer->id)
+            ->whereIn('status', ['posted', 'part_paid'])
+            ->sum(\Illuminate\Support\Facades\DB::raw('total - received_amount'));
+        if ($outstanding > (float) $customer->credit_limit) {
+            throw ValidationException::withMessages(['credit' => sprintf(
+                'Customer is over the credit limit (outstanding %.2f vs limit %.2f) — Finance approval required.',
+                $outstanding, (float) $customer->credit_limit)]);
+        }
     }
 
     private function nextRef(): string

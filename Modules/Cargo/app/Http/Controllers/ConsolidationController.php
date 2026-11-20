@@ -189,6 +189,19 @@ class ConsolidationController extends Controller
         return back()->with('success', 'Package matched — tracking number assigned.');
     }
 
+    /** Management profitability — group and per-branch margins (spec §15.8). */
+    public function profitability(Request $r)
+    {
+        $profit = app(\Modules\Cargo\Services\ShipmentProfitService::class);
+        $branches = \Modules\Organization\Models\Branch::active()->orderBy('name')->get();
+        return view('cargo::consolidation.profitability', [
+            'group' => $profit->summary(),
+            'branches' => $branches->map(fn ($b) => ['branch' => $b, 'summary' => $profit->summary($b->id)]),
+            'trips' => CargoTrip::with('boxes')->latest()->limit(25)->get()
+                ->map(fn ($t) => ['trip' => $t, 'profit' => $profit->tripProfit($t)]),
+        ]);
+    }
+
     // ---- Billing (spec §13-14) ----
 
     /** Price preview — freight + storage + delivery for a package. */

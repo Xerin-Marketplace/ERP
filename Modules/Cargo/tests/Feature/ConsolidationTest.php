@@ -257,6 +257,30 @@ class ConsolidationTest extends TestCase
         $this->assertSame(-20000.0, $tp['profit']); // loss-making leg flagged
     }
 
+    public function test_release_blocked_when_customer_over_credit_limit(): void
+    {
+        $customer = $this->customer();
+        $customer->update(['credit_limit' => 5000]);
+        \Modules\Finance\Models\CustomerInvoice::forceCreate([
+            'reference' => 'INV-X', 'company_id' => $customer->company_id,
+            'customer_id' => $customer->id, 'package_id' => null,
+            'invoice_date' => now()->toDateString(), 'currency' => 'TZS',
+            'total' => 9000, 'received_amount' => 0, 'status' => 'posted',
+            'created_by' => $this->ops->id,
+        ]);
+        $p = $this->package(['customer_id' => $customer->id]);
+        try {
+            app(ReleaseService::class)->request($p, null, $this->tz->id, $this->ops->id);
+            $this->fail('expected credit-limit block');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->assertStringContainsString('credit limit', $e->errors()['credit'][0]);
+        }
+        // No limit configured → allowed.
+        $customer->update(['credit_limit' => null]);
+        $a = app(ReleaseService::class)->request($this->package(['customer_id' => $customer->id]), null, $this->tz->id, $this->ops->id);
+        $this->assertSame('pending', $a->status);
+    }
+
     public function test_guest_tracking_requires_xrn_and_contact_match(): void
     {
         $customer = $this->customer();
