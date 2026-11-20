@@ -53,6 +53,8 @@ class DatabaseSeeder extends Seeder
             // Governance power-matrix — runs LAST so it picks up every
             // permission defined by the module seeders above.
             AdministrationRoleSeeder::class,
+            // DEMO accounts — development/staging only.
+            SampleUsersSeeder::class,
         ]);
     }
 }
