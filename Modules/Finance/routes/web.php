@@ -21,6 +21,9 @@ Route::middleware(['auth', 'verified', 'account.active'])->prefix('finance')->na
     Route::post('journals/{journal}/reverse', [Fin::class, 'reverseJournal'])->name('journals.reverse')->middleware('can:finance.journals.reverse');
 
     Route::get('ledger', [Fin::class, 'ledger'])->name('ledger.index')->middleware('can:finance.ledger.view');
+    Route::get('inter-branch', [Fin::class, 'interBranch'])->name('interbranch.index')->middleware('can:finance.ledger.view');
+    Route::post('inter-branch', [Fin::class, 'interBranchStore'])->name('interbranch.store')->middleware('can:finance.interbranch.manage');
+    Route::post('inter-branch/settle', [Fin::class, 'interBranchSettle'])->name('interbranch.settle')->middleware('can:finance.interbranch.manage');
 
     Route::get('payables', [Fin::class, 'payables'])->name('payables.index')->middleware('can:finance.payables.manage');
     Route::post('payables/{invoice}/post', [Fin::class, 'postPayable'])->name('payables.post')->middleware('can:finance.payables.manage');

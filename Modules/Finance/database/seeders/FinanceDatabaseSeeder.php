@@ -27,6 +27,7 @@ class FinanceDatabaseSeeder extends Seeder
         'finance.banks.manage', 'finance.reconciliation.manage', 'finance.budgets.manage',
         'finance.tax.manage', 'finance.assets.manage', 'finance.reports.view',
         'finance.periods.close', 'finance.periods.reopen', 'finance.audit.view',
+        'finance.interbranch.manage',
     ];
 
     public function run(): void
@@ -41,7 +42,7 @@ class FinanceDatabaseSeeder extends Seeder
             'accountant' => ['finance.dashboard.view', 'finance.accounts.view', 'finance.journals.view',
                 'finance.journals.create', 'finance.journals.submit', 'finance.ledger.view',
                 'finance.payables.manage', 'finance.receivables.manage', 'finance.expenses.manage',
-                'finance.reports.view'],
+                'finance.reports.view', 'finance.interbranch.manage'],
             'cashier' => ['finance.dashboard.view', 'finance.payments.manage', 'finance.banks.manage'],
             'finance_read_only' => ['finance.dashboard.view', 'finance.accounts.view', 'finance.journals.view',
                 'finance.ledger.view', 'finance.reports.view', 'finance.audit.view'],
@@ -65,16 +66,20 @@ class FinanceDatabaseSeeder extends Seeder
             ['1200', 'Accounts Receivable', 'asset', '1000', true],
             ['1300', 'Fixed Assets', 'asset', '1000', true],
             ['1350', 'Accumulated Depreciation', 'asset', '1000', true],
+            ['1400', 'Inter-branch Receivable', 'asset', '1000', true],
             ['2000', 'Liabilities', 'liability', null, false],
             ['2100', 'Accounts Payable', 'liability', '2000', true],
             ['2200', 'Tax Payable', 'liability', '2000', true],
+            ['2300', 'Inter-branch Payable', 'liability', '2000', true],
             ['3000', 'Equity', 'equity', null, false],
             ['3100', 'Retained Earnings', 'equity', '3000', true],
             ['4000', 'Revenue', 'revenue', null, false],
             ['4100', 'Sales Revenue', 'revenue', '4000', true],
+            ['4300', 'Inter-branch Handling Recovery', 'revenue', '4000', true],
             ['5000', 'Expenses', 'expense', null, false],
             ['5100', 'Operating Expenses', 'expense', '5000', true],
             ['5200', 'Depreciation Expense', 'expense', '5000', true],
+            ['5300', 'Inter-branch Handling Charge', 'expense', '5000', true],
         ];
         $ids = [];
         foreach ($coa as [$code, $name, $type, $parent, $postable]) {

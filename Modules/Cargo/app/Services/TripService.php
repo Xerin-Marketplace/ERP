@@ -44,6 +44,18 @@ class TripService
         $trip->boxes()->update(['status' => 'departed']);
         $this->audit->log('cargo.trip_departed', $trip);
         $this->emitPackageEvent($trip, 'departed', $userId);
+
+        // Spec §8.3 — the passenger fee is a Dubai spend recoverable from TZ.
+        if ($trip->passenger_fee > 0 && $trip->destination_branch_id
+            && $trip->origin_branch_id !== $trip->destination_branch_id) {
+            $companyId = \Modules\Organization\Models\Branch::whereKey($trip->origin_branch_id)->value('company_id');
+            app(\Modules\Finance\Services\InterBranchService::class)->record(
+                $companyId,
+                $trip->origin_branch_id, $trip->destination_branch_id,
+                (float) $trip->passenger_fee, $trip->currency ?? 'AED',
+                "Passenger fee — {$trip->reference} ({$trip->passenger_name})",
+                'cargo_trip', $trip->id, $userId);
+        }
         return $trip;
     }
 

@@ -122,6 +122,14 @@ class ConsolidationTest extends TestCase
         $this->assertSame('departed', $trip->fresh()->status);
         $this->assertSame('departed', $box->fresh()->status);
 
+        // §8.3 — passenger fee auto-recorded as DXB→TZ inter-branch charge.
+        $ib = \Modules\Finance\Models\InterBranchEntry::where('source_type', 'cargo_trip')
+            ->where('source_id', $trip->id)->first();
+        $this->assertNotNull($ib);
+        $this->assertSame(50.0, (float) $ib->amount);
+        $this->assertSame($this->dxb->id, $ib->spent_branch_id);
+        $this->assertSame($this->tz->id, $ib->owed_branch_id);
+
         $trips->arrive($trip->fresh());
         $trips->handoverTanzania($trip->fresh(), $this->ops->id);
         $this->assertSame('reconciled', $trip->fresh()->status);

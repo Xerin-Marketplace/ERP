@@ -43,6 +43,7 @@ class FinanceController extends Controller
         private BankService $banks,
         private BudgetService $budgets,
         private FixedAssetService $assets,
+        private \Modules\Finance\Services\InterBranchService $interBranch,
     ) {}
 
     private function companyId(Request $r): int
@@ -121,6 +122,38 @@ class FinanceController extends Controller
             $data = $this->ledger->accountLedger((int) $r->account_id, $r->from, $r->to);
         }
         return view('finance::ledger.index', compact('accounts', 'data'));
+    }
+
+    public function interBranch(Request $r)
+    {
+        [$year, $month] = array_pad(explode('-', $r->get('month', now()->format('Y-m'))), 2, null);
+        $data = $this->interBranch->reconciliation($this->companyId($r), (int) $year, (int) $month);
+        return view('finance::interbranch.index', [
+            'entries' => $data['entries'], 'pairs' => $data['pairs'],
+            'month' => $r->get('month', now()->format('Y-m')),
+            'branches' => \Modules\Organization\Models\Branch::orderBy('name')->get(['id', 'name']),
+        ]);
+    }
+
+    public function interBranchStore(Request $r)
+    {
+        $d = $r->validate([
+            'spent_branch_id' => 'required|integer|exists:branches,id',
+            'owed_branch_id' => 'required|integer|exists:branches,id|different:spent_branch_id',
+            'description' => 'required|string|max:200',
+            'amount' => 'required|numeric|min:0.01',
+            'currency' => 'required|string|size:3',
+        ]);
+        $this->interBranch->record($this->companyId($r), $d['spent_branch_id'], $d['owed_branch_id'],
+            (float) $d['amount'], $d['currency'], $d['description'], 'manual', null, $r->user()->id);
+        return back()->with('success', 'Inter-branch charge recorded.');
+    }
+
+    public function interBranchSettle(Request $r)
+    {
+        $d = $r->validate(['entries' => 'required|array|min:1', 'entries.*' => 'integer']);
+        $journals = $this->interBranch->settle($this->companyId($r), $d['entries'], $r->user()->id);
+        return back()->with('success', count($journals).' settlement journal(s) posted.');
     }
 
     public function trialBalance(Request $r)
