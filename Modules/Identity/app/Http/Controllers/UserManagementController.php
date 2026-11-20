@@ -63,7 +63,7 @@ class UserManagementController extends Controller
             'branch_id' => ['nullable', 'exists:branches,id'],
             'department_id' => ['nullable', 'exists:departments,id'],
             'role' => ['nullable', 'exists:roles,name'],
-            'activation_mode' => ['sometimes', 'in:invite,manual'],
+            'activation_mode' => ['sometimes', 'in:invite,manual,generate'],
         ]);
 
         if ($data['role'] ?? null) {
@@ -106,11 +106,19 @@ class UserManagementController extends Controller
                     new: ['email' => $user->email, 'role' => $data['role'] ?? null]);
             } else {
                 app(\App\Services\AuditService::class)->log('user.created_manual', $user,
-                    new: ['email' => $user->email, 'mode' => 'manual']);
+                    new: ['email' => $user->email, 'mode' => $data['activation_mode']]);
             }
 
             return $user;
         });
+
+        if (($data['activation_mode'] ?? 'invite') === 'generate') {
+            $plain = \Str::password(12);
+            $user->update(['password' => \Hash::make($plain), 'must_change_password' => true]);
+            return redirect()->route('identity.users.show', $user)
+                ->with('generated_password', $plain)
+                ->with('success', 'User created — temporary password shown below. Verify & activate when ready.');
+        }
 
         return redirect()->route('identity.users.show', $user)->with('success',
             ($data['activation_mode'] ?? 'invite') === 'invite'

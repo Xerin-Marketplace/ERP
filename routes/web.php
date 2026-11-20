@@ -15,6 +15,19 @@ Route::get('/api-docs/openapi.yaml', fn () => response(
 
 Route::middleware(['auth', 'verified', 'account.active'])->group(function () {
 
+    Route::get('/onboarding', function () {
+        $u = auth()->user();
+        $steps = [
+            ['label' => 'Account activated', 'done' => ($u->status->value ?? $u->status) === 'active'],
+            ['label' => 'Email verified', 'done' => (bool) $u->email_verified_at],
+            ['label' => 'Password set', 'done' => ! $u->must_change_password],
+            ['label' => 'Phone number added', 'done' => (bool) $u->phone],
+            ['label' => 'Department assigned', 'done' => $u->assignments()->current()->exists()],
+        ];
+        return view('onboarding', ['steps' => $steps,
+            'complete' => ! in_array(false, array_column($steps, 'done'), true)]);
+    })->name('onboarding');
+
     Route::get('/dashboard', function () {
         $stats = [
             'companies' => \Modules\Organization\Models\Company::count(),

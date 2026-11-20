@@ -60,7 +60,7 @@ Route::middleware('auth')->group(function () {
         $r->validate(['password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::min(8)->mixedCase()->numbers()]]);
         $r->user()->update(['password' => \Hash::make($r->password), 'must_change_password' => false]);
         app(\App\Services\AuditService::class)->log('user.password_changed_forced', $r->user());
-        return redirect()->route('dashboard')->with('success', 'Password updated — welcome.');
+        return redirect()->route('onboarding')->with('success', 'Password updated — complete your setup.');
     })->name('password.force.store');
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])

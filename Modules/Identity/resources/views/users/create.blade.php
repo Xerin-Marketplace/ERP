@@ -62,6 +62,7 @@
                 <div class="mt-1.5 flex gap-6 text-sm">
                     <label class="flex items-center gap-2"><input type="radio" name="activation_mode" value="invite" @checked(old('activation_mode','invite')==='invite')> Send email invitation <span class="text-gray-400">— user sets own password via link</span></label>
                     <label class="flex items-center gap-2"><input type="radio" name="activation_mode" value="manual" @checked(old('activation_mode')==='manual')> Create pending <span class="text-gray-400">— admin verifies & activates manually</span></label>
+                    <label class="flex items-center gap-2"><input type="radio" name="activation_mode" value="generate" @checked(old('activation_mode')==='generate')> Generate password <span class="text-gray-400">— shown once here, user must change it on login</span></label>
                 </div>
             </div>
             <div class="sm:col-span-2 mt-4 flex items-center gap-3">
