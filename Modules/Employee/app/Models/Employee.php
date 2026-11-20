@@ -56,6 +56,9 @@ class Employee extends Model
         return $this->hasOne(EmploymentRecord::class)->where('status', 'active')->latestOfMany('start_date');
     }
     public function events(): HasMany { return $this->hasMany(EmployeeEvent::class)->latest(); }
+    public function bankAccounts(): HasMany { return $this->hasMany(\Modules\HR\Models\EmployeeBankAccount::class); }
+    public function compensations(): HasMany { return $this->hasMany(\Modules\HR\Models\EmployeeCompensation::class); }
+    public function payrollRuns(): HasMany { return $this->hasMany(\Modules\HR\Models\PayrollRun::class); }
     public function onboarding(): HasOne { return $this->hasOne(OnboardingRecord::class); }
     public function offboarding(): HasOne { return $this->hasOne(OffboardingRecord::class); }
     public function transfers(): HasMany { return $this->hasMany(TransferRequest::class); }

@@ -2,10 +2,13 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\HR\Http\Controllers\AttendanceController;
+use Modules\HR\Http\Controllers\BankDetailsController;
+use Modules\HR\Http\Controllers\CompensationController;
 use Modules\HR\Http\Controllers\DisciplinaryController;
 use Modules\HR\Http\Controllers\HRDashboardController;
 use Modules\HR\Http\Controllers\LeaveController;
 use Modules\HR\Http\Controllers\OvertimeController;
+use Modules\HR\Http\Controllers\PayrollController;
 use Modules\HR\Http\Controllers\PerformanceController;
 use Modules\HR\Http\Controllers\RecruitmentController;
 use Modules\HR\Http\Controllers\ShiftController;
@@ -79,4 +82,21 @@ Route::middleware(['auth', 'verified', 'account.active'])->prefix('hr')->name('h
     // Welfare
     Route::get('welfare', [WelfareController::class, 'index'])->name('welfare.index')->middleware('can:welfare.view');
     Route::post('welfare', [WelfareController::class, 'store'])->name('welfare.store')->middleware('can:welfare.manage');
+
+    // Bank & Payment Details
+    Route::post('employees/{employee}/bank', [BankDetailsController::class, 'store'])->name('bank.store');
+    Route::post('bank/{account}/verify', [BankDetailsController::class, 'verify'])->name('bank.verify');
+
+    // Compensation
+    Route::get('compensation', [CompensationController::class, 'index'])->name('compensation.index');
+    Route::post('employees/{employee}/compensation', [CompensationController::class, 'store'])->name('compensation.store');
+    Route::post('compensation/{revision}/approve', [CompensationController::class, 'approve'])->name('compensation.approve');
+    Route::post('compensation/{revision}/reject', [CompensationController::class, 'reject'])->name('compensation.reject');
+
+    // Payroll
+    Route::get('payroll', [PayrollController::class, 'index'])->name('payroll.index');
+    Route::post('payroll/periods', [PayrollController::class, 'storePeriod'])->name('payroll.periods.store');
+    Route::post('payroll/{period}/process', [PayrollController::class, 'process'])->name('payroll.process');
+    Route::post('payroll/{period}/approve', [PayrollController::class, 'approve'])->name('payroll.approve');
+    Route::post('payroll/runs/{run}/pay', [PayrollController::class, 'pay'])->name('payroll.pay');
 });

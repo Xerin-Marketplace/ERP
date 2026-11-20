@@ -4,7 +4,8 @@
     @php
         $tabs = [
             'overview' => 'Overview', 'personal' => 'Personal', 'employment' => 'Employment',
-            'assignment' => 'Assignment', 'documents' => 'Documents', 'history' => 'History',
+            'assignment' => 'Assignment', 'bank' => 'Bank', 'compensation' => 'Compensation',
+            'documents' => 'Documents', 'history' => 'History',
             'reporting' => 'Reporting', 'onboarding' => 'Onboarding', 'activity' => 'Activity',
         ];
     @endphp
@@ -144,6 +145,110 @@
                     <li class="text-gray-400">No IAM assignment history (no linked account).</li>
                 @endforelse
             </ul>
+        </div>
+
+    @elseif ($tab === 'bank')
+        <div class="rounded-sm border border-gray-200 bg-white p-5 shadow-sm">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-sm font-semibold text-gray-900">Bank & Payment Details</h3>
+                @can('hr.bank_details.manage')
+                    <span class="text-xs text-gray-400">Account numbers are encrypted & masked</span>
+                @endcan
+            </div>
+            @forelse ($employee->bankAccounts as $acc)
+                <div class="flex flex-wrap items-center justify-between py-2.5 border-b last:border-0 text-sm">
+                    <div>
+                        <p class="font-medium">{{ $acc->bank_name }} · {{ $acc->maskedAccount() }}</p>
+                        <p class="text-xs text-gray-500">{{ $acc->account_holder_name }} · {{ $acc->currency }} · {{ ucwords(str_replace('_',' ',$acc->payment_method)) }} {{ $acc->is_primary ? '· primary' : '' }}</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs rounded-full px-2 py-0.5 {{ $acc->verification_status==='verified' ? 'bg-green-100 text-green-700' : ($acc->verification_status==='rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700') }}">{{ ucfirst($acc->verification_status) }}</span>
+                        @can('hr.bank_details.verify')
+                            @if ($acc->verification_status === 'pending')
+                                <form method="POST" action="{{ route('hr.bank.verify', $acc) }}">@csrf
+                                    <input type="hidden" name="approve" value="1">
+                                    <button class="text-xs font-semibold text-green-700">Verify</button></form>
+                            @endif
+                        @endcan
+                    </div>
+                </div>
+            @empty
+                <p class="text-sm text-gray-400">No bank details on file.</p>
+            @endforelse
+            @can('hr.bank_details.manage')
+                <details class="mt-4">
+                    <summary class="text-sm font-semibold text-xerin-700 cursor-pointer">+ Add bank account</summary>
+                    <form method="POST" action="{{ route('hr.bank.store', $employee) }}" class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        @csrf
+                        <input name="account_holder_name" required placeholder="Account holder" class="rounded-sm border-gray-300 text-sm">
+                        <input name="bank_name" required placeholder="Bank name" class="rounded-sm border-gray-300 text-sm">
+                        <input name="bank_branch" placeholder="Branch" class="rounded-sm border-gray-300 text-sm">
+                        <input name="account_number" required placeholder="Account number" class="rounded-sm border-gray-300 text-sm">
+                        <input name="iban" placeholder="IBAN (if applicable)" class="rounded-sm border-gray-300 text-sm">
+                        <input name="swift_bic" placeholder="SWIFT/BIC" class="rounded-sm border-gray-300 text-sm">
+                        <select name="currency" class="rounded-sm border-gray-300 text-sm"><option>TZS</option><option>AED</option><option>USD</option></select>
+                        <select name="country" class="rounded-sm border-gray-300 text-sm"><option value="TZ">Tanzania</option><option value="AE">UAE</option></select>
+                        <select name="payment_method" class="rounded-sm border-gray-300 text-sm"><option value="bank_transfer">Bank transfer</option><option value="mobile_money">Mobile money</option><option value="cash">Cash</option><option value="cheque">Cheque</option></select>
+                        <input type="hidden" name="payment_frequency" value="monthly">
+                        <button class="rounded-sm bg-xerin-600 px-4 py-2 text-sm font-semibold text-white sm:col-span-3">Save — pending verification</button>
+                    </form>
+                </details>
+            @endcan
+        </div>
+
+    @elseif ($tab === 'compensation')
+        <div class="rounded-sm border border-gray-200 bg-white p-5 shadow-sm">
+            <h3 class="text-sm font-semibold text-gray-900 mb-3">Compensation & Salary</h3>
+            @can('hr.compensation.view')
+                @php $current = $employee->compensations->where('status','approved')->first(); @endphp
+                @if ($current)
+                    <dl class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm mb-4">
+                        <div><dt class="text-gray-500">Basic</dt><dd class="font-medium">{{ $current->currency }} {{ number_format($current->basic_salary,2) }}</dd></div>
+                        <div><dt class="text-gray-500">Gross</dt><dd class="font-medium">{{ $current->currency }} {{ number_format($current->gross(),2) }}</dd></div>
+                        <div><dt class="text-gray-500">Deductions</dt><dd class="font-medium">{{ $current->currency }} {{ number_format($current->deductions(),2) }}</dd></div>
+                        <div><dt class="text-gray-500">Net</dt><dd class="font-semibold text-green-700">{{ $current->currency }} {{ number_format($current->net(),2) }}</dd></div>
+                    </dl>
+                    <p class="text-xs text-gray-400 mb-4">Effective {{ $current->effective_date->format('M j, Y') }} · approved by {{ $current->approver->name ?? '—' }}</p>
+                @else
+                    <p class="text-sm text-gray-400 mb-4">No approved compensation package.</p>
+                @endif
+
+                <h4 class="text-xs font-semibold uppercase text-gray-500 mb-2">Revision history</h4>
+                @forelse ($employee->compensations as $rev)
+                    <div class="flex justify-between py-2 border-b last:border-0 text-sm">
+                        <span>{{ $rev->currency }} {{ number_format($rev->gross(),2) }} gross · effective {{ $rev->effective_date->format('M j, Y') }}</span>
+                        <span class="text-xs {{ $rev->status==='approved' ? 'text-green-600' : ($rev->status==='pending' ? 'text-amber-600' : 'text-gray-400') }}">{{ ucfirst($rev->status) }}</span>
+                    </div>
+                @empty <p class="text-sm text-gray-400">No history.</p> @endforelse
+            @else
+                <p class="text-sm text-gray-400">You don't have permission to view compensation details.</p>
+            @endcan
+
+            @can('hr.compensation.manage')
+                <details class="mt-4">
+                    <summary class="text-sm font-semibold text-xerin-700 cursor-pointer">+ Propose salary revision</summary>
+                    <form method="POST" action="{{ route('hr.compensation.store', $employee) }}" class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        @csrf
+                        <input name="basic_salary" type="number" step="0.01" required placeholder="Basic *" class="rounded-sm border-gray-300 text-sm">
+                        <input name="housing_allowance" type="number" step="0.01" placeholder="Housing" class="rounded-sm border-gray-300 text-sm">
+                        <input name="transport_allowance" type="number" step="0.01" placeholder="Transport" class="rounded-sm border-gray-300 text-sm">
+                        <input name="medical_allowance" type="number" step="0.01" placeholder="Medical" class="rounded-sm border-gray-300 text-sm">
+                        <input name="communication_allowance" type="number" step="0.01" placeholder="Communication" class="rounded-sm border-gray-300 text-sm">
+                        <input name="meal_allowance" type="number" step="0.01" placeholder="Meal" class="rounded-sm border-gray-300 text-sm">
+                        <input name="other_allowances" type="number" step="0.01" placeholder="Other allowances" class="rounded-sm border-gray-300 text-sm">
+                        <input name="overtime_rate" type="number" step="0.01" placeholder="OT rate/hr" class="rounded-sm border-gray-300 text-sm">
+                        <input name="pension_deduction" type="number" step="0.01" placeholder="Pension" class="rounded-sm border-gray-300 text-sm">
+                        <input name="insurance_deduction" type="number" step="0.01" placeholder="Insurance" class="rounded-sm border-gray-300 text-sm">
+                        <input name="tax_deduction" type="number" step="0.01" placeholder="Tax" class="rounded-sm border-gray-300 text-sm">
+                        <input name="other_deductions" type="number" step="0.01" placeholder="Other deductions" class="rounded-sm border-gray-300 text-sm">
+                        <select name="currency" class="rounded-sm border-gray-300 text-sm"><option>TZS</option><option>AED</option><option>USD</option></select>
+                        <select name="pay_frequency" class="rounded-sm border-gray-300 text-sm"><option>monthly</option><option>biweekly</option><option>weekly</option></select>
+                        <input type="date" name="effective_date" required class="rounded-sm border-gray-300 text-sm">
+                        <input name="reason" required placeholder="Reason *" class="rounded-sm border-gray-300 text-sm">
+                        <button class="rounded-sm bg-xerin-600 px-4 py-2 text-sm font-semibold text-white col-span-2 sm:col-span-4">Propose — needs approval</button>
+                    </form>
+                </details>
+            @endcan
         </div>
 
     @elseif ($tab === 'documents')

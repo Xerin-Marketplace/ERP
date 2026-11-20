@@ -18,6 +18,7 @@ class HRNumberService
         'review'       => ['performance_reviews', 'reference', 'XERIN-PRF'],
         'case'         => ['disciplinary_cases', 'reference', 'XERIN-CAS'],
         'welfare'      => ['welfare_records', 'reference', 'XERIN-WEL'],
+        'payroll'      => ['payroll_runs', 'reference', 'XERIN-PAY'],
         'document'     => ['hr_documents', 'reference', 'XERIN-DOC'],
     ];
 

@@ -39,6 +39,8 @@ class HRServiceProvider extends ModuleServiceProvider
             ['Training', 'hr.training.index', ['training.view'], 60],
             ['Disciplinary', 'hr.disciplinary.index', ['disciplinary.view'], 65],
             ['Welfare', 'hr.welfare.index', ['welfare.view'], 70],
+            ['Compensation', 'hr.compensation.index', ['hr.compensation.view'], 75],
+            ['Payroll', 'hr.payroll.index', ['hr.payroll.view'], 80],
             ['HR Reports', 'hr.reports', ['attendance.reports.view', 'hr.dashboard.view'], 90],
         ];
 

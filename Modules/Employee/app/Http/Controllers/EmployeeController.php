@@ -133,6 +133,8 @@ class EmployeeController extends Controller
             'changeRequests' => fn ($q) => $q->latest()->with('initiator:id,name', 'approver:id,name'),
             'events' => fn ($q) => $q->latest()->limit(50)->with('actor:id,name'),
             'reportingRelationships' => fn ($q) => $q->current()->with('manager.personal'),
+            'bankAccounts.verifier:id,name',
+            'compensations' => fn ($q) => $q->latest('effective_date')->with('requester:id,name', 'approver:id,name'),
         ]);
         $employee->loadCount('documents');
 

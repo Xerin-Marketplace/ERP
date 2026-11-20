@@ -23,10 +23,23 @@ class HRDatabaseSeeder extends Seeder
         'training.view', 'training.manage',
         'disciplinary.view', 'disciplinary.manage',
         'welfare.view', 'welfare.manage',
+        'hr.bank_details.view', 'hr.bank_details.manage', 'hr.bank_details.verify',
+        'hr.compensation.view', 'hr.compensation.manage', 'hr.compensation.approve',
+        'hr.payroll.view', 'hr.payroll.process', 'hr.payroll.approve', 'hr.payroll.export',
     ];
 
     public const ROLES = [
         'hr-administrator' => self::PERMISSIONS,
+        'payroll-officer' => [
+            'hr.dashboard.view', 'hr.employee.view',
+            'hr.bank_details.view', 'hr.bank_details.manage', 'hr.bank_details.verify',
+            'hr.compensation.view', 'hr.compensation.manage',
+            'hr.payroll.view', 'hr.payroll.process', 'hr.payroll.export',
+        ],
+        'payroll-approver' => [
+            'hr.dashboard.view', 'hr.compensation.view', 'hr.compensation.approve',
+            'hr.payroll.view', 'hr.payroll.approve',
+        ],
         'hr-officer' => [
             'hr.dashboard.view', 'hr.employee.view',
             'attendance.view', 'attendance.correct', 'attendance.approve', 'attendance.reports.view',

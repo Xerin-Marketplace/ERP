@@ -549,4 +549,153 @@ class HRModuleTest extends TestCase
             $this->actingAs($admin)->get($url)->assertOk();
         }
     }
+
+    /* ================= BANK DETAILS (Phase HR-04) ================= */
+
+    private function emp(): Employee
+    {
+        return $this->employeeUser()->employee;
+    }
+
+    public function test_bank_account_saved_encrypted_and_masked(): void
+    {
+        $admin = $this->admin();
+        $e = $this->emp();
+
+        $this->actingAs($admin)->post(route('hr.bank.store', $e), [
+            'account_holder_name' => 'Test Worker', 'bank_name' => 'NMB',
+            'account_number' => '12345678901', 'currency' => 'TZS',
+            'country' => 'TZ', 'payment_method' => 'bank_transfer',
+            'payment_frequency' => 'monthly',
+        ])->assertSessionHas('success');
+
+        $acc = $e->bankAccounts()->sole();
+        $raw = \Illuminate\Support\Facades\DB::table('employee_bank_accounts')->find($acc->id);
+        $this->assertNotSame('12345678901', $raw->account_number); // encrypted
+        $this->assertSame('****8901', $acc->maskedAccount());
+        $this->assertSame('pending', $acc->verification_status);
+    }
+
+    public function test_bank_verify_requires_permission(): void
+    {
+        $e = $this->emp();
+        $acc = $e->bankAccounts()->create([
+            'account_holder_name' => 'T', 'bank_name' => 'NMB', 'account_number' => '999',
+            'currency' => 'TZS', 'payment_method' => 'bank_transfer',
+        ]);
+
+        $officer = User::factory()->create(['status' => 'active']);
+        $officer->assignRole('employee');
+        $this->actingAs($officer)->post(route('hr.bank.verify', $acc), ['approve' => 1])->assertForbidden();
+
+        $admin = $this->admin();
+        $this->actingAs($admin)->post(route('hr.bank.verify', $acc), ['approve' => 1]);
+        $this->assertSame('verified', $acc->fresh()->verification_status);
+    }
+
+    /* ================= COMPENSATION (Phase HR-05) ================= */
+
+    public function test_compensation_revision_workflow_supersedes_previous(): void
+    {
+        $admin = $this->admin();
+        $approver = User::factory()->create(['status' => 'active']);
+        $approver->assignRole('hr-administrator');
+        $e = $this->emp();
+
+        $rev1 = app(\Modules\HR\Services\CompensationService::class)
+            ->propose($e, ['basic_salary' => 500000, 'currency' => 'TZS',
+                'pay_frequency' => 'monthly', 'effective_date' => now()->toDateString(),
+                'reason' => 'Initial'], $admin);
+        app(\Modules\HR\Services\CompensationService::class)->approve($rev1, $approver);
+
+        $rev2 = app(\Modules\HR\Services\CompensationService::class)
+            ->propose($e, ['basic_salary' => 650000, 'currency' => 'TZS',
+                'pay_frequency' => 'monthly', 'effective_date' => now()->toDateString(),
+                'reason' => 'Promotion'], $admin);
+        app(\Modules\HR\Services\CompensationService::class)->approve($rev2, $approver);
+
+        $this->assertSame('superseded', $rev1->fresh()->status);
+        $this->assertSame($rev1->id, $rev2->fresh()->supersedes_id);
+        $this->assertDatabaseHas('employee_events', ['employee_id' => $e->id, 'type' => 'salary_revision']);
+    }
+
+    public function test_requester_cannot_approve_own_salary_change(): void
+    {
+        $admin = $this->admin();
+        $e = $this->emp();
+        $rev = app(\Modules\HR\Services\CompensationService::class)
+            ->propose($e, ['basic_salary' => 100, 'currency' => 'TZS',
+                'pay_frequency' => 'monthly', 'effective_date' => now()->toDateString(),
+                'reason' => 'x'], $admin);
+
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        app(\Modules\HR\Services\CompensationService::class)->approve($rev, $admin);
+    }
+
+    /* ================= PAYROLL (Phase HR-06) ================= */
+
+    private function compedEmployee(): Employee
+    {
+        $admin = $this->admin();
+        $approver = User::factory()->create(['status' => 'active']);
+        $approver->assignRole('hr-administrator');
+        $e = $this->emp();
+        $e->update(['status' => 'active']);
+        $rev = app(\Modules\HR\Services\CompensationService::class)
+            ->propose($e, ['basic_salary' => 1000000, 'housing_allowance' => 200000,
+                'pension_deduction' => 50000, 'currency' => 'TZS',
+                'pay_frequency' => 'monthly', 'effective_date' => now()->toDateString(),
+                'reason' => 'Setup'], $admin);
+        app(\Modules\HR\Services\CompensationService::class)->approve($rev, $approver);
+        return $e;
+    }
+
+    public function test_payroll_process_approve_pay_cycle(): void
+    {
+        $admin = $this->admin();
+        $e = $this->compedEmployee();
+        $svc = app(\Modules\HR\Services\PayrollService::class);
+
+        $period = $svc->openPeriod([
+            'name' => '2026-02', 'start_date' => '2026-02-01', 'end_date' => '2026-02-28',
+        ], $admin);
+
+        $count = $svc->process($period, $admin);
+        $this->assertSame(1, $count);
+
+        $run = $period->runs()->sole();
+        $this->assertSame('1200000.00', $run->gross_amount);
+        $this->assertSame('50000.00', $run->total_deductions);
+        $this->assertSame('1150000.00', $run->net_amount);
+        $this->assertArrayHasKey('basic_salary', $run->breakdown);
+
+        $svc->approve($period, $admin);
+        $this->assertSame('approved', $run->fresh()->status);
+        $this->assertSame('approved', $period->fresh()->status);
+
+        $svc->markPaid($run->fresh(), $admin);
+        $this->assertSame('paid', $run->fresh()->status);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'hr.payroll.paid']);
+    }
+
+    public function test_payroll_run_unique_per_employee_per_period(): void
+    {
+        $admin = $this->admin();
+        $this->compedEmployee();
+        $svc = app(\Modules\HR\Services\PayrollService::class);
+        $period = $svc->openPeriod(['name' => '2026-03', 'start_date' => '2026-03-01', 'end_date' => '2026-03-31'], $admin);
+
+        $svc->process($period, $admin);
+        $count2 = $svc->process($period, $admin); // reprocess — no dupes
+        $this->assertSame(0, $count2);
+        $this->assertSame(1, $period->runs()->count());
+    }
+
+    public function test_payroll_pages_accessible_to_admin(): void
+    {
+        $admin = $this->admin();
+        foreach (['/hr/compensation', '/hr/payroll'] as $url) {
+            $this->actingAs($admin)->get($url)->assertOk();
+        }
+    }
 }
