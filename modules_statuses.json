@@ -12,5 +12,6 @@
     "Cargo": true,
     "Shipment": true,
     "Arrival": true,
-    "Delivery": true
+    "Delivery": true,
+    "Portal": true
 }

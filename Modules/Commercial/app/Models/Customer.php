@@ -21,6 +21,7 @@ class Customer extends Model
     public function getReferenceAttribute(): string { return $this->code; }
     public function contacts() { return $this->hasMany(CustomerContact::class); }
     public function addresses() { return $this->hasMany(CustomerAddress::class); }
+    public function communicationPreference() { return $this->hasOne(\Modules\Portal\Models\CommunicationPreference::class); }
     public function documents() { return $this->hasMany(CustomerDocument::class); }
     public function branch() { return $this->belongsTo(\Modules\Organization\Models\Branch::class); }
     public function owner() { return $this->belongsTo(\App\Models\User::class, 'owner_id'); }

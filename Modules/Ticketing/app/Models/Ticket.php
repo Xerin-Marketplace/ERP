@@ -48,6 +48,8 @@ class Ticket extends Model
     public function category(): BelongsTo { return $this->belongsTo(TicketCategory::class, 'category_id'); }
     public function service(): BelongsTo { return $this->belongsTo(ServiceCatalogItem::class, 'service_id'); }
     public function sla(): HasOne { return $this->hasOne(TicketSlaTracking::class); }
+    public function customer(): BelongsTo { return $this->belongsTo(\Modules\Commercial\Models\Customer::class); }
+
     public function comments(): HasMany { return $this->hasMany(TicketComment::class)->latest(); }
     public function publicComments(): HasMany { return $this->comments()->where('is_internal', false); }
     public function internalNotes(): HasMany { return $this->comments()->where('is_internal', true); }
