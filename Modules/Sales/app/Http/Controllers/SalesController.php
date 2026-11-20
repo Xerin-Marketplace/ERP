@@ -21,7 +21,7 @@ class SalesController extends Controller
 
     public function dashboard()
     {
-        $this->authorize('view', 'commercial.dashboard');
+        abort_unless(auth()->user()->can('commercial.dashboard.view'), 403);
         return view('sales::dashboard', ['d' => $this->svc->dashboard($this->bid()),
             'analytics' => $this->svc->revenueAnalytics($this->bid()), 'forecast' => $this->svc->forecast($this->bid())]);
     }
