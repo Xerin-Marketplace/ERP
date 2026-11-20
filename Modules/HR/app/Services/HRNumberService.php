@@ -26,7 +26,7 @@ class HRNumberService
         [$table, $column, $prefix] = self::MAP[$kind];
         $year ??= (int) now()->format('Y');
         $full = "{$prefix}-{$year}-";
-        $max = DB::table($table)->where($column, 'like', "{$full}%")->lockForUpdate()->max($column);
+        $max = DB::table($table)->where($column, 'like', "{$full}%")->orderByDesc($column)->lockForUpdate()->value($column);
         $seq = $max ? ((int) substr($max, -6)) + 1 : 1;
 
         return sprintf('%s%06d', $full, $seq);

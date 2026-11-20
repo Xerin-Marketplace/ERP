@@ -102,7 +102,7 @@ class RegistrationService
         $prefix = "XERIN-REG-{$year}-";
 
         $last = RegistrationApplication::where('reference', 'like', "{$prefix}%")
-            ->lockForUpdate()->max('reference');
+            ->orderByDesc('reference')->lockForUpdate()->value('reference');
 
         $seq = $last ? ((int) substr($last, -6)) + 1 : 1;
 
