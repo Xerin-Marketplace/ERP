@@ -34,6 +34,11 @@ class ReceptionServiceProvider extends ModuleServiceProvider
             ['New Ticket', 'reception.tickets.create', ['reception.tickets.create'], 35],
             ['Directory', 'reception.directory', ['reception.employees.view_directory'], 40],
             ['IT Technicians', 'reception.technicians', ['reception.it_availability.view'], 50],
+            ['Access Requests', 'reception.access.requests.index', ['reception.access.view'], 60],
+            ['Access Dashboard', 'reception.access.dashboard', ['reception.access.view'], 61],
+            ['Approval Inbox', 'reception.access.approvals.inbox', null, 62],
+            ['Provisioning', 'reception.access.provisioning.queue', ['reception.access.provision'], 70],
+            ['Workflows', 'reception.access.workflows.index', ['reception.access.workflows.manage'], 80],
         ];
 
         $children = [];

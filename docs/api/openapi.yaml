@@ -1429,6 +1429,108 @@ paths:
       responses:
         '201': { description: Payment recorded and allocated }
         '422': { description: Overpayment or invalid document }
+
+  /access-requests:
+    post:
+      tags: [Reception Access]
+      summary: Submit a public access request
+      description: Unauthenticated intake — returns reference + tracking token. Throttled.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, full_name, email]
+              properties:
+                type: {type: string, enum: [new_employee, existing_employee, external]}
+                full_name: {type: string}
+                email: {type: string, format: email}
+                phone: {type: string}
+                organization: {type: string}
+                branch_id: {type: integer}
+                department_id: {type: integer}
+                job_title: {type: string}
+                employee_id: {type: integer}
+                sponsor_id: {type: integer}
+                start_date: {type: string, format: date}
+                expiry_date: {type: string, format: date}
+                requested_modules: {type: array, items: {type: string}}
+                justification: {type: string}
+      responses:
+        '201': {description: Created — returns reference, tracking_token, status}
+        '422': {description: Validation or duplicate failure}
+    get:
+      tags: [Reception Access]
+      summary: List access requests (internal)
+      security: [{bearerAuth: []}]
+      parameters:
+        - {name: status, in: query, schema: {type: string}}
+        - {name: type, in: query, schema: {type: string}}
+      responses:
+        '200': {description: Paginated request list}
+  /access-requests/track:
+    get:
+      tags: [Reception Access]
+      summary: Public request status tracking
+      parameters:
+        - {name: reference, in: query, required: true, schema: {type: string}}
+        - {name: token, in: query, required: true, schema: {type: string}}
+      responses:
+        '200': {description: Status + public history}
+        '404': {description: Not found}
+  /access-requests/{id}:
+    get:
+      tags: [Reception Access]
+      summary: Request detail with verifications, tasks, history
+      security: [{bearerAuth: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: integer}}]
+      responses: {'200': {description: Request detail}}
+  /access-requests/{id}/route:
+    post:
+      tags: [Reception Access]
+      summary: Route request into resolved approval workflow
+      security: [{bearerAuth: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: integer}}]
+      responses: {'200': {description: Status in_approval}, '422': {description: No matching workflow}}
+  /access-requests/{id}/reject:
+    post:
+      tags: [Reception Access]
+      summary: Reject a request with reason
+      security: [{bearerAuth: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: integer}}]
+      responses: {'200': {description: Rejected}}
+  /access-requests/{id}/provision:
+    post:
+      tags: [Reception Access]
+      summary: Provision approved request into a user account
+      security: [{bearerAuth: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: integer}}]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {roles: {type: array, items: {type: string}}}
+      responses: {'200': {description: Provisioned user_id}, '403': {description: Forbidden}, '422': {description: Not approved}}
+  /access-approval-tasks/{id}/decide:
+    post:
+      tags: [Reception Access]
+      summary: Approve / reject / request-changes on an approval task
+      security: [{bearerAuth: []}]
+      parameters: [{name: id, in: path, required: true, schema: {type: integer}}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision: {type: string, enum: [approved, rejected, changes_requested]}
+                comment: {type: string}
+      responses: {'200': {description: Decision recorded}, '403': {description: Unauthorized stage}}
+
 components:
   securitySchemes:
     bearerAuth:
