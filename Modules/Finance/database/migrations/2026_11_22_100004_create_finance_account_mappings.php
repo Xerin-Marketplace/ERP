@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('account_mappings')) {
+            return; // already created on DBs that ran the pre-rename file
+        }
+
         // Default GL accounts per company: ar, ap, cash, bank, tax_payable,
         // retained_earnings, depreciation_expense, accumulated_depreciation, ...
         Schema::create('account_mappings', function (Blueprint $t) {
