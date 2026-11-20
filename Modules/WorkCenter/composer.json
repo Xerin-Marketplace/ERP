@@ -1,0 +1,15 @@
+{
+    "name": "nwidart/workcenter",
+    "description": "Reporting, Document & Work Management module",
+    "autoload": {
+        "psr-4": {
+            "Modules\\WorkCenter\\": "app/",
+            "Modules\\WorkCenter\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\WorkCenter\\Tests\\": "tests/"
+        }
+    }
+}

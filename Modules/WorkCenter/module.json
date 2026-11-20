@@ -1,0 +1,8 @@
+{
+    "name": "WorkCenter",
+    "alias": "workcenter",
+    "description": "Reporting, Document Management & Work Management — report builder, PDF, DMS, tasks",
+    "priority": 1,
+    "providers": ["Modules\\WorkCenter\\Providers\\WorkCenterServiceProvider"],
+    "files": []
+}

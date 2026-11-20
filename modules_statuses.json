@@ -15,5 +15,6 @@
     "Delivery": true,
     "Portal": true,
     "Sales": true,
-    "Tender": true
+    "Tender": true,
+    "WorkCenter": true
 }
