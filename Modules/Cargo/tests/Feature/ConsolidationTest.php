@@ -173,6 +173,68 @@ class ConsolidationTest extends TestCase
         app(ReleaseService::class)->request($this->package(), $invoice->id, $this->tz->id, $this->ops->id);
     }
 
+    public function test_package_quote_and_invoice_from_rate_card(): void
+    {
+        \Modules\Commercial\Models\RateCard::forceCreate([
+            'code' => 'RC-AIR-1', 'name' => 'DXB→DAR air', 'service_type' => 'air_cargo',
+            'origin_country' => 'United Arab Emirates', 'destination_country' => 'Tanzania',
+            'currency' => 'TZS', 'base_rate' => 5000, 'per_kg_rate' => 2500,
+            'minimum_charge' => 3000, 'status' => 'active', 'priority' => 1,
+        ]);
+        $customer = $this->customer();
+        $p = $this->package(['customer_id' => $customer->id, 'gross_weight' => 10]);
+
+        $billing = app(\Modules\Cargo\Services\PackageBillingService::class);
+        $q = $billing->quote($p, []);
+        $this->assertSame(10.0, $q['freight']['kg']);
+        $this->assertSame(30000.0, $q['freight']['amount']); // 5000 + 10×2500
+        $this->assertSame('RC-AIR-1', $q['freight']['rate_card']);
+
+        $inv = $billing->invoice($p, [], $this->ops->id);
+        $this->assertSame('draft', $inv->status);
+        $this->assertSame(30000.0, (float) $inv->total);
+        $this->assertSame(1, $inv->lines->count());
+        $this->assertStringContainsString('Freight', $inv->lines->first()->description);
+        // Revenue account 4110 created idempotently.
+        $this->assertSame('4110', $inv->lines->first()->account->code ?? \Modules\Finance\Models\ChartOfAccount::find($inv->lines->first()->account_id)->code);
+    }
+
+    public function test_invoice_blocked_without_customer_or_charges(): void
+    {
+        $p = $this->package(); // no customer
+        try {
+            app(\Modules\Cargo\Services\PackageBillingService::class)->invoice($p, [], $this->ops->id);
+            $this->fail('expected abort');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {}
+
+        // Customer but no rates/fees → nothing to invoice.
+        $p2 = $this->package(['customer_id' => $this->customer()->id]);
+        try {
+            app(\Modules\Cargo\Services\PackageBillingService::class)->invoice($p2, [], $this->ops->id);
+            $this->fail('expected abort');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {}
+        $this->assertTrue(true);
+    }
+
+    public function test_guest_tracking_requires_xrn_and_contact_match(): void
+    {
+        $customer = $this->customer();
+        $customer->update(['email' => 'cust@x.com', 'phone' => '+255700111222']);
+        $p = $this->package(['customer_id' => $customer->id, 'tracking_no' => 'XRN123456789']);
+
+        $svc = app(\Modules\Portal\Services\PortalService::class);
+        $this->assertNull($svc->guestTrack('XRN123456789', 'wrong@x.com'));
+        $this->assertNull($svc->guestTrack('XRN000000000', 'cust@x.com'));
+        $r = $svc->guestTrack('xrn123456789', 'cust@x.com');
+        $this->assertSame('XRN123456789', $r['tracking_no']);
+
+        // Web route works for guests.
+        $this->get(route('track.form'))->assertOk();
+        $this->post(route('track.lookup'), [
+            'tracking_no' => 'XRN123456789', 'contact' => 'cust@x.com',
+        ])->assertOk()->assertSee('XRN123456789');
+    }
+
     public function test_storage_charge_free_days_then_rate(): void
     {
         StorageRateSetting::create([
@@ -191,3 +253,5 @@ class ConsolidationTest extends TestCase
         $this->assertSame(25000.0, $charged['charge']); // 5 days × 10kg × 500
     }
 }
+
+// Guest tracking coverage (spec §12.2) — lives here since it uses cargo fixtures.

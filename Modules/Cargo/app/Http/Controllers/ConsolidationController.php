@@ -188,6 +188,31 @@ class ConsolidationController extends Controller
         return back()->with('success', 'Package matched — tracking number assigned.');
     }
 
+    // ---- Billing (spec §13-14) ----
+
+    /** Price preview — freight + storage + delivery for a package. */
+    public function packageQuote(CargoPackage $package, Request $r)
+    {
+        return response()->json(
+            app(\Modules\Cargo\Services\PackageBillingService::class)
+                ->quote($package, $r->only(['service_type', 'zone_id', 'handling_fee', 'pickup_fee', 'currency'])));
+    }
+
+    /** Create the draft customer invoice for a package. */
+    public function packageInvoice(Request $r, CargoPackage $package)
+    {
+        $data = $r->validate([
+            'service_type' => 'nullable|string|max:60',
+            'zone_id' => 'nullable|exists:delivery_zones,id',
+            'handling_fee' => 'nullable|numeric|min:0',
+            'pickup_fee' => 'nullable|numeric|min:0',
+            'currency' => 'nullable|string|size:3',
+        ]);
+        $invoice = app(\Modules\Cargo\Services\PackageBillingService::class)
+            ->invoice($package, $data, $r->user()->id);
+        return back()->with('success', "Invoice {$invoice->reference} drafted — total {$invoice->total} {$invoice->currency}.");
+    }
+
     /** Unmatched queue — packages with no customer/booking. */
     public function unmatched()
     {

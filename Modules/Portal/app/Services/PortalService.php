@@ -50,14 +50,42 @@ class PortalService
     public function trackingTimeline(Customer $c): array
     {
         return \Modules\Cargo\Models\CargoPackage::where('customer_id', $c->id)
-            ->get()->map(fn ($p) => ['package' => $p->reference, 'status' => $p->status,
-                'label' => match ($p->status) {
-                    'stored' => 'Received at warehouse', 'allocated' => 'Assigned to shipment',
-                    'dispatched' => 'Handed to airline', 'received_tz' => 'In Tanzania warehouse',
-                    'out_for_delivery' => 'Out for delivery', 'delivered' => 'Delivered',
-                    'collected' => 'Collected by customer', 'on_hold' => 'On hold',
-                    default => $p->status,
-                }])->all();
+            ->get()->map(fn ($p) => ['package' => $p->reference,
+                'tracking_no' => $p->tracking_no, 'status' => $p->status,
+                'label' => self::statusLabel($p->status),
+                'events' => $this->publicEvents($p),
+            ])->all();
+    }
+
+    public static function statusLabel(string $status): string
+    {
+        return match ($status) {
+            'stored' => 'Received at warehouse', 'allocated' => 'Assigned to shipment',
+            'dispatched' => 'Handed to airline', 'received_tz' => 'In Tanzania warehouse',
+            'out_for_delivery' => 'Out for delivery', 'delivered' => 'Delivered',
+            'collected' => 'Collected by customer', 'on_hold' => 'On hold',
+            default => $status,
+        };
+    }
+
+    /** Public-safe event list — drops internal meta. */
+    public function publicEvents(\Modules\Cargo\Models\CargoPackage $p): array
+    {
+        return $p->events()->orderBy('created_at')->get()
+            ->map(fn ($e) => ['event' => $e->event, 'at' => $e->created_at])->all();
+    }
+
+    /** Guest tracking: XRN number + registered phone/email (spec §12.2). */
+    public function guestTrack(string $trackingNo, string $contact): ?array
+    {
+        $p = \Modules\Cargo\Models\CargoPackage::where('tracking_no', strtoupper(trim($trackingNo)))->first();
+        if (! $p) return null;
+        $c = $p->customer;
+        $ok = $c && (strtolower((string) $c->email) === strtolower(trim($contact))
+            || preg_replace('/\D/', '', (string) $c->phone) === preg_replace('/\D/', '', $contact));
+        if (! $ok) return null;
+        return ['tracking_no' => $p->tracking_no, 'status' => $p->status,
+            'label' => self::statusLabel($p->status), 'events' => $this->publicEvents($p)];
     }
 
     // ── Support ticket (reuses Ticketing engine) ─────────

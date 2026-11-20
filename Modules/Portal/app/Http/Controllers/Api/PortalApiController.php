@@ -16,6 +16,15 @@ class PortalApiController extends Controller
     }
     public function dashboard(Request $r) { return ApiResponse::success($this->svc->customerDashboard($this->customer($r))); }
     public function tracking(Request $r) { return ApiResponse::success($this->svc->trackingTimeline($this->customer($r))); }
+
+    /** POST /api/v1/track — guest tracking by XRN + email/phone. */
+    public function guestTrack(Request $r)
+    {
+        $r->validate(['tracking_no' => 'required|string|max:20', 'contact' => 'required|string|max:120']);
+        $result = $this->svc->guestTrack($r->input('tracking_no'), $r->input('contact'));
+        abort_unless($result, 404, 'No shipment found for those details.');
+        return ApiResponse::success($result);
+    }
     public function statement(Request $r) { return ApiResponse::success($this->svc->statement($this->customer($r), $r->input('from'), $r->input('to'))); }
     public function storeTicket(Request $r)
     {

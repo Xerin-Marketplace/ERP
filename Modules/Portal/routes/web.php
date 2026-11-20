@@ -2,6 +2,12 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Portal\Http\Controllers\{PortalController, ServiceDeskController};
 
+// Public guest tracking — XRN number + registered email/phone. Throttled.
+Route::middleware(['web', 'throttle:20,1'])->prefix('track')->name('track.')->group(function () {
+    Route::get('/', [PortalController::class, 'guestTrackForm'])->name('form');
+    Route::post('/', [PortalController::class, 'guestTrack'])->name('lookup');
+});
+
 // Customer-facing portal
 Route::middleware(['web','auth'])->prefix('portal')->name('portal.')->group(function () {
     Route::get('/', [PortalController::class,'dashboard'])->name('dashboard');

@@ -53,5 +53,8 @@ Route::middleware(['auth', 'verified', 'account.active'])->prefix('cargo')->name
         Route::post('bookings/{booking}/confirm', [K::class, 'bookingConfirm'])->name('bookings.confirm')->middleware('can:cargo.bookings.confirm');
         Route::post('bookings/{booking}/match', [K::class, 'bookingMatch'])->name('bookings.match')->middleware('can:cargo.receiving.manage_discrepancies');
         Route::get('unmatched', [K::class, 'unmatched'])->name('unmatched')->middleware('can:cargo.receiving.view');
+
+        Route::get('packages/{package}/quote', [K::class, 'packageQuote'])->name('packages.quote')->middleware('can:cargo.packages.view');
+        Route::post('packages/{package}/invoice', [K::class, 'packageInvoice'])->name('packages.invoice')->middleware('can:cargo.bookings.confirm');
     });
 });

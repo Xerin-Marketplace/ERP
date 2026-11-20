@@ -28,6 +28,21 @@ class PortalController extends Controller
         $c = $this->customer($r);
         return view('portal::tracking', ['timeline' => $this->svc->trackingTimeline($c), 'c' => $c]);
     }
+
+    /** Guest tracking page — no login; XRN + email/phone verification. */
+    public function guestTrackForm()
+    {
+        return view('portal::guest-track', ['result' => null, 'searched' => false]);
+    }
+
+    public function guestTrack(Request $r)
+    {
+        $r->validate(['tracking_no' => 'required|string|max:20', 'contact' => 'required|string|max:120']);
+        return view('portal::guest-track', [
+            'result' => $this->svc->guestTrack($r->input('tracking_no'), $r->input('contact')),
+            'searched' => true,
+        ]);
+    }
     public function tickets(Request $r)
     {
         $c = $this->customer($r);
