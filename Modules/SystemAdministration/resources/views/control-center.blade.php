@@ -9,6 +9,7 @@
             ['Registrations', $platform['registrations_pending'], 'pending review'],
             ['Companies', $platform['companies'], $platform['branches'].' branches'],
             ['Departments', $platform['departments'], 'org-wide'],
+            ['Employees', $platform['employees_total'] ?? 0, ($platform['employees_active'] ?? 0).' active · '.($platform['employees_onboarding'] ?? 0).' onboarding'],
             ['Sessions', $platform['sessions_active'], 'active now'],
         ] as $card)
             <div class="rounded-sm border border-gray-200 bg-white p-4 shadow-sm">

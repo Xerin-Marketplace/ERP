@@ -30,6 +30,12 @@ class ControlCenterController extends Controller
                 'companies' => Company::count(),
                 'branches' => Branch::count(),
                 'departments' => Department::count(),
+                'employees_total' => class_exists(\Modules\Employee\Models\Employee::class)
+                    ? \Modules\Employee\Models\Employee::count() : 0,
+                'employees_active' => class_exists(\Modules\Employee\Models\Employee::class)
+                    ? \Modules\Employee\Models\Employee::where('status', 'active')->count() : 0,
+                'employees_onboarding' => class_exists(\Modules\Employee\Models\Employee::class)
+                    ? \Modules\Employee\Models\Employee::whereIn('status', ['onboarding', 'pending_approval', 'draft'])->count() : 0,
                 'modules_enabled' => count(array_filter(\Module::allEnabled() ? array_map(fn ($m) => true, \Module::allEnabled()) : [])),
                 'modules_disabled' => count(\Module::allDisabled()),
                 'sessions_active' => $health->activeSessions(),
