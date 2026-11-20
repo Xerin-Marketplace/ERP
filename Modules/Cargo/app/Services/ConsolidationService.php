@@ -9,6 +9,8 @@ use Modules\Cargo\Models\CargoBox;
 use Modules\Cargo\Models\CargoBoxLine;
 use Modules\Cargo\Models\CargoPackage;
 use Modules\Cargo\Models\CargoTrip;
+use Modules\Shipment\Models\Shipment;
+use Modules\Shipment\Models\ShipmentPackage;
 
 class ConsolidationService
 {
@@ -76,7 +78,7 @@ class ConsolidationService
         abort_unless($box->status === 'closed', 422, 'Only closed, sealed and weighed boxes can be assigned.');
         abort_unless(in_array($trip->status, ['planned', 'assigned'], true), 422, 'Trip is not accepting boxes.');
 
-        $box->update(['trip_id' => $trip->id, 'status' => 'assigned']);
+        $box->update(['trip_id' => $trip->id, 'shipment_id' => null, 'status' => 'assigned']);
         if ($trip->status === 'planned') $trip->update(['status' => 'assigned']);
 
         $total = (float) $trip->boxes()->sum('actual_weight');
@@ -86,6 +88,45 @@ class ConsolidationService
         }
         return $box;
     }
+
+    /**
+     * Assign a closed box to an air-cargo shipment leg (AWB/manifest)
+     * instead of an MCO trip. All box packages flow into
+     * shipment_packages so the Shipment manifest reflects reality.
+     */
+    public function assignToShipment(CargoBox $box, Shipment $shipment, int $userId): CargoBox
+    {
+        abort_unless($box->status === 'closed', 422, 'Only closed, sealed and weighed boxes can be assigned.');
+        abort_unless(in_array($shipment->status, self::SHIPMENT_LOADING_STATUSES, true),
+            422, "Shipment {$shipment->reference} is past its loading window ({$shipment->status}).");
+
+        return DB::transaction(function () use ($box, $shipment, $userId) {
+            $box->update(['shipment_id' => $shipment->id, 'trip_id' => null, 'status' => 'assigned']);
+            $added = 0;
+            foreach ($box->lines as $line) {
+                $exists = ShipmentPackage::where('shipment_id', $shipment->id)
+                    ->where('package_id', $line->package_id)
+                    ->whereNull('removed_at')->exists();
+                if (! $exists) {
+                    ShipmentPackage::create([
+                        'shipment_id' => $shipment->id, 'package_id' => $line->package_id,
+                        'allocated_by' => $userId, 'allocated_at' => now(),
+                    ]);
+                    $added++;
+                }
+            }
+            $this->audit->log('cargo.box_shipment_assigned', $box,
+                new: ['shipment' => $shipment->reference, 'packages' => $added]);
+            return $box;
+        });
+    }
+
+    /** Shipment statuses that still accept loading. */
+    public const SHIPMENT_LOADING_STATUSES = [
+        'draft', 'planning', 'pending_approval', 'ready_for_booking',
+        'booking_pending', 'booked', 'documentation_pending',
+        'documentation_complete', 'ready_for_dispatch',
+    ];
 
     private function nextRef(string $prefix): string
     {

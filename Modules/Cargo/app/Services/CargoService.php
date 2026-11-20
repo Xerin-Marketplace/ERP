@@ -26,6 +26,11 @@ class CargoService
     public function log(CargoPackage $pkg, string $event, ?int $userId, array $meta = []): void
     {
         CargoEvent::create(['package_id' => $pkg->id, 'event' => $event, 'user_id' => $userId, 'branch_id' => $pkg->branch_id, 'meta' => $meta ?: null]);
+        try {
+            app(StatusNotificationService::class)->notifyPackageEvent($pkg, $event);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Status notification failed for package {$pkg->id}: {$e->getMessage()}");
+        }
     }
     public function logReceiving(Receiving $r, string $event, ?int $userId, array $meta = []): void
     {

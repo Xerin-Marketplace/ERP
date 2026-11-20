@@ -43,6 +43,7 @@ class TripService
         ]);
         $trip->boxes()->update(['status' => 'departed']);
         $this->audit->log('cargo.trip_departed', $trip);
+        $this->emitPackageEvent($trip, 'departed', $userId);
         return $trip;
     }
 
@@ -52,6 +53,7 @@ class TripService
         $trip->update(['status' => 'arrived', 'arrived_at' => now()]);
         $trip->boxes()->update(['status' => 'arrived']);
         $this->audit->log('cargo.trip_arrived', $trip);
+        $this->emitPackageEvent($trip, 'arrived', null);
         return $trip;
     }
 
@@ -65,6 +67,17 @@ class TripService
         $trip->boxes()->update(['status' => 'opened']);
         $this->audit->log('cargo.trip_handover_tz', $trip);
         return $trip;
+    }
+
+    /** Write a package-level cargo event for every package on the trip. */
+    private function emitPackageEvent(CargoTrip $trip, string $event, ?int $userId): void
+    {
+        $cargo = app(CargoService::class);
+        foreach ($trip->boxes()->with('lines.package')->get() as $box) {
+            foreach ($box->lines as $line) {
+                if ($line->package) $cargo->log($line->package, $event, $userId);
+            }
+        }
     }
 
     public function weightCheck(CargoTrip $trip): array

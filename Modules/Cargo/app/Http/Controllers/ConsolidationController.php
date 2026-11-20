@@ -82,6 +82,15 @@ class ConsolidationController extends Controller
         return back()->with('success', 'Box assigned to trip.');
     }
 
+    /** Air-cargo leg: assign the sealed box onto a Shipment/AWB. */
+    public function boxAssignShipment(Request $r, CargoBox $box)
+    {
+        $data = $r->validate(['shipment_id' => 'required|exists:shipments,id']);
+        $this->consolidation->assignToShipment($box,
+            \Modules\Shipment\Models\Shipment::findOrFail($data['shipment_id']), $r->user()->id);
+        return back()->with('success', 'Box loaded onto shipment.');
+    }
+
     // ---- Trips ----
     public function trips()
     {

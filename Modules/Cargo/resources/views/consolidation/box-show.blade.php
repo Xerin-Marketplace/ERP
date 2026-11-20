@@ -62,6 +62,18 @@
                     <button class="w-full rounded-sm bg-xerin-700 px-3 py-2 text-xs font-semibold text-white">Assign</button>
                 </form>
             </div>
+            <div class="rounded-sm border border-gray-200 bg-white p-5 shadow-sm space-y-3">
+                <h4 class="text-sm font-semibold">Load onto Shipment (AWB)</h4>
+                <form method="POST" action="{{ route('cargo.consolidation.boxes.assign-shipment', $box) }}" class="space-y-2">
+                    @csrf
+                    <select name="shipment_id" required class="w-full rounded-sm border-gray-300 text-sm">
+                        @foreach (\Modules\Shipment\Models\Shipment::whereIn('status', \Modules\Cargo\Services\ConsolidationService::SHIPMENT_LOADING_STATUSES)->orderByDesc('id')->limit(50)->get() as $s)
+                            <option value="{{ $s->id }}">{{ $s->reference }} — {{ $s->origin_airport }}→{{ $s->destination_airport }} ({{ $s->status }})</option>
+                        @endforeach
+                    </select>
+                    <button class="w-full rounded-sm bg-xerin-700 px-3 py-2 text-xs font-semibold text-white">Load onto shipment</button>
+                </form>
+            </div>
             @endif
             @endcan
         </div>

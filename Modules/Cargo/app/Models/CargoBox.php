@@ -8,16 +8,22 @@ class CargoBox extends Model
 {
     protected $table = 'cargo_boxes';
 
-    protected $fillable = ['reference', 'branch_id', 'location_id', 'box_type', 'target_weight', 'actual_weight', 'seal_number', 'status', 'trip_id', 'packed_by', 'closed_at', 'notes'];
+    protected $fillable = ['reference', 'branch_id', 'location_id', 'box_type', 'target_weight', 'actual_weight', 'seal_number', 'status', 'trip_id', 'shipment_id', 'packed_by', 'closed_at', 'notes'];
 
     protected $casts = [
         'target_weight' => 'decimal:2',
         'actual_weight' => 'decimal:2',
-        'closed_at' => 'datetime',    ];
+        'closed_at' => 'datetime',
+    ];
 
     public function lines()
     {
         return $this->hasMany(\Modules\Cargo\Models\CargoBoxLine::class, 'box_id');
+    }
+
+    public function shipment()
+    {
+        return $this->belongsTo(\Modules\Shipment\Models\Shipment::class);
     }
 
     public function trip()

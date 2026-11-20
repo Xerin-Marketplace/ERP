@@ -128,6 +128,97 @@ class ConsolidationTest extends TestCase
         $this->assertSame('opened', $box->fresh()->status);
     }
 
+    public function test_box_loads_onto_shipment_awb_leg(): void
+    {
+        $svc = app(ConsolidationService::class);
+
+        $box = $svc->createBox($this->dxb->id, [], $this->ops->id);
+        $p1 = $this->package(); $p2 = $this->package();
+        $svc->addPackage($box, $p1, 10, $this->ops->id);
+        $svc->addPackage($box, $p2, 12, $this->ops->id);
+        $box = $svc->close($box->fresh(), 22.1, 'SEAL-AWB', $this->ops->id);
+
+        $shipment = new \Modules\Shipment\Models\Shipment([
+            'origin_branch_id' => $this->dxb->id, 'destination_branch_id' => $this->tz->id,
+            'status' => 'booked', 'origin_airport' => 'DXB', 'destination_airport' => 'DAR',
+        ]);
+        $shipment->reference = 'XER-SHP-2026-TEST1';
+        $shipment->save();
+        $box = $svc->assignToShipment($box, $shipment, $this->ops->id);
+
+        $this->assertSame('assigned', $box->status);
+        $this->assertSame($shipment->id, $box->shipment_id);
+        $this->assertNull($box->trip_id);
+        $this->assertSame(2, \Modules\Shipment\Models\ShipmentPackage::where('shipment_id', $shipment->id)->count());
+
+        // Idempotent — re-assign adds no duplicate rows.
+        $box->update(['status' => 'closed']);
+        $svc->assignToShipment($box->fresh(), $shipment, $this->ops->id);
+        $this->assertSame(2, \Modules\Shipment\Models\ShipmentPackage::where('shipment_id', $shipment->id)->count());
+
+        // Past loading window → rejected.
+        $departed = new \Modules\Shipment\Models\Shipment([
+            'origin_branch_id' => $this->dxb->id, 'status' => 'departed',
+        ]);
+        $departed->reference = 'XER-SHP-2026-TEST2';
+        $departed->save();
+        $box->update(['status' => 'closed']);
+        try { $svc->assignToShipment($box->fresh(), $departed, $this->ops->id); $this->fail('expected 422'); }
+        catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {}
+    }
+
+    public function test_status_notifications_fan_out_to_customer_channels(): void
+    {
+        $package = $this->package(['customer_id' => $this->customer()->id, 'tracking_no' => 'XRN900001']);
+        $svc = app(\Modules\Cargo\Services\CargoService::class);
+
+        // Customer-safe milestone → in_app + email + whatsapp + sms rows.
+        $svc->log($package, 'received', $this->ops->id);
+        $msgs = \Modules\Portal\Models\CustomerMessage::where('customer_id', $package->customer_id)->get();
+        $this->assertCount(4, $msgs);
+        $this->assertStringContainsString($package->tracking_no, $msgs->first()->body);
+        $this->assertSame('queued', $msgs->firstWhere('channel', 'whatsapp')->status);
+        $this->assertSame('sent', $msgs->firstWhere('channel', 'in_app')->status);
+
+        // Internal-only event → nothing.
+        $svc->log($package, 'weighed', $this->ops->id);
+        $this->assertSame(4, \Modules\Portal\Models\CustomerMessage::count());
+    }
+
+    public function test_status_notifications_respect_channel_preferences(): void
+    {
+        $package = $this->package(['customer_id' => $this->customer()->id, 'tracking_no' => 'XRN900002']);
+        \Modules\Portal\Models\CommunicationPreference::create([
+            'customer_id' => $package->customer_id,
+            'channels' => ['whatsapp' => false, 'sms' => false, 'email' => true, 'in_app' => true],
+        ]);
+        app(\Modules\Cargo\Services\CargoService::class)->log($package, 'arrived', $this->ops->id);
+        $channels = \Modules\Portal\Models\CustomerMessage::pluck('channel')->all();
+        sort($channels);
+        $this->assertSame(['email', 'in_app'], $channels);
+    }
+
+    public function test_trip_departure_notifies_package_customers(): void
+    {
+        $svc = app(ConsolidationService::class);
+        $trips = app(TripService::class);
+        $package = $this->package(['customer_id' => $this->customer()->id, 'tracking_no' => 'XRN900003']);
+
+        $box = $svc->createBox($this->dxb->id, [], $this->ops->id);
+        $svc->addPackage($box, $package, 10, $this->ops->id);
+        $box = $svc->close($box->fresh(), 10.1, 'SEAL-N', $this->ops->id);
+
+        $trip = $trips->create(['passenger_name' => 'X', 'origin_branch_id' => $this->dxb->id,
+            'destination_branch_id' => $this->tz->id, 'flight_date' => now()->addDay()->toDateString()], $this->ops->id);
+        $svc->assignToTrip($box, $trip, $this->ops->id);
+        $trips->handoverDubai($trip->fresh(), $this->ops->id);
+        $trips->depart($trip->fresh(), 1, $this->ops->id);
+
+        $this->assertNotNull($package->fresh()->events()->where('event', 'departed')->first());
+        $this->assertStringContainsString('departed for Tanzania',
+            \Modules\Portal\Models\CustomerMessage::where('customer_id', $package->customer_id)->latest()->first()->body);
+    }
+
     public function test_unmatched_package_cannot_be_consolidated(): void
     {
         $svc = app(ConsolidationService::class);

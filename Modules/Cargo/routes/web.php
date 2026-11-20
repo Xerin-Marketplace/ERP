@@ -39,6 +39,7 @@ Route::middleware(['auth', 'verified', 'account.active'])->prefix('cargo')->name
         Route::post('boxes/{box}/lines', [K::class, 'boxAddLine'])->name('boxes.lines')->middleware('can:cargo.consolidation.manage');
         Route::post('boxes/{box}/close', [K::class, 'boxClose'])->name('boxes.close')->middleware('can:cargo.consolidation.manage');
         Route::post('boxes/{box}/assign', [K::class, 'boxAssign'])->name('boxes.assign')->middleware('can:cargo.consolidation.manage');
+        Route::post('boxes/{box}/assign-shipment', [K::class, 'boxAssignShipment'])->name('boxes.assign-shipment')->middleware('can:cargo.consolidation.manage');
 
         Route::get('trips', [K::class, 'trips'])->name('trips.index')->middleware('can:cargo.trips.view');
         Route::post('trips', [K::class, 'tripStore'])->name('trips.store')->middleware('can:cargo.trips.manage');
