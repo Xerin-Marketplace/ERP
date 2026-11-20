@@ -56,6 +56,9 @@ class DatabaseSeeder extends Seeder
             AdministrationRoleSeeder::class,
             // DEMO accounts — development/staging only.
             SampleUsersSeeder::class,
+            // Real operating roster from the master spec (§16.2) —
+            // named staff, departments, positions and branch placement.
+            XerinStaffSeeder::class,
         ]);
     }
 }
