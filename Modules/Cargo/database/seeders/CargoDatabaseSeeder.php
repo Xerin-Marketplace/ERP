@@ -17,6 +17,9 @@ class CargoDatabaseSeeder extends Seeder
         'cargo.packaging.view', 'cargo.packaging.manage',
         'warehouse.view', 'warehouse.manage', 'warehouse.locations.manage', 'warehouse.movements.create', 'warehouse.movements.approve',
         'cargo.incidents.view', 'cargo.incidents.manage',
+        'cargo.bookings.view', 'cargo.bookings.create', 'cargo.bookings.confirm',
+        'cargo.consolidation.view', 'cargo.consolidation.manage',
+        'cargo.trips.view', 'cargo.trips.manage',
     ];
 
     public function run(): void
@@ -39,6 +42,13 @@ class CargoDatabaseSeeder extends Seeder
 
         $mgr = Role::firstOrCreate(['name' => 'Warehouse Manager', 'guard_name' => 'web']);
         $mgr->syncPermissions(self::PERMISSIONS);
+
+        // Cargo Operations — consolidation boxes and MCO trips (spec 12.4).
+        Role::firstOrCreate(['name' => 'Cargo Operations', 'guard_name' => 'web'])
+            ->syncPermissions(['cargo.dashboard.view', 'cargo.receiving.view',
+                'cargo.packages.view', 'cargo.consolidation.view', 'cargo.consolidation.manage',
+                'cargo.trips.view', 'cargo.trips.manage', 'cargo.bookings.view',
+                'warehouse.view', 'cargo.incidents.view']);
 
         Role::where('name', 'super-admin')->first()?->givePermissionTo(self::PERMISSIONS);
 

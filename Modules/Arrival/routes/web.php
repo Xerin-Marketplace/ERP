@@ -1,6 +1,7 @@
 <?php
 use Illuminate\Support\Facades\Route;
 use Modules\Arrival\Http\Controllers\ArrivalController;
+use Modules\Arrival\Http\Controllers\ReleaseController;
 
 Route::middleware(['web','auth'])->prefix('arrival')->name('arrival.')->group(function () {
     Route::get('dashboard', [ArrivalController::class,'dashboard'])->name('dashboard');
@@ -21,4 +22,11 @@ Route::middleware(['web','auth'])->prefix('arrival')->name('arrival.')->group(fu
     Route::post('collections/{collection}/approve', [ArrivalController::class,'approveCollection'])->name('collections.approve');
     Route::post('collections/{collection}/confirm', [ArrivalController::class,'confirmCollection'])->name('collections.confirm');
     Route::post('{arrival}/receive', [ArrivalController::class,'receive'])->name('receive');
+
+    // Release approvals + storage (spec 12.8, 14.2).
+    Route::get('releases/queue', [ReleaseController::class, 'index'])->name('releases.index')->middleware('can:release.view');
+    Route::post('releases', [ReleaseController::class, 'store'])->name('releases.store')->middleware('can:release.request');
+    Route::post('releases/{approval}/decide', [ReleaseController::class, 'decide'])->name('releases.decide')->middleware('can:release.approve');
+    Route::post('releases/verify', [ReleaseController::class, 'verify'])->name('releases.verify')->middleware('can:release.view');
+    Route::get('storage/{package}/charge', [ReleaseController::class, 'storage'])->name('storage.charge')->middleware('can:storage.view');
 });

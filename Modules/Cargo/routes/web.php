@@ -1,6 +1,7 @@
 <?php
 use Illuminate\Support\Facades\Route;
 use Modules\Cargo\Http\Controllers\CargoController as C;
+use Modules\Cargo\Http\Controllers\ConsolidationController as K;
 
 Route::middleware(['auth', 'verified', 'account.active'])->prefix('cargo')->name('cargo.')->group(function () {
     Route::get('/dashboard', [C::class, 'dashboard'])->name('dashboard')->middleware('can:cargo.dashboard.view');
@@ -29,4 +30,28 @@ Route::middleware(['auth', 'verified', 'account.active'])->prefix('cargo')->name
 
     Route::get('/incidents', [C::class, 'incidents'])->name('incidents.index')->middleware('can:cargo.incidents.view');
     Route::post('/incidents/{incident}/resolve', [C::class, 'incidentResolve'])->name('incidents.resolve')->middleware('can:cargo.incidents.manage');
+
+    // Consolidation — boxes, MCO trips, bookings (spec 12.3-12.5).
+    Route::prefix('consolidation')->name('consolidation.')->group(function () {
+        Route::get('boxes', [K::class, 'boxes'])->name('boxes.index')->middleware('can:cargo.consolidation.view');
+        Route::post('boxes', [K::class, 'boxStore'])->name('boxes.store')->middleware('can:cargo.consolidation.manage');
+        Route::get('boxes/{box}', [K::class, 'boxShow'])->name('boxes.show')->middleware('can:cargo.consolidation.view');
+        Route::post('boxes/{box}/lines', [K::class, 'boxAddLine'])->name('boxes.lines')->middleware('can:cargo.consolidation.manage');
+        Route::post('boxes/{box}/close', [K::class, 'boxClose'])->name('boxes.close')->middleware('can:cargo.consolidation.manage');
+        Route::post('boxes/{box}/assign', [K::class, 'boxAssign'])->name('boxes.assign')->middleware('can:cargo.consolidation.manage');
+
+        Route::get('trips', [K::class, 'trips'])->name('trips.index')->middleware('can:cargo.trips.view');
+        Route::post('trips', [K::class, 'tripStore'])->name('trips.store')->middleware('can:cargo.trips.manage');
+        Route::get('trips/{trip}', [K::class, 'tripShow'])->name('trips.show')->middleware('can:cargo.trips.view');
+        Route::post('trips/{trip}/handover-dxb', [K::class, 'tripHandoverDxb'])->name('trips.handover-dxb')->middleware('can:cargo.trips.manage');
+        Route::post('trips/{trip}/depart', [K::class, 'tripDepart'])->name('trips.depart')->middleware('can:cargo.trips.manage');
+        Route::post('trips/{trip}/arrive', [K::class, 'tripArrive'])->name('trips.arrive')->middleware('can:cargo.trips.manage');
+        Route::post('trips/{trip}/handover-tz', [K::class, 'tripHandoverTz'])->name('trips.handover-tz')->middleware('can:cargo.trips.manage');
+
+        Route::get('bookings', [K::class, 'bookings'])->name('bookings.index')->middleware('can:cargo.bookings.view');
+        Route::post('bookings', [K::class, 'bookingStore'])->name('bookings.store')->middleware('can:cargo.bookings.create');
+        Route::post('bookings/{booking}/confirm', [K::class, 'bookingConfirm'])->name('bookings.confirm')->middleware('can:cargo.bookings.confirm');
+        Route::post('bookings/{booking}/match', [K::class, 'bookingMatch'])->name('bookings.match')->middleware('can:cargo.receiving.manage_discrepancies');
+        Route::get('unmatched', [K::class, 'unmatched'])->name('unmatched')->middleware('can:cargo.receiving.view');
+    });
 });
