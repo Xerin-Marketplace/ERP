@@ -1,0 +1,15 @@
+{
+    "name": "nwidart/tender",
+    "description": "Tender & Bid Management module",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Tender\\": "app/",
+            "Modules\\Tender\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Tender\\Tests\\": "tests/"
+        }
+    }
+}

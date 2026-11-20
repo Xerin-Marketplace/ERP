@@ -1,0 +1,151 @@
+<?php
+
+namespace Modules\Tender\Http\Controllers;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Modules\Tender\Models\Tender;
+use Modules\Tender\Models\TenderContract;
+use Modules\Tender\Models\TenderEvent;
+use Modules\Tender\Models\TenderSubmission;
+use Modules\Tender\Services\{BidNoBidService, BoqService, SubmissionGate, TenderWorkflow};
+
+class TenderController extends Controller
+{
+    public function dashboard(Request $r)
+    {
+        $q = Tender::query();
+        if (! $r->user()->hasRole('super-admin')) {
+            $q->where(fn ($q) => $q->where('branch_id', $r->user()->branch_id)->orWhereNull('branch_id'));
+        }
+        return view('tender::dashboard', [
+            'byStage' => (clone $q)->select('stage', DB::raw('count(*) c'))->groupBy('stage')->pluck('c'),
+            'upcoming' => (clone $q)->whereNotNull('submission_deadline')->where('submission_deadline','>',now())
+                ->orderBy('submission_deadline')->limit(8)->get(),
+            'totalValue' => (clone $q)->sum('submitted_value'),
+            'awardedValue' => TenderContract::sum('value'),
+        ]);
+    }
+
+    public function index(Request $r)
+    {
+        $tenders = Tender::with('assessment')->latest()
+            ->when($r->filled('stage'), fn ($q) => $q->where('stage', $r->input('stage')))
+            ->when($r->filled('buyer_type'), fn ($q) => $q->where('buyer_type', $r->input('buyer_type')))
+            ->paginate(20);
+        return view('tender::index', compact('tenders'));
+    }
+
+    public function store(Request $r)
+    {
+        $d = $r->validate([
+            'reference' => 'required|string|max:60', 'buyer_name' => 'required|string|max:150',
+            'buyer_type' => 'required|in:public,private,international,ngo',
+            'category' => 'required|in:goods,works,services,consultancy,framework,jv,subcontract',
+            'title' => 'required|string|max:255', 'description' => 'nullable|string',
+            'location' => 'nullable|string|max:150',
+            'source' => 'nullable|in:nest,portal,newspaper,email,referral,manual',
+            'source_url' => 'nullable|url|max:255',
+            'estimated_value' => 'nullable|numeric|min:0',
+            'security_required' => 'nullable|numeric|min:0',
+            'performance_security_pct' => 'nullable|numeric|min:0|max:100',
+            'document_fee' => 'nullable|numeric|min:0',
+            'currency' => 'required|size:3',
+            'published_at' => 'nullable|date', 'prebid_meeting_at' => 'nullable|date',
+            'clarification_deadline' => 'nullable|date',
+            'submission_deadline' => 'nullable|date', 'validity_days' => 'nullable|integer|min:0',
+        ]);
+        $d['company_id'] = $r->user()->company_id ?? \Modules\Organization\Models\Company::value('id');
+        $d['branch_id'] = $r->user()->branch_id;
+        $d['created_by'] = $r->user()->id;
+        try {
+            $t = Tender::create($d);
+        } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+            return back()->withErrors(['reference' => 'Duplicate tender: this reference + buyer already exists.']);
+        }
+        return redirect()->route('tender.show', $t)->with('success', 'Opportunity registered.');
+    }
+
+    public function show(Tender $tender, Request $r)
+    {
+        $tender->load(['assessment','activeBoq.items','team','approvals','securities','events','submission','contracts']);
+        return view('tender::show', [
+            't' => $tender,
+            'boqTotals' => $tender->activeBoq ? app(BoqService::class)->totals($tender->activeBoq) : null,
+            'checklist' => app(SubmissionGate::class)->checklist($tender),
+            'nextStages' => collect(Tender::STAGES)->filter(fn ($s) => app(TenderWorkflow::class)->can($tender, $s)),
+        ]);
+    }
+
+    public function assess(Tender $tender, Request $r, BidNoBidService $svc)
+    {
+        $svc->assess($tender, $r->input('scores', []), $r->user());
+        return back()->with('success', 'Assessment saved.');
+    }
+
+    public function decide(Tender $tender, Request $r, BidNoBidService $svc)
+    {
+        $r->validate(['decision' => 'required|in:bid,no_bid,conditional_bid', 'reason' => 'nullable|string|max:500']);
+        $svc->decide($tender, $r->input('decision'), $r->user(), $r->input('reason'));
+        return back()->with('success', 'Decision recorded.');
+    }
+
+    public function addBoqItem(Tender $tender, Request $r, BoqService $svc)
+    {
+        $boq = $tender->activeBoq ?? $tender->boqs()->create(['version' => 1]);
+        $d = $r->validate(['item_no' => 'required|string|max:30', 'description' => 'required|string',
+            'section' => 'nullable|string|max:100', 'unit' => 'nullable|string|max:20',
+            'quantity' => 'required|numeric|min:0',
+            'material_cost' => 'nullable|numeric|min:0', 'labour_cost' => 'nullable|numeric|min:0',
+            'equipment_cost' => 'nullable|numeric|min:0', 'transport_cost' => 'nullable|numeric|min:0',
+            'other_cost' => 'nullable|numeric|min:0', 'subcontract_cost' => 'nullable|numeric|min:0',
+            'unit_rate' => 'nullable|numeric|min:0', 'remarks' => 'nullable|string|max:500']);
+        $svc->addItem($boq, $d);
+        return back()->with('success', 'BOQ item added.');
+    }
+
+    public function submit(Tender $tender, Request $r)
+    {
+        $r->validate(['method' => 'required|in:nest,portal,physical,email',
+            'platform_ref' => 'nullable|string|max:100', 'evidence_document_id' => 'required|exists:tender_documents,id']);
+        $gate = app(SubmissionGate::class);
+        abort_unless($gate->ready($tender), 422, 'Submission checklist incomplete.');
+        DB::transaction(function () use ($tender, $r) {
+            TenderSubmission::create(['tender_id' => $tender->id, 'method' => $r->input('method'),
+                'platform_ref' => $r->input('platform_ref'), 'submitted_at' => now(),
+                'submitted_by' => $r->user()->id,
+                'evidence_document_id' => $r->input('evidence_document_id')]);
+            app(TenderWorkflow::class)->transition($tender, 'submitted', $r->user(), null, true);
+        });
+        return back()->with('success', 'Tender submitted — awaiting evidence verification.');
+    }
+
+    public function event(Tender $tender, Request $r)
+    {
+        $r->validate(['type' => 'required|string|max:40', 'note' => 'nullable|string|max:1000',
+            'event_date' => 'required|date']);
+        TenderEvent::create(['tender_id' => $tender->id, 'type' => $r->input('type'),
+            'note' => $r->input('note'), 'event_date' => $r->input('event_date'),
+            'recorded_by' => $r->user()->id]);
+        $map = ['under_eval' => 'evaluation', 'clarification' => 'clarification', 'negotiation' => 'negotiation'];
+        if (isset($map[$r->input('type')])) {
+            app(TenderWorkflow::class)->transition($tender, $map[$r->input('type')], $r->user());
+        }
+        return back()->with('success', 'Event recorded.');
+    }
+
+    public function award(Tender $tender, Request $r)
+    {
+        $r->validate(['contract_ref' => 'required|string|max:60', 'value' => 'required|numeric|min:0']);
+        abort_unless($tender->stage === 'evaluation' || $tender->submission()->exists(), 422,
+            'Award requires a submitted tender under evaluation.');
+        DB::transaction(function () use ($tender, $r) {
+            $tender->contracts()->create(['contract_ref' => $r->input('contract_ref'),
+                'value' => $r->input('value'), 'currency' => $tender->currency]);
+            $tender->update(['submitted_value' => $r->input('value')]);
+            app(TenderWorkflow::class)->transition($tender, 'awarded', $r->user());
+        });
+        return back()->with('success', 'Award recorded — contract created.');
+    }
+}

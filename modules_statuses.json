@@ -14,5 +14,6 @@
     "Arrival": true,
     "Delivery": true,
     "Portal": true,
-    "Sales": true
+    "Sales": true,
+    "Tender": true
 }

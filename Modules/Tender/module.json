@@ -1,0 +1,8 @@
+{
+    "name": "Tender",
+    "alias": "tender",
+    "description": "Tender & Bid Management — opportunities, BOQ, approvals, submission, awards, contracts (Tanzania)",
+    "priority": 1,
+    "providers": ["Modules\\Tender\\Providers\\TenderServiceProvider"],
+    "files": []
+}
