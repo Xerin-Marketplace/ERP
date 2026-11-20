@@ -15,8 +15,7 @@
             <x-input-label for="password_confirmation" value="Confirm password" />
             <x-text-input id="password_confirmation" name="password_confirmation" type="password" class="block mt-1 w-full" required autocomplete="new-password" />
         </div>
-        <div class="flex items-center justify-between">
-            <form></form>
+        <div class="flex items-center justify-end">
             <x-primary-button>Save password &amp; continue</x-primary-button>
         </div>
     </form>
