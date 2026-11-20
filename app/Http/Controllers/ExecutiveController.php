@@ -44,6 +44,9 @@ class ExecutiveController extends Controller
             'kpis' => $this->an->executive($this->companyId(), $f['from'], $f['to'], $f['pf'], $f['pt'], $f['branchId']),
             'trend' => $this->an->financeTrend($this->companyId(), $f['from'], $f['to'], $f['branchId']),
             'branchRows' => $this->an->branches($this->companyId(), $f['from'], $f['to']),
+            'ops' => $this->an->operations($this->companyId(), $f['from'], $f['to'], $f['branchId']),
+            'sparklines' => $this->an->dailySeries($this->companyId(), $f['from'], $f['to'], $f['branchId']),
+            'taskStats' => $this->an->tasks($this->companyId(), $f['branchId'], null),
             'activity' => $this->an->activity(15),
         ]));
     }

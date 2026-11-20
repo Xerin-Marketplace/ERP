@@ -7,11 +7,16 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Modules\Arrival\Models\ReleaseApproval;
+use Modules\Cargo\Models\CargoBooking;
+use Modules\Cargo\Models\CargoPackage;
 use Modules\Commercial\Models\Customer;
+use Modules\Delivery\Models\DeliveryOrder;
 use Modules\Employee\Models\Employee;
 use Modules\Finance\Models\ChartOfAccount;
 use Modules\Finance\Models\CustomerInvoice;
 use Modules\Finance\Models\GeneralLedgerEntry;
+use Modules\Finance\Models\PaymentRecord;
 use Modules\Finance\Models\SupplierInvoice;
 use Modules\Finance\Services\FinanceDashboardService;
 use Modules\Organization\Models\Branch;
@@ -118,8 +123,14 @@ class ExecutiveAnalyticsService
 
         $invoices = CustomerInvoice::where('company_id', $companyId)->whereIn('status', ['posted', 'partially_paid', 'paid']);
         $ar = (float) (clone $invoices)->whereIn('status', ['posted', 'partially_paid'])->sum(DB::raw('total - received_amount'));
+        $arOverdue = (float) (clone $invoices)->whereIn('status', ['posted', 'partially_paid'])
+            ->whereDate('due_date', '<', now())->sum(DB::raw('total - received_amount'));
         $ap = (float) SupplierInvoice::where('company_id', $companyId)
             ->whereIn('status', ['posted', 'partially_paid'])->sum(DB::raw('total - paid_amount'));
+
+        $cash = fn ($f, $t) => (float) PaymentRecord::where('company_id', $companyId)
+            ->where('direction', 'in')->where('status', '!=', 'reversed')
+            ->whereBetween('payment_date', [$f, $t])->sum('amount');
 
         $customers = Customer::where('company_id', $companyId)->when($branchId, fn ($q) => $q->where('branch_id', $branchId));
         $employees = Employee::where('company_id', $companyId)->when($branchId, fn ($q) => $q->where('branch_id', $branchId));
@@ -130,7 +141,11 @@ class ExecutiveAnalyticsService
             'revenue' => $this->kpi($rev, $prevRev),
             'expenses' => $this->kpi($exp, $prevExp),
             'net_profit' => $this->kpi($rev - $exp, $prevRev - $prevExp),
+            'margin' => $this->kpi($rev > 0 ? round(($rev - $exp) / $rev * 100, 1) : 0,
+                $prevRev > 0 ? round(($prevRev - $prevExp) / $prevRev * 100, 1) : null),
+            'cash_collected' => $this->kpi($cash($from, $to), $cash($prevFrom, $prevTo)),
             'ar_outstanding' => $this->kpi($ar, null),
+            'ar_overdue' => $this->kpi($arOverdue, null),
             'ap_outstanding' => $this->kpi($ap, null),
             'customers' => $this->kpi((clone $customers)->count(),
                 (clone $customers)->whereDate('created_at', '<=', $prevTo)->count()),
@@ -265,6 +280,69 @@ class ExecutiveAnalyticsService
                 ->whereNotNull('submission_deadline')->whereDate('submission_deadline', '>=', now())
                 ->orderBy('submission_deadline')->limit(10)->get(),
             'recent' => (clone $q)->latest()->limit(10)->get(),
+        ];
+    }
+
+    // ── Operations pulse (cargo → release → delivery) ───
+    public function operations(int $companyId, string $from, string $to, ?int $branchId): array
+    {
+        $pkg = fn () => CargoPackage::when($branchId, fn ($q) => $q->where('branch_id', $branchId));
+        $book = fn () => CargoBooking::when($branchId, fn ($q) => $q->where('branch_id', $branchId));
+        $del = fn () => DeliveryOrder::when($branchId, fn ($q) => $q->where('branch_id', $branchId));
+        $rel = fn () => ReleaseApproval::when($branchId, fn ($q) => $q->where('branch_id', $branchId));
+
+        $delivered = ['delivered', 'closed', 'collected_by_customer'];
+        $pkgDone = $pkg()->whereBetween('created_at', [$from, $to . ' 23:59:59'])->count();
+        $delDone = $del()->whereIn('status', $delivered)->count();
+
+        return [
+            'packages_received' => $this->kpi($pkgDone, null),
+            'in_warehouse' => $this->kpi($pkg()->whereIn('status', ['received', 'identified', 'weighed', 'inspection_passed', 'stored', 'ready'])->count(), null),
+            'active_bookings' => $this->kpi($book()->whereIn('status', ['pending', 'confirmed', 'in_transit'])->count(), null),
+            'pending_releases' => $this->kpi($rel()->where('status', 'pending')->count(), null),
+            'deliveries_completed' => $this->kpi($delDone, null),
+            'deliveries_active' => $this->kpi($del()->whereNotIn('status', array_merge($delivered, ['cancelled', 'returned_to_warehouse']))->count(), null),
+            'funnel' => [
+                'labels' => ['Bookings', 'Received', 'In warehouse', 'Dispatched', 'Delivered'],
+                'values' => [
+                    $book()->whereBetween('created_at', [$from, $to . ' 23:59:59'])->count(),
+                    $pkgDone,
+                    $pkg()->whereIn('status', ['received', 'identified', 'weighed', 'inspection_passed', 'stored', 'ready'])->count(),
+                    $pkg()->where('status', 'dispatched')->count(),
+                    $delDone,
+                ],
+            ],
+        ];
+    }
+
+    /** Per-day GL + package series for KPI sparklines (real data only). */
+    public function dailySeries(int $companyId, string $from, string $to, ?int $branchId): array
+    {
+        $rows = GeneralLedgerEntry::where('general_ledger_entries.company_id', $companyId)
+            ->join('chart_of_accounts', 'chart_of_accounts.id', '=', 'general_ledger_entries.account_id')
+            ->whereBetween('general_ledger_entries.entry_date', [$from, $to])
+            ->when($branchId, fn ($q) => $q->where('general_ledger_entries.branch_id', $branchId))
+            ->whereIn('chart_of_accounts.type', ['revenue', 'expense'])
+            ->selectRaw("SUBSTR(general_ledger_entries.entry_date,1,10) as day, chart_of_accounts.type, SUM(general_ledger_entries.credit - general_ledger_entries.debit) as amt")
+            ->groupBy('day', 'chart_of_accounts.type')->get();
+
+        $pkgDays = CargoPackage::when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->whereBetween('created_at', [$from, $to . ' 23:59:59'])
+            ->selectRaw("SUBSTR(created_at,1,10) as day, COUNT(*) as n")->groupBy('day')->pluck('n', 'day');
+
+        $days = [];
+        for ($c = Carbon::parse($from); $c <= Carbon::parse($to); $c->addDay()) { $days[] = $c->toDateString(); }
+
+        $at = fn ($day, $type) => (float) ($rows->firstWhere(fn ($r) => $r->day === $day && $r->type === $type)?->amt ?? 0);
+        $rev = array_map(fn ($d) => $at($d, 'revenue'), $days);
+        $exp = array_map(fn ($d) => -1 * $at($d, 'expense'), $days);
+
+        return [
+            'labels' => $days,
+            'revenue' => $rev,
+            'expenses' => $exp,
+            'profit' => array_map(fn ($r, $e) => $r - $e, $rev, $exp),
+            'packages' => array_map(fn ($d) => (int) ($pkgDays[$d] ?? 0), $days),
         ];
     }
 
