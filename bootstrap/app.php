@@ -37,6 +37,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // Users flagged must_change_password are confined to the change screen.
         $middleware->appendToGroup('web', \App\Http\Middleware\ForcePasswordChange::class);
 
+        // Privileged roles must complete a TOTP challenge each session (spec §16.4).
+        $middleware->appendToGroup('web', \App\Http\Middleware\RequireMfaChallenge::class);
+
         // EN+SW bilingual foundation: resolves user/system locale per request.
         $middleware->appendToGroup('web', \App\Http\Middleware\SetLocale::class);
     })

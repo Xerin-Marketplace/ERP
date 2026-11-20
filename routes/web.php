@@ -28,6 +28,12 @@ Route::middleware(['auth', 'verified', 'account.active'])->group(function () {
             'complete' => ! in_array(false, array_column($steps, 'done'), true)]);
     })->name('onboarding');
 
+    // MFA — enrollment + session challenge for privileged roles (spec §16.4).
+    Route::get('/mfa/enroll', [\App\Http\Controllers\MfaChallengeController::class, 'enroll'])->name('mfa.enroll');
+    Route::post('/mfa/enroll', [\App\Http\Controllers\MfaChallengeController::class, 'confirmEnroll'])->name('mfa.enroll.confirm');
+    Route::get('/mfa/challenge', [\App\Http\Controllers\MfaChallengeController::class, 'challenge'])->name('mfa.challenge');
+    Route::post('/mfa/challenge', [\App\Http\Controllers\MfaChallengeController::class, 'verify'])->name('mfa.verify');
+
     Route::get('/dashboard', function () {
         $stats = [
             'companies' => \Modules\Organization\Models\Company::count(),

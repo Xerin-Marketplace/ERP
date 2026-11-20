@@ -23,7 +23,8 @@ class MfaService
         if ($user->hasAnyRole(['super-admin', 'group-administrator', 'company-administrator'])) {
             return true;
         }
-        return (bool) SettingCatalog::definitions()['security.mfa.required']['default'] ?? false
+        $default = SettingCatalog::definitions()['security.mfa.required']['default'] ?? false;
+        return (bool) $default
             || \App\Models\SystemSetting::where('key', 'security.mfa.required')->value('value') === '1';
     }
 

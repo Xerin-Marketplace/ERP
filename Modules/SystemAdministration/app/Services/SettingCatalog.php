@@ -96,6 +96,10 @@ class SettingCatalog
             'rules.registration.allowed_domains' => ['group' => 'Rules — Registration', 'label' => 'Allowed email domains (comma-separated, blank = all)', 'type' => 'string', 'default' => '', 'rules' => 'nullable|string|max:500', 'risk' => 'medium'],
             'rules.registration.require_it_approval' => ['group' => 'Rules — Registration', 'label' => 'Require IT approval before provisioning', 'type' => 'bool', 'default' => true, 'rules' => 'boolean', 'risk' => 'critical', 'help' => 'Cannot be disabled — public applicants never self-provision.', 'locked' => true],
 
+            /* ------------------------- Rules: Security ------------------------- */
+            'security.mfa.required' => ['group' => 'Rules — Security', 'label' => 'Enforce MFA enrollment for privileged roles', 'type' => 'bool', 'default' => false, 'rules' => 'boolean', 'risk' => 'high', 'help' => 'When on, Finance/accounts/cashier, Release Approver, Branch Manager, CEO/management and admin-tier users are pushed to MFA enrollment before they can proceed. Accounts with MFA enabled are always challenged per session regardless of this switch.'],
+            'security.mfa.session_ttl_hours' => ['group' => 'Rules — Security', 'label' => 'MFA session trust duration (hours)', 'type' => 'int', 'default' => 12, 'rules' => 'required|integer|min:1|max:168', 'risk' => 'medium'],
+
             /* ------------------------- Rules: Operational ------------------------- */
             'rules.files.max_upload_kb' => ['group' => 'Rules — Operational', 'label' => 'Max upload size (KB)', 'type' => 'int', 'default' => 10240, 'rules' => 'required|integer|min:128|max:102400', 'risk' => 'medium'],
             'rules.api.rate_limit' => ['group' => 'Rules — Operational', 'label' => 'API rate limit (requests per minute)', 'type' => 'int', 'default' => 60, 'rules' => 'required|integer|min:10|max:1000', 'risk' => 'high'],
