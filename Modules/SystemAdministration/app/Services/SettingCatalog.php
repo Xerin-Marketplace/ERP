@@ -43,7 +43,7 @@ class SettingCatalog
 
             /* ------------------------- Regional ------------------------- */
             'system.timezone' => ['group' => 'Regional', 'label' => 'Timezone', 'type' => 'string', 'default' => 'Africa/Dar_es_Salaam', 'rules' => 'required|timezone', 'risk' => 'medium'],
-            'system.locale' => ['group' => 'Regional', 'label' => 'Default language', 'type' => 'enum', 'default' => 'en', 'options' => ['en' => 'English', 'sw' => 'Kiswahili', 'fr' => 'Français'], 'rules' => 'required|in:en,sw,fr', 'risk' => 'low'],
+            'system.locale' => ['group' => 'Regional', 'label' => 'Default language', 'type' => 'enum', 'default' => 'en', 'options' => ['en' => 'English', 'sw' => 'Kiswahili', 'fr' => 'Français'], 'rules' => 'required|in:en,sw,fr', 'risk' => 'low', 'allowed_scopes' => ['group','company','branch','user']],
             'system.available_locales' => ['group' => 'Regional', 'label' => 'Available languages', 'type' => 'multiselect', 'default' => ['en', 'sw'], 'options' => ['en' => 'English', 'sw' => 'Kiswahili', 'fr' => 'Français'], 'rules' => 'array', 'risk' => 'low'],
             'system.country' => ['group' => 'Regional', 'label' => 'Default country', 'type' => 'string', 'default' => 'Tanzania', 'rules' => 'required|string|max:100', 'risk' => 'low'],
             'system.currency' => ['group' => 'Regional', 'label' => 'Default currency', 'type' => 'enum', 'default' => 'TZS', 'options' => ['TZS' => 'TZS — Tanzanian Shilling', 'USD' => 'USD — US Dollar', 'KES' => 'KES — Kenyan Shilling', 'EUR' => 'EUR — Euro'], 'rules' => 'required|in:TZS,USD,KES,EUR', 'risk' => 'high', 'help' => 'Display default only — does NOT convert historical financial records.'],
@@ -74,7 +74,7 @@ class SettingCatalog
             'branding.registration_enabled' => ['group' => 'Branding', 'label' => 'Show register link on login page', 'type' => 'bool', 'default' => true, 'rules' => 'boolean', 'risk' => 'medium'],
 
             /* ------------------------- Rules: Authentication ------------------------- */
-            'rules.auth.max_login_attempts' => ['group' => 'Rules — Authentication', 'label' => 'Max failed login attempts before lockout', 'type' => 'int', 'default' => 5, 'rules' => 'required|integer|min:3|max:20', 'risk' => 'high'],
+            'rules.auth.max_login_attempts' => ['group' => 'Rules — Authentication', 'label' => 'Max failed login attempts before lockout', 'type' => 'int', 'default' => 5, 'rules' => 'required|integer|min:3|max:20', 'risk' => 'high', 'protected' => true],
             'rules.auth.lockout_minutes' => ['group' => 'Rules — Authentication', 'label' => 'Lockout duration (minutes)', 'type' => 'int', 'default' => 15, 'rules' => 'required|integer|min:1|max:1440', 'risk' => 'high'],
             'rules.auth.reset_token_minutes' => ['group' => 'Rules — Authentication', 'label' => 'Password reset token expiry (minutes)', 'type' => 'int', 'default' => 60, 'rules' => 'required|integer|min:15|max:1440', 'risk' => 'medium'],
             'rules.auth.suspicious_login_alert' => ['group' => 'Rules — Authentication', 'label' => 'Alert on suspicious logins', 'type' => 'bool', 'default' => true, 'rules' => 'boolean', 'risk' => 'low'],

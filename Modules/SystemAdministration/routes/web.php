@@ -51,6 +51,19 @@ Route::middleware(['web', 'auth', 'verified', 'account.active'])
         Route::post('navigation/reset', [Controllers\NavigationController::class, 'reset'])
             ->name('navigation.reset')->middleware('permission:sysadmin.navigation.manage');
 
+        /* SA.12 Governance APIs (web-auth JSON endpoints) */
+        Route::get('governance/settings/{key}/effective', [Controllers\GovernanceController::class, 'effective'])->name('gov.effective');
+        Route::post('governance/settings/{key}/scope', [Controllers\GovernanceController::class, 'setScope'])->name('gov.scope')->middleware('permission:sysadmin.settings.manage');
+        Route::get('governance/changes', [Controllers\GovernanceController::class, 'pendingChanges'])->name('gov.changes');
+        Route::post('governance/changes', [Controllers\GovernanceController::class, 'requestChange'])->name('gov.request');
+        Route::post('governance/changes/{cr}/approve', [Controllers\GovernanceController::class, 'approve'])->name('gov.approve');
+        Route::post('governance/changes/{cr}/reject', [Controllers\GovernanceController::class, 'reject'])->name('gov.reject');
+        Route::post('governance/integrations/{integration}/test', [Controllers\GovernanceController::class, 'testIntegration'])->name('gov.test');
+        Route::get('governance/integrations/{integration}/history', [Controllers\GovernanceController::class, 'integrationHistory'])->name('gov.ihistory');
+        Route::post('governance/mfa/enroll', [Controllers\GovernanceController::class, 'mfaEnroll'])->name('mfa.enroll');
+        Route::post('governance/mfa/confirm', [Controllers\GovernanceController::class, 'mfaConfirm'])->name('mfa.confirm');
+        Route::post('governance/mfa/challenge', [Controllers\GovernanceController::class, 'mfaChallenge'])->name('mfa.challenge');
+
         /* Command Center */
         Route::get('command-center', [Controllers\CommandCenterController::class, 'index'])
             ->name('commands.index')->middleware('permission:sysadmin.commands.view');
