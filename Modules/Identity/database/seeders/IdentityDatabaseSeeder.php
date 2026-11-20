@@ -41,6 +41,14 @@ class IdentityDatabaseSeeder extends Seeder
     public const FUTURE_MODULE_PERMISSIONS = [
         'reception.dashboard.view', 'reception.visitors.create',
         'reception.visitors.view', 'reception.requests.manage',
+        'reception.attendance.view', 'reception.attendance.view_daily',
+        'reception.attendance.view_department', 'reception.attendance.export',
+        'reception.employees.view_directory',
+        'reception.tickets.create', 'reception.tickets.view',
+        'reception.tickets.view_branch', 'reception.tickets.track',
+        'reception.tickets.comment', 'reception.tickets.attachments.upload',
+        'reception.it_availability.view',
+        'reception.reports.view', 'reception.reports.export',
         'it.dashboard.view', 'it.availability.manage',
     ];
 
@@ -80,6 +88,13 @@ class IdentityDatabaseSeeder extends Seeder
             'identity.view', 'users.view',
             'reception.dashboard.view', 'reception.visitors.create',
             'reception.visitors.view', 'reception.requests.manage',
+            'reception.attendance.view', 'reception.attendance.view_daily',
+            'reception.attendance.view_department',
+            'reception.employees.view_directory',
+            'reception.tickets.create', 'reception.tickets.view',
+            'reception.tickets.view_branch', 'reception.tickets.track',
+            'reception.tickets.comment', 'reception.tickets.attachments.upload',
+            'reception.it_availability.view',
         ],
         'auditor' => [
             'identity.view', 'registration.view', 'users.view', 'roles.view',

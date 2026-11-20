@@ -6,5 +6,6 @@
     "Ticketing": true,
     "HR": true,
     "Finance": true,
-    "SystemAdministration": true
+    "SystemAdministration": true,
+    "Reception": true
 }

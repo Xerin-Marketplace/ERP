@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Modules\Employee\Models\Employee;
 use Modules\Ticketing\Models\ServiceCatalogItem;
 use Modules\Ticketing\Models\Ticket;
 use Modules\Ticketing\Models\TicketComment;
@@ -31,9 +32,16 @@ class TicketService
     {
         return DB::transaction(function () use ($data, $requester) {
             $emp = $requester->employee;
+            $onBehalf = null;
+            if (! empty($data['on_behalf_employee_id'])) {
+                $onBehalf = Employee::find($data['on_behalf_employee_id']);
+            }
+            $subject = $onBehalf ?? $emp;
 
             $ticket = new Ticket;
-            $ticket->ticket_number = $this->numbers->ticket();
+            $ticket->ticket_number = isset($data['branch_code'])
+                ? $this->numbers->itTicket($data['branch_code'])
+                : $this->numbers->ticket();
             $ticket->fill([
                 'subject' => $data['subject'],
                 'description' => $data['description'],
@@ -44,11 +52,11 @@ class TicketService
                 'severity' => $data['severity'] ?? 'minor',
                 'status' => 'submitted',
                 'requester_id' => $requester->id,
-                'requester_employee_id' => $emp?->id,
-                'requester_company_id' => $emp?->company_id,
-                'requester_branch_id' => $emp?->branch_id,
-                'requester_department_id' => $emp?->department_id,
-                'custom_fields' => $data['custom_fields'] ?? null,
+                'requester_employee_id' => $subject?->id,
+                'requester_company_id' => $subject?->company_id,
+                'requester_branch_id' => $subject?->branch_id,
+                'requester_department_id' => $subject?->department_id,
+                'custom_fields' => array_merge($data['custom_fields'] ?? [], $onBehalf ? ['created_on_behalf_by' => $requester->id] : []),
             ]);
             $ticket->save();
 
