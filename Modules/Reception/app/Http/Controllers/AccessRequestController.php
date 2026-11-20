@@ -5,6 +5,7 @@ namespace Modules\Reception\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Modules\Reception\Models\AccessRequest;
+use Modules\Reception\Models\AccessRequestDocument;
 use Modules\Reception\Services\AccessDashboardService;
 use Modules\Reception\Services\AccessRequestService;
 use Modules\Reception\Services\VerificationService;
@@ -44,6 +45,24 @@ class AccessRequestController extends Controller
             'documents.file', 'workflowVersion.stages', 'employee.user', 'sponsor');
         app(VerificationService::class)->bootstrap($accessRequest);
         return view('reception::access.show', ['request' => $accessRequest]);
+    }
+
+    public function uploadDocument(Request $r, AccessRequest $accessRequest)
+    {
+        $data = $r->validate([
+            'documents' => 'required|array|max:5',
+            'documents.*' => 'file|max:10240|mimes:pdf,jpg,jpeg,png',
+            'category' => 'nullable|string|max:40',
+        ]);
+        $n = $this->requests->attachDocuments($accessRequest, $r->file('documents'),
+            $r->user()->id, $data['category'] ?? 'supporting');
+        return back()->with('success', "{$n} document(s) uploaded.");
+    }
+
+    public function downloadDocument(AccessRequest $accessRequest, AccessRequestDocument $document)
+    {
+        abort_unless($document->request_id === $accessRequest->id, 404);
+        return app(\App\Services\FileService::class)->download($document->file);
     }
 
     public function startReview(Request $r, AccessRequest $accessRequest)

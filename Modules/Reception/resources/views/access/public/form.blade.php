@@ -1,7 +1,7 @@
 <x-guest-layout>
     <div class="max-w-2xl mx-auto py-10 px-4">
         <h1 class="text-xl font-bold">{{ str_replace('_', ' ', ucwords($type, '_')) }} Access Request</h1>
-        <form method="POST" action="{{ route('access.store') }}" class="mt-6 space-y-5 rounded-sm border border-gray-200 bg-white p-6 shadow-sm">
+        <form method="POST" action="{{ route('access.store') }}" enctype="multipart/form-data" class="mt-6 space-y-5 rounded-sm border border-gray-200 bg-white p-6 shadow-sm">
             @csrf
             <input type="hidden" name="type" value="{{ $type }}">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -70,6 +70,11 @@
             <div>
                 <label class="block text-xs font-semibold text-gray-600">Business Justification</label>
                 <textarea name="justification" rows="3" class="mt-1 w-full rounded-sm border-gray-300 text-sm">{{ old('justification') }}</textarea>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600">Supporting Documents (ID, contract — PDF/JPG/PNG, max 5)</label>
+                <input type="file" name="documents[]" multiple accept=".pdf,.jpg,.jpeg,.png" class="mt-1 w-full text-sm">
+                @error('documents.*') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>
             <label class="flex items-start gap-2 text-xs text-gray-600">
                 <input type="checkbox" name="privacy_ack" value="1" required class="mt-0.5 rounded-sm">

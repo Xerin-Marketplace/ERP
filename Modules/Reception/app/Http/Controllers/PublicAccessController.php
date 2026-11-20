@@ -49,9 +49,14 @@ class PublicAccessController extends Controller
             'requested_modules.*' => 'string|max:60',
             'justification' => 'nullable|string|max:2000',
             'privacy_ack' => 'accepted',
+            'documents' => 'nullable|array|max:5',
+            'documents.*' => 'file|max:10240|mimes:pdf,jpg,jpeg,png',
         ]);
 
         $req = $this->requests->submit($data, $request->ip());
+        if ($request->hasFile('documents')) {
+            $this->requests->attachDocuments($req, $request->file('documents'), null);
+        }
         return redirect()->route('access.submitted', $req->tracking_token)
             ->with('reference', $req->reference);
     }

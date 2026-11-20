@@ -48,6 +48,8 @@ Route::middleware(['auth', 'verified', 'account.active'])->prefix('reception')->
         Route::post('requests/{accessRequest}/route', [AccessRequestController::class, 'route'])->name('requests.route')->middleware('can:reception.access.route');
         Route::post('requests/{accessRequest}/reject', [AccessRequestController::class, 'reject'])->name('requests.reject')->middleware('can:reception.access.route');
         Route::post('requests/{accessRequest}/notes', [AccessRequestController::class, 'note'])->name('requests.notes')->middleware('can:reception.access.view');
+        Route::post('requests/{accessRequest}/documents', [AccessRequestController::class, 'uploadDocument'])->name('requests.documents')->middleware('can:reception.access.review');
+        Route::get('requests/{accessRequest}/documents/{document}/download', [AccessRequestController::class, 'downloadDocument'])->name('requests.documents.download')->middleware('can:reception.access.view');
 
         Route::get('approvals', [ApprovalController::class, 'inbox'])->name('approvals.inbox');
         Route::post('approvals/{task}/decide', [ApprovalController::class, 'decide'])->name('approvals.decide');

@@ -295,6 +295,42 @@ class AccessManagementTest extends TestCase
         return $r->fresh();
     }
 
+    public function test_documents_attach_to_request_and_download(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+        $r = $this->submitRequest();
+
+        $file = \Illuminate\Http\UploadedFile::fake()->create('passport.pdf', 100, 'application/pdf');
+        $n = app(\Modules\Reception\Services\AccessRequestService::class)
+            ->attachDocuments($r, [$file], $this->itAdmin->id, 'id_document');
+
+        $this->assertSame(1, $n);
+        $this->assertDatabaseHas('access_request_documents',
+            ['request_id' => $r->id, 'category' => 'id_document']);
+        $this->assertDatabaseHas('access_request_history',
+            ['request_id' => $r->id, 'event' => 'documents.attached']);
+        \Illuminate\Support\Facades\Storage::disk('local')->assertExists(
+            $r->fresh()->documents->first()->file->path);
+
+        // Authorized download.
+        $doc = $r->fresh()->documents->first();
+        $this->actingAs($this->receptionist ?? $this->itAdmin)
+            ->get(route('reception.access.requests.documents.download', [$r->id, $doc->id]))
+            ->assertOk();
+    }
+
+    public function test_public_submission_accepts_document_uploads(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+        $this->post('/access-request', [
+            'type' => 'new_employee', 'full_name' => 'Docs Test',
+            'email' => 'docs@example.com', 'privacy_ack' => '1',
+            'branch_id' => $this->branch()->id, 'department_id' => $this->department()->id,
+            'documents' => [\Illuminate\Http\UploadedFile::fake()->create('cv.pdf', 50, 'application/pdf')],
+        ])->assertRedirect();
+        $this->assertDatabaseCount('access_request_documents', 1);
+    }
+
     public function test_expired_external_profiles_are_suspended(): void
     {
         $expired = User::factory()->create(['status' => AccountStatus::Active]);

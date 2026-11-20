@@ -34,6 +34,32 @@
                 @endforeach
             </div>
             <div class="rounded-sm border border-gray-200 bg-white p-5 shadow-sm">
+                <h4 class="text-sm font-semibold mb-3">Documents</h4>
+                @forelse ($request->documents as $d)
+                    <div class="flex items-center justify-between border-b border-gray-50 py-2 text-xs">
+                        <span>{{ $d->file->original_name ?? 'file' }} <em class="text-gray-400">({{ $d->category }})</em></span>
+                        <a href="{{ route('reception.access.requests.documents.download', [$request, $d->id]) }}" class="text-xerin-700 font-semibold">Download</a>
+                    </div>
+                @empty
+                    <p class="py-2 text-xs text-gray-400">No documents attached.</p>
+                @endforelse
+                @can('reception.access.review')
+                <form method="POST" action="{{ route('reception.access.requests.documents', $request) }}" enctype="multipart/form-data" class="mt-3 space-y-2">
+                    @csrf
+                    <div class="flex gap-2">
+                        <input type="file" name="documents[]" multiple required accept=".pdf,.jpg,.jpeg,.png" class="w-full text-xs">
+                        <select name="category" class="rounded-sm border-gray-300 text-xs">
+                            <option value="supporting">Supporting</option>
+                            <option value="id_document">ID document</option>
+                            <option value="contract">Contract</option>
+                            <option value="approval_evidence">Approval evidence</option>
+                        </select>
+                    </div>
+                    <button class="rounded-sm bg-xerin-700 px-3 py-1.5 text-xs font-semibold text-white">Upload</button>
+                </form>
+                @endcan
+            </div>
+            <div class="rounded-sm border border-gray-200 bg-white p-5 shadow-sm">
                 <h4 class="text-sm font-semibold mb-3">Approval Tasks</h4>
                 @forelse ($request->tasks as $t)
                     <div class="flex justify-between border-b border-gray-50 py-2 text-xs">

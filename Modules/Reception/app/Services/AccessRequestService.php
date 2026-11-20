@@ -86,6 +86,35 @@ class AccessRequestService
         return $this->move($request, 'reception_review', $actorId, 'reception.review_started');
     }
 
+    /** Attach uploaded evidence documents (public form + reception). */
+    public function attachDocuments(AccessRequest $request, array $files, ?int $userId, string $category = 'supporting'): int
+    {
+        $count = 0;
+        foreach ($files as $file) {
+            if (! $file) continue;
+            $path = $file->store("access-requests/{$request->id}", 'local');
+            $managed = \App\Models\ManagedFile::create([
+                'user_id' => $userId,
+                'disk' => 'local', 'path' => $path,
+                'original_name' => $file->getClientOriginalName(),
+                'mime_type' => $file->getMimeType(),
+                'size' => $file->getSize(),
+                'visibility' => 'private',
+            ]);
+            $request->documents()->create(['file_id' => $managed->id, 'category' => $category]);
+            $count++;
+        }
+        if ($count) {
+            $request->history()->create([
+                'actor_id' => $userId, 'event' => 'documents.attached',
+                'payload' => ['count' => $count, 'category' => $category],
+                'internal' => true,
+            ]);
+            $this->audit->log('reception.access.documents_attached', $request, new: ['count' => $count]);
+        }
+        return $count;
+    }
+
     /** Return to applicant for missing info — public-visible note. */
     public function requestInfo(AccessRequest $request, int $actorId, string $note): AccessRequest
     {
