@@ -208,6 +208,9 @@ class ConsolidationController extends Controller
             'branches' => $branches->map(fn ($b) => ['branch' => $b, 'summary' => $profit->summary($b->id)]),
             'trips' => CargoTrip::with('boxes')->latest()->limit(25)->get()
                 ->map(fn ($t) => ['trip' => $t, 'profit' => $profit->tripProfit($t)]),
+            'packages' => $profit->drilldown(
+                $r->filled('branch') ? (int) $r->branch : null, $r->from, $r->to),
+            'branchOptions' => $branches,
         ]);
     }
 

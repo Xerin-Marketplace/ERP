@@ -20,6 +20,11 @@ class ReceptionServiceProvider extends ModuleServiceProvider
     {
         parent::boot();
         $this->registerNavigation();
+        $this->commands([\Modules\Reception\Console\Commands\SuspendExpiredExternalAccounts::class]);
+        $this->app->booted(function () {
+            $this->app->make(Schedule::class)
+                ->command('reception:suspend-expired')->dailyAt('01:00');
+        });
     }
 
     private function registerNavigation(): void

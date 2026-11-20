@@ -294,4 +294,31 @@ class AccessManagementTest extends TestCase
         }
         return $r->fresh();
     }
+
+    public function test_expired_external_profiles_are_suspended(): void
+    {
+        $expired = User::factory()->create(['status' => AccountStatus::Active]);
+        $valid = User::factory()->create(['status' => AccountStatus::Active]);
+
+        \Modules\Reception\Models\ExternalUserProfile::create([
+            'user_id' => $expired->id, 'category' => 'contractor',
+            'organization' => 'Acme', 'sponsor_id' => $this->itAdmin->id,
+            'expires_on' => now()->subDay()->toDateString(),
+        ]);
+        \Modules\Reception\Models\ExternalUserProfile::create([
+            'user_id' => $valid->id, 'category' => 'vendor',
+            'organization' => 'Acme', 'sponsor_id' => $this->itAdmin->id,
+            'expires_on' => now()->addMonth()->toDateString(),
+        ]);
+
+        $n = app(\Modules\Reception\Services\AccessExpirationService::class)->suspendExpired();
+
+        $this->assertSame(1, $n);
+        $this->assertTrue($expired->fresh()->isSuspended());
+        $this->assertFalse($valid->fresh()->isSuspended());
+
+        // Idempotent — second run suspends nobody.
+        $this->assertSame(0, app(\Modules\Reception\Services\AccessExpirationService::class)->suspendExpired());
+    }
 }
+

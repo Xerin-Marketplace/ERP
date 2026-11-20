@@ -82,6 +82,21 @@ class ShipmentProfitService
         ];
     }
 
+    /** Package-level drill-down — worst margins first, loss flag included. */
+    public function drilldown(?int $branchId = null, ?string $from = null, ?string $to = null, int $limit = 50): \Illuminate\Support\Collection
+    {
+        $packages = CargoPackage::query()
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
+            ->when($from, fn ($q) => $q->whereDate('created_at', '>=', $from))
+            ->when($to, fn ($q) => $q->whereDate('created_at', '<=', $to))
+            ->with('customer:id,name')->latest()->get();
+
+        return $packages->map(function ($p) {
+            $row = $this->packageProfit($p);
+            return ['package' => $p, 'loss' => $row['profit'] < 0] + $row;
+        })->sortBy('profit')->take($limit)->values();
+    }
+
     /** Branch/route rollup for management dashboards. */
     public function summary(?int $branchId = null): array
     {

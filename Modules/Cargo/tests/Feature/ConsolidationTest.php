@@ -399,6 +399,30 @@ class ConsolidationTest extends TestCase
         ])->assertOk()->assertSee('XRN123456789');
     }
 
+    public function test_profit_drilldown_sorts_worst_first_and_flags_losses(): void
+    {
+        $svc = app(ConsolidationService::class);
+        $trips = app(TripService::class);
+
+        // Loss-making package: trip fee 100, no revenue.
+        $loser = $this->package();
+        $box = $svc->createBox($this->dxb->id, [], $this->ops->id);
+        $svc->addPackage($box, $loser, 10, $this->ops->id);
+        $box = $svc->close($box->fresh(), 10.0, 'SEAL-D', $this->ops->id);
+        $trip = $trips->create(['passenger_name' => 'L', 'origin_branch_id' => $this->dxb->id,
+            'destination_branch_id' => $this->tz->id, 'flight_date' => now()->addDay()->toDateString(),
+            'passenger_fee' => 100], $this->ops->id);
+        $svc->assignToTrip($box, $trip, $this->ops->id);
+
+        $neutral = $this->package(); // no costs, no revenue
+
+        $rows = app(\Modules\Cargo\Services\ShipmentProfitService::class)->drilldown();
+        $this->assertSame($loser->id, $rows->first()['package']->id);
+        $this->assertTrue($rows->first()['loss']);
+        $this->assertLessThan(0, $rows->first()['profit']);
+        $this->assertFalse($rows->last()['loss']);
+    }
+
     public function test_storage_charge_free_days_then_rate(): void
     {
         StorageRateSetting::create([

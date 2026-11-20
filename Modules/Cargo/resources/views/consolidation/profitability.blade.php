@@ -49,4 +49,41 @@
             @empty <tr><td colspan="7" class="px-4 py-8 text-center text-sm text-gray-400">No trips yet.</td></tr> @endforelse
             </tbody></table>
     </div>
+
+    <div class="mt-6 rounded-sm border border-gray-200 bg-white shadow-sm overflow-x-auto">
+        <div class="border-b border-gray-100 p-4 flex items-center justify-between">
+            <h3 class="text-sm font-semibold">Package Drill-Down — worst margins first</h3>
+            <form method="GET" class="flex items-end gap-2">
+                <select name="branch" class="rounded-sm border-gray-300 text-xs">
+                    <option value="">All branches</option>
+                    @foreach ($branchOptions as $b)
+                        <option value="{{ $b->id }}" @selected(request('branch') == $b->id)>{{ $b->name }}</option>
+                    @endforeach
+                </select>
+                <input type="date" name="from" value="{{ request('from') }}" class="rounded-sm border-gray-300 text-xs">
+                <input type="date" name="to" value="{{ request('to') }}" class="rounded-sm border-gray-300 text-xs">
+                <button class="rounded-sm bg-xerin-700 px-3 py-1.5 text-xs font-semibold text-white">Filter</button>
+            </form>
+        </div>
+        <table class="w-full text-sm">
+            <thead><tr class="border-b bg-gray-50 text-left text-xs text-gray-500">
+                <th class="px-4 py-2">Tracking</th><th class="px-4 py-2">Customer</th><th class="px-4 py-2">Status</th>
+                <th class="px-4 py-2">Revenue</th><th class="px-4 py-2">Leg cost</th><th class="px-4 py-2">Delivery</th>
+                <th class="px-4 py-2">Profit</th><th class="px-4 py-2">Margin</th><th class="px-4 py-2"></th></tr></thead>
+            <tbody>
+            @forelse ($packages as $row)
+                <tr class="border-b border-gray-50 {{ $row['loss'] ? 'bg-red-50/40' : '' }}">
+                    <td class="px-4 py-2 font-mono text-xs">{{ $row['package']->tracking_no ?? $row['package']->reference }}</td>
+                    <td class="px-4 py-2 text-xs">{{ $row['package']->customer->name ?? '—' }}</td>
+                    <td class="px-4 py-2 text-xs">{{ $row['package']->status }}</td>
+                    <td class="px-4 py-2">{{ number_format($row['revenue']) }}</td>
+                    <td class="px-4 py-2">{{ number_format($row['trip_cost']) }}</td>
+                    <td class="px-4 py-2">{{ number_format($row['delivery_cost']) }}</td>
+                    <td class="px-4 py-2 font-semibold {{ $row['profit'] >= 0 ? 'text-green-700' : 'text-red-600' }}">{{ number_format($row['profit']) }}</td>
+                    <td class="px-4 py-2 text-xs">{{ $row['margin_pct'] ?? '—' }}%</td>
+                    <td class="px-4 py-2">@if ($row['loss'])<span class="rounded-sm bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">LOSS</span>@endif</td>
+                </tr>
+            @empty <tr><td colspan="9" class="px-4 py-8 text-center text-sm text-gray-400">No packages.</td></tr> @endforelse
+            </tbody></table>
+    </div>
 </x-app-layout>
