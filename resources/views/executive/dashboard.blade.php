@@ -24,36 +24,36 @@
     {{-- ── FINANCIAL PULSE ──────────────────────────── --}}
     <p class="mb-2 text-[11px] font-bold uppercase tracking-widest text-gray-400">Financial pulse</p>
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
-        @include('executive._kpi', ['title' => 'Revenue', 'kpi' => $kpis['revenue'], 'money' => true, 'color' => 'text-emerald-700', 'accent' => 'from-emerald-400 to-emerald-600', 'spark' => 'revenue', 'sparkColor' => '#059669', 'href' => route('executive.financial', request()->query())])
-        @include('executive._kpi', ['title' => 'Expenses', 'kpi' => $kpis['expenses'], 'money' => true, 'color' => 'text-red-700', 'accent' => 'from-red-400 to-red-600', 'spark' => 'expenses', 'sparkColor' => '#dc2626', 'invert' => true])
-        @include('executive._kpi', ['title' => 'Net Profit', 'kpi' => $kpis['net_profit'], 'money' => true, 'color' => $kpis['net_profit']['value'] >= 0 ? 'text-emerald-700' : 'text-red-700', 'accent' => 'from-sky-400 to-xerin-600', 'spark' => 'profit', 'sparkColor' => '#0369a1', 'href' => route('executive.financial', request()->query())])
-        @include('executive._kpi', ['title' => 'Profit Margin', 'kpi' => $kpis['margin'], 'percent' => true, 'accent' => 'from-violet-400 to-violet-600'])
-        @include('executive._kpi', ['title' => 'Cash Collected', 'kpi' => $kpis['cash_collected'], 'money' => true, 'color' => 'text-teal-700', 'accent' => 'from-teal-400 to-teal-600'])
-        @include('executive._kpi', ['title' => 'A/R Outstanding', 'kpi' => $kpis['ar_outstanding'], 'money' => true, 'accent' => 'from-amber-400 to-amber-600', 'invert' => true, 'href' => route('executive.financial', request()->query())])
-        @include('executive._kpi', ['title' => 'A/R Overdue', 'kpi' => $kpis['ar_overdue'], 'money' => true, 'color' => 'text-red-700', 'accent' => 'from-rose-400 to-rose-600', 'invert' => true])
-        @include('executive._kpi', ['title' => 'A/P Outstanding', 'kpi' => $kpis['ap_outstanding'], 'money' => true, 'accent' => 'from-orange-400 to-orange-600', 'invert' => true])
+        @include('executive._kpi', ['title' => 'Revenue', 'kpi' => $kpis['revenue'], 'money' => true, 'bg' => 'from-emerald-500 to-emerald-700', 'spark' => 'revenue', 'href' => route('executive.financial', request()->query())])
+        @include('executive._kpi', ['title' => 'Expenses', 'kpi' => $kpis['expenses'], 'money' => true, 'bg' => 'from-rose-500 to-red-700', 'spark' => 'expenses', 'invert' => true])
+        @include('executive._kpi', ['title' => 'Net Profit', 'kpi' => $kpis['net_profit'], 'money' => true, 'bg' => 'from-sky-500 to-indigo-700', 'spark' => 'profit', 'href' => route('executive.financial', request()->query())])
+        @include('executive._kpi', ['title' => 'Profit Margin', 'kpi' => $kpis['margin'], 'percent' => true, 'bg' => 'from-violet-500 to-purple-700'])
+        @include('executive._kpi', ['title' => 'Cash Collected', 'kpi' => $kpis['cash_collected'], 'money' => true, 'bg' => 'from-teal-500 to-cyan-700'])
+        @include('executive._kpi', ['title' => 'A/R Outstanding', 'kpi' => $kpis['ar_outstanding'], 'money' => true, 'bg' => 'from-amber-500 to-orange-700', 'invert' => true, 'href' => route('executive.financial', request()->query())])
+        @include('executive._kpi', ['title' => 'A/R Overdue', 'kpi' => $kpis['ar_overdue'], 'money' => true, 'bg' => 'from-red-600 to-rose-800', 'invert' => true])
+        @include('executive._kpi', ['title' => 'A/P Outstanding', 'kpi' => $kpis['ap_outstanding'], 'money' => true, 'bg' => 'from-orange-500 to-amber-700', 'invert' => true])
     </div>
 
     {{-- ── OPERATIONS PULSE ─────────────────────────── --}}
     <p class="mb-2 text-[11px] font-bold uppercase tracking-widest text-gray-400">Operations pulse</p>
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-        @include('executive._kpi', ['title' => 'Pkgs Received', 'kpi' => $ops['packages_received'], 'accent' => 'from-sky-400 to-sky-600', 'spark' => 'packages', 'sparkColor' => '#0284c7'])
-        @include('executive._kpi', ['title' => 'In Warehouse', 'kpi' => $ops['in_warehouse'], 'accent' => 'from-cyan-400 to-cyan-600'])
-        @include('executive._kpi', ['title' => 'Active Bookings', 'kpi' => $ops['active_bookings'], 'accent' => 'from-indigo-400 to-indigo-600'])
-        @include('executive._kpi', ['title' => 'Pending Releases', 'kpi' => $ops['pending_releases'], 'color' => 'text-amber-700', 'accent' => 'from-amber-400 to-amber-600', 'invert' => true])
-        @include('executive._kpi', ['title' => 'Delivered', 'kpi' => $ops['deliveries_completed'], 'color' => 'text-emerald-700', 'accent' => 'from-emerald-400 to-emerald-600'])
-        @include('executive._kpi', ['title' => 'Active Deliveries', 'kpi' => $ops['deliveries_active'], 'accent' => 'from-lime-400 to-lime-600'])
+        @include('executive._kpi', ['title' => 'Pkgs Received', 'kpi' => $ops['packages_received'], 'bg' => 'from-sky-500 to-blue-700', 'spark' => 'packages'])
+        @include('executive._kpi', ['title' => 'In Warehouse', 'kpi' => $ops['in_warehouse'], 'bg' => 'from-cyan-500 to-teal-700'])
+        @include('executive._kpi', ['title' => 'Active Bookings', 'kpi' => $ops['active_bookings'], 'bg' => 'from-indigo-500 to-violet-700'])
+        @include('executive._kpi', ['title' => 'Pending Releases', 'kpi' => $ops['pending_releases'], 'bg' => 'from-amber-500 to-yellow-700', 'invert' => true])
+        @include('executive._kpi', ['title' => 'Delivered', 'kpi' => $ops['deliveries_completed'], 'bg' => 'from-emerald-500 to-green-700'])
+        @include('executive._kpi', ['title' => 'Active Deliveries', 'kpi' => $ops['deliveries_active'], 'bg' => 'from-lime-500 to-emerald-700'])
     </div>
 
     {{-- ── BUSINESS PULSE ───────────────────────────── --}}
     <p class="mb-2 text-[11px] font-bold uppercase tracking-widest text-gray-400">Business pulse</p>
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-        @include('executive._kpi', ['title' => 'Customers', 'kpi' => $kpis['customers'], 'accent' => 'from-blue-400 to-blue-600', 'href' => route('executive.sales', request()->query())])
-        @include('executive._kpi', ['title' => 'New Customers', 'kpi' => $kpis['new_customers'], 'accent' => 'from-sky-400 to-sky-600'])
-        @include('executive._kpi', ['title' => 'Employees', 'kpi' => $kpis['employees'], 'accent' => 'from-fuchsia-400 to-fuchsia-600', 'href' => route('executive.employees', request()->query())])
-        @include('executive._kpi', ['title' => 'Open Tasks', 'kpi' => $kpis['tasks_open'], 'accent' => 'from-slate-400 to-slate-600', 'href' => route('executive.tasks', request()->query())])
-        @include('executive._kpi', ['title' => 'Overdue Tasks', 'kpi' => $kpis['tasks_overdue'], 'color' => 'text-red-700', 'accent' => 'from-red-400 to-red-600', 'invert' => true, 'href' => route('executive.tasks', request()->query())])
-        @include('executive._kpi', ['title' => 'Tenders Won', 'kpi' => $kpis['tenders_won'], 'color' => 'text-emerald-700', 'accent' => 'from-emerald-400 to-emerald-600', 'href' => route('executive.tenders', request()->query())])
+        @include('executive._kpi', ['title' => 'Customers', 'kpi' => $kpis['customers'], 'bg' => 'from-blue-500 to-indigo-700', 'href' => route('executive.sales', request()->query())])
+        @include('executive._kpi', ['title' => 'New Customers', 'kpi' => $kpis['new_customers'], 'bg' => 'from-sky-500 to-cyan-700'])
+        @include('executive._kpi', ['title' => 'Employees', 'kpi' => $kpis['employees'], 'bg' => 'from-fuchsia-500 to-pink-700', 'href' => route('executive.employees', request()->query())])
+        @include('executive._kpi', ['title' => 'Open Tasks', 'kpi' => $kpis['tasks_open'], 'bg' => 'from-slate-500 to-gray-700', 'href' => route('executive.tasks', request()->query())])
+        @include('executive._kpi', ['title' => 'Overdue Tasks', 'kpi' => $kpis['tasks_overdue'], 'bg' => 'from-red-500 to-rose-700', 'invert' => true, 'href' => route('executive.tasks', request()->query())])
+        @include('executive._kpi', ['title' => 'Tenders Won', 'kpi' => $kpis['tenders_won'], 'bg' => 'from-emerald-500 to-teal-700', 'href' => route('executive.tenders', request()->query())])
     </div>
 
     {{-- ── CHARTS ROW 1: trend + branch mix ─────────── --}}
