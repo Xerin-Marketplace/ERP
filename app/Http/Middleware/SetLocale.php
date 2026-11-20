@@ -27,9 +27,17 @@ class SetLocale
             $systemDefault = config('app.locale');
         }
 
-        $locale = $request->user()?->profile?->preferred_language
-            ?? $request->session()->get('locale')
-            ?? $systemDefault;
+        // Explicit ?lang= switch (guests + shareable links) — persisted to session.
+        $requested = $request->query('lang');
+        if ($requested && in_array($requested, $available, true)) {
+            $request->session()->put('locale', $requested);
+        }
+
+        $locale = ($requested && in_array($requested, $available, true))
+            ? $requested
+            : ($request->user()?->profile?->preferred_language
+                ?? $request->session()->get('locale')
+                ?? $systemDefault);
 
         App::setLocale(in_array($locale, $available, true) ? $locale : 'en');
 

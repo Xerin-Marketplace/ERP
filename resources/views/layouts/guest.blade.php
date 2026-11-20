@@ -32,6 +32,12 @@
             <div class="w-full sm:max-w-md mt-6 px-6 py-8 sm:px-8 bg-white shadow-md overflow-hidden rounded-lg">
                 {{ $slot }}
             </div>
+
+            <div class="mt-4 flex gap-3 text-xs text-gray-500">
+                <a href="{{ request()->fullUrlWithQuery(['lang' => 'en']) }}" class="{{ app()->getLocale() === 'en' ? 'font-bold text-gray-700' : 'underline' }}">English</a>
+                <span>·</span>
+                <a href="{{ request()->fullUrlWithQuery(['lang' => 'sw']) }}" class="{{ app()->getLocale() === 'sw' ? 'font-bold text-gray-700' : 'underline' }}">Kiswahili</a>
+            </div>
         </div>
     </body>
 </html>

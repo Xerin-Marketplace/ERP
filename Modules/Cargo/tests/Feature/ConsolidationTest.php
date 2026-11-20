@@ -399,6 +399,20 @@ class ConsolidationTest extends TestCase
         ])->assertOk()->assertSee('XRN123456789');
     }
 
+    public function test_guest_tracking_localizes_to_swahili(): void
+    {
+        // ?lang=sw switches locale and persists for the session.
+        $this->get(route('track.form', ['lang' => 'sw']))
+            ->assertOk()
+            ->assertSee('Fuatilia Mizigo Yako')
+            ->assertSee('Namba ya ufuatiliaji');
+        $this->get(route('track.form'))->assertOk()->assertSee('Fuatilia Mizigo Yako');
+
+        // English still works explicitly.
+        $this->get(route('track.form', ['lang' => 'en']))
+            ->assertOk()->assertSee('Track Your Shipment');
+    }
+
     public function test_profit_drilldown_sorts_worst_first_and_flags_losses(): void
     {
         $svc = app(ConsolidationService::class);

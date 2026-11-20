@@ -1,12 +1,12 @@
 <x-guest-layout>
     <div class="max-w-lg mx-auto py-12 px-4">
-        <h1 class="text-xl font-bold">Track Access Request</h1>
+        <h1 class="text-xl font-bold">{{ __('access.track_title') }}</h1>
         <form method="GET" class="mt-6 rounded-sm border border-gray-200 bg-white p-6 shadow-sm space-y-4">
-            <div><label class="block text-xs font-semibold text-gray-600">Reference</label>
+            <div><label class="block text-xs font-semibold text-gray-600">{{ __('access.reference') }}</label>
                 <input name="reference" value="{{ request('reference') }}" placeholder="XER-ACC-2026-000001" class="mt-1 w-full rounded-sm border-gray-300 text-sm font-mono"></div>
-            <div><label class="block text-xs font-semibold text-gray-600">Tracking Token</label>
+            <div><label class="block text-xs font-semibold text-gray-600">{{ __('access.tracking_token') }}</label>
                 <input name="token" value="{{ request('token') }}" class="mt-1 w-full rounded-sm border-gray-300 text-sm font-mono"></div>
-            <button class="rounded-sm bg-xerin-700 px-4 py-2 text-sm font-semibold text-white">Check Status</button>
+            <button class="rounded-sm bg-xerin-700 px-4 py-2 text-sm font-semibold text-white">{{ __('access.check_status') }}</button>
         </form>
         @if ($searched)
             @if ($found)
@@ -21,7 +21,7 @@
                     </div>
                 </div>
             @else
-                <p class="mt-4 text-sm text-red-600">No request found — check the reference and token.</p>
+                <p class="mt-4 text-sm text-red-600">{{ __('access.no_request') }}</p>
             @endif
         @endif
     </div>
