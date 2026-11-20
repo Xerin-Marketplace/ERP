@@ -13,5 +13,6 @@
     "Shipment": true,
     "Arrival": true,
     "Delivery": true,
-    "Portal": true
+    "Portal": true,
+    "Sales": true
 }
