@@ -9,5 +9,6 @@
     "SystemAdministration": true,
     "Reception": true,
     "Commercial": true,
-    "Cargo": true
+    "Cargo": true,
+    "Shipment": true
 }
