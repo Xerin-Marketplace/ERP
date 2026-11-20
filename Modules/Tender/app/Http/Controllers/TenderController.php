@@ -148,4 +148,88 @@ class TenderController extends Controller
         });
         return back()->with('success', 'Award recorded — contract created.');
     }
+
+    /* ---- Phase 2: clarifications / tasks / award / variations / intelligence ---- */
+
+    public function intelligence(Tender $tender)
+    {
+        return response()->json(app(\Modules\Tender\Services\TenderIntelligence::class)->analyze($tender));
+    }
+
+    public function clarify(Request $r, Tender $tender)
+    {
+        $d = $r->validate(['direction' => 'required|in:received,sent',
+            'subject' => 'required|string|max:255', 'content' => 'required|string',
+            'response' => 'nullable|string', 'received_at' => 'nullable|date']);
+        $c = $tender->clarifications()->create($d + [
+            'status' => isset($d['response']) ? 'responded' : 'open',
+            'responded_at' => isset($d['response']) ? now() : null,
+            'handled_by' => $r->user()->id,
+        ]);
+        if ($tender->stage === 'evaluation') {
+            app(\Modules\Tender\Services\TenderWorkflow::class)->transition($tender, 'clarification', $r->user());
+        }
+        return response()->json($c, 201);
+    }
+
+    public function respondClarification(Request $r, \Modules\Tender\Models\TenderClarification $clarification)
+    {
+        $r->validate(['response' => 'required|string']);
+        $clarification->update(['response' => $r->input('response'),
+            'responded_at' => now(), 'status' => 'responded', 'handled_by' => $r->user()->id]);
+        return response()->json($clarification);
+    }
+
+    public function addTask(Request $r, Tender $tender)
+    {
+        $d = $r->validate(['title' => 'required|string|max:255',
+            'raci' => 'required|in:R,A,C,I', 'assignee_id' => 'required|exists:users,id',
+            'due_at' => 'nullable|date', 'note' => 'nullable|string']);
+        return response()->json($tender->tasks()->create($d), 201);
+    }
+
+    public function updateTask(Request $r, \Modules\Tender\Models\TenderTask $task)
+    {
+        $d = $r->validate(['status' => 'required|in:open,in_progress,done,blocked',
+            'note' => 'nullable|string']);
+        $task->update($d);
+        return response()->json($task);
+    }
+
+    public function recordAward(Request $r, Tender $tender)
+    {
+        $d = $r->validate(['award_ref' => 'nullable|string|max:100',
+            'awarded_at' => 'required|date', 'value' => 'required|numeric|min:0',
+            'currency' => 'required|string|size:3', 'scope' => 'nullable|string',
+            'conditions' => 'nullable|string', 'contract_sign_deadline' => 'nullable|date',
+            'notice_document_id' => 'nullable|exists:tender_documents,id']);
+        $award = $tender->awards()->create($d + ['recorded_by' => $r->user()->id]);
+        $tender->update(['submitted_value' => $d['value']]);
+        if ($tender->stage !== 'awarded') {
+            app(\Modules\Tender\Services\TenderWorkflow::class)->transition($tender, 'awarded', $r->user());
+        }
+        return response()->json($award, 201);
+    }
+
+    public function variation(Request $r, \Modules\Tender\Models\TenderContract $contract)
+    {
+        $d = $r->validate(['ref' => 'nullable|string|max:100',
+            'type' => 'required|in:scope,value,time,payment_terms,other',
+            'description' => 'required|string',
+            'value_delta' => 'nullable|numeric', 'days_delta' => 'nullable|integer']);
+        return response()->json($contract->variations()->create($d), 201);
+    }
+
+    public function approveVariation(Request $r, \Modules\Tender\Models\TenderContractVariation $variation)
+    {
+        abort_if($variation->status !== 'draft', 422, 'Already decided.');
+        $variation->update(['status' => 'approved', 'approved_by' => $r->user()->id]);
+        $contract = $variation->contract;
+        $contract->value = bcadd((string) $contract->value, (string) $variation->value_delta, 2);
+        if ($variation->days_delta > 0 && $contract->ends_at) {
+            $contract->ends_at = $contract->ends_at->addDays($variation->days_delta);
+        }
+        $contract->save();
+        return response()->json($variation->fresh());
+    }
 }

@@ -18,4 +18,6 @@ class TenderContract extends Model
             'technically_compliant' => 'boolean'];
     }
     public function tender() { return $this->belongsTo(Tender::class); }
+
+    public function variations() { return $this->hasMany(TenderContractVariation::class, 'contract_id'); }
 }

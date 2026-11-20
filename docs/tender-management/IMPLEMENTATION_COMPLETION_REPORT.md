@@ -1,41 +1,50 @@
-# TENDER MANAGEMENT — PHASE 1 REPORT
+# XERIN TENDER MANAGEMENT — COMPLETION REPORT (Phase 2)
 
-## Implemented (Modules/Tender — 17 tables)
-- tender_opportunities (unique ref+buyer duplicate guard, stages, deadlines,
-  securities requirements, buyer types: public/private/international/ngo;
-  categories: goods/works/services/consultancy/framework/jv/subcontract)
-- tender_team_members, tender_documents (versioned), tender_requirements
-  (compliance matrix w/ mandatory flag), tender_company_qualifications
-  (expiry-tracked corporate pack)
-- tender_assessments (Bid/No-Bid: commercial 30%, technical 25%, compliance
-  20%, strategic 15%, risk 10%; threshold 65; NO_BID requires reason)
-- tender_boqs + tender_boq_items (bcmath decimal-safe totals: direct,
-  overhead%, contingency%, profit%, tax%; immutable original desc/qty)
-- tender_quotations (supplier comparison, technical compliance flag)
-- tender_pricing_scenarios (versioned)
-- tender_securities (tender/performance/advance/retention/warranty;
-  expires vs required_until validity check in SubmissionGate)
-- tender_approvals, tender_submissions (verified evidence REQUIRED —
-  upload alone ≠ submitted), tender_events, tender_contracts +
-  milestones, tender_transitions (immutable history)
+## Status vs Master Prompt (Modules A–T)
 
-## Engine
-- TenderWorkflow — 22-stage machine; API cannot skip; gates:
-  preparation needs bid decision, submission_ready needs all approvals,
-  submitted needs verified evidence, contract_signing needs contract
-- SubmissionGate — readiness checklist (decision, mandatory compliance,
-  BOQ, security validity, approvals, deadline)
-- Roles: tender-manager, tender-officer, quantity-surveyor,
-  compliance-officer + 11 tenders.* perms
+| Module | Status | Evidence |
+|---|---|---|
+| A Dashboard | IMPLEMENTED | `tender.dashboard` + real record queries |
+| B Opportunity register | IMPLEMENTED | 22-stage stage field, unique company+ref, sources incl. nest/portal/manual |
+| C Document centre | IMPLEMENTED | categories, status lifecycle; `tender_document_versions` table added (upload wiring pending) |
+| D Requirements extraction | IMPLEMENTED | `tender_requirements` + human verification statuses |
+| E Bid/No-Bid | IMPLEMENTED+VERIFIED | weighted 30/25/20/15/10 scoring, threshold 65, NO_BID needs reason |
+| F Qualification profile | IMPLEMENTED | company-level docs + expiry status |
+| G BOQ engine | IMPLEMENTED+VERIFIED | bcmath totals, immutable original qty/desc, overhead/profit/tax/contingency |
+| H Supplier quotations | IMPLEMENTED | per-item quotes, `tender_supplier_rfqs` added |
+| I Pricing scenarios | IMPLEMENTED | conservative/competitive/target/approved |
+| J Technical proposal | PARTIAL | compliance matrix via requirements; dedicated proposal doc pending |
+| K Financial proposal | IMPLEMENTED | scenarios + restricted permission |
+| L Securities | IMPLEMENTED+VERIFIED | PPRA validity +28-day rule in `SecurityValidityService` |
+| M Team & tasks | IMPLEMENTED | roles + `tender_tasks` RACI (R/A/C/I) |
+| N Approvals | IMPLEMENTED | step-based, self-approval guard in decide(); configurable matrix pending |
+| O Submission | IMPLEMENTED+VERIFIED | `SubmissionGate` — verified evidence required, never upload-only |
+| P Evaluation tracking | IMPLEMENTED | events + `tender_clarifications` (received/sent, respond) |
+| Q Award & contract | IMPLEMENTED | `tender_awards` + contracts + `tender_contract_variations` (value/time deltas) |
+| R Execution | PARTIAL | contract milestones; WBS/IPCs pending |
+| S Invoicing | PARTIAL | milestone invoiced status; Finance-module linkage pending |
+| T Analytics | PARTIAL | `TenderIntelligence` endpoint (score, compliance, margin, capital, readiness) |
 
-## UI (Blade) — dashboard (pipeline/deadlines/values), opportunities
-register+list, tender workspace (bid decision, readiness, BOQ entry+totals,
-events, award→contract)
+## Tanzania compliance
+- `validity_days` + 28-day security extension per PPRA guidance — enforced in
+  `SecurityValidityService` and `SubmissionGate`.
+- Public/private/international/NGO buyer types; categories incl. JV, framework,
+  subcontract. NeST recorded as `source`/`method` — no fabricated API.
+- Legal thresholds NOT hardcoded where configurable: bid weights in
+  `BidNoBidService` marked for SettingRegistry registration.
 
-## Tests: 11/11 — scoring math, reason-required NO_BID, stage anti-skip,
-bcmath totals, immutable originals, checklist gate, security validity,
-full pipeline register→award.
+## Phase 2 additions (this session)
+- 6 tables: clarifications, tasks, awards, contract variations,
+  document versions, supplier RFQs (+quotation linkage)
+- Services: `SecurityValidityService`, `TenderIntelligence`
+- 8 routes: intelligence, clarifications(+respond), tasks(+update),
+  awards, variations(+approve) — all permission-gated
+- 8 new tests → **19/19 module tests green**
 
-## Deferred (tracked): Excel BOQ import, supplier RFQ screens, NeST
-structured import (no invented API), AI doc analysis, RACI tasks UI,
-milestone→Finance invoicing, multi-currency, Swahili labels.
+## Remaining blockers / deferred
+- Execution: IPCs, measurement sheets, defect liability (R)
+- Finance-module invoice creation (S)
+- Notifications/deadline reminders wiring (9)
+- Document-version upload endpoint + addendum flagging (C)
+- Configurable approval matrix + compliance rules engine (N, §3)
+- API v1 endpoints; Blade workspace tabs beyond overview

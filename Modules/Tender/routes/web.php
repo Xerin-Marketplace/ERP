@@ -25,4 +25,22 @@ Route::middleware(['web', 'auth', 'verified', 'account.active'])
             ->middleware('permission:tenders.evaluate');
         Route::post('{tender}/award', [TenderController::class, 'award'])->name('award')
             ->middleware('permission:tenders.award');
+
+        /* Phase 2 */
+        Route::get('{tender}/intelligence', [TenderController::class, 'intelligence'])->name('intelligence')
+            ->middleware('permission:tenders.view');
+        Route::post('{tender}/clarifications', [TenderController::class, 'clarify'])->name('clarify')
+            ->middleware('permission:tenders.evaluate');
+        Route::post('clarifications/{clarification}/respond', [TenderController::class, 'respondClarification'])->name('clarify.respond')
+            ->middleware('permission:tenders.evaluate');
+        Route::post('{tender}/tasks', [TenderController::class, 'addTask'])->name('tasks.add')
+            ->middleware('permission:tenders.manage');
+        Route::patch('tasks/{task}', [TenderController::class, 'updateTask'])->name('tasks.update')
+            ->middleware('permission:tenders.manage');
+        Route::post('{tender}/awards', [TenderController::class, 'recordAward'])->name('awards.record')
+            ->middleware('permission:tenders.award');
+        Route::post('contracts/{contract}/variations', [TenderController::class, 'variation'])->name('variations.add')
+            ->middleware('permission:tenders.contract.manage');
+        Route::post('variations/{variation}/approve', [TenderController::class, 'approveVariation'])->name('variations.approve')
+            ->middleware('permission:tenders.contract.manage');
     });

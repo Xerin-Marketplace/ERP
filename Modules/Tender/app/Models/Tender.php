@@ -44,4 +44,8 @@ class Tender extends Model
     public function events(): HasMany { return $this->hasMany(TenderEvent::class); }
     public function contracts(): HasMany { return $this->hasMany(TenderContract::class); }
     public function transitions(): HasMany { return $this->hasMany(TenderTransition::class); }
+    public function clarifications(): HasMany { return $this->hasMany(TenderClarification::class); }
+    public function tasks(): HasMany { return $this->hasMany(TenderTask::class); }
+    public function awards(): HasMany { return $this->hasMany(TenderAward::class); }
+    public function rfqs(): HasMany { return $this->hasMany(TenderSupplierRfq::class); }
 }
