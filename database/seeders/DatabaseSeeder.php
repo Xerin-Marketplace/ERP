@@ -44,6 +44,12 @@ class DatabaseSeeder extends Seeder
             \Modules\SystemAdministration\Database\Seeders\SystemAdministrationDatabaseSeeder::class,
             \Modules\Commercial\Database\Seeders\CommercialDatabaseSeeder::class,
             \Modules\Cargo\Database\Seeders\CargoDatabaseSeeder::class,
+            \Modules\Reception\Database\Seeders\ReceptionDatabaseSeeder::class,
+            \Modules\Shipment\Database\Seeders\ShipmentDatabaseSeeder::class,
+            \Modules\Arrival\Database\Seeders\ArrivalDatabaseSeeder::class,
+            \Modules\Delivery\Database\Seeders\DeliveryDatabaseSeeder::class,
+            \Modules\Portal\Database\Seeders\PortalDatabaseSeeder::class,
+            \Modules\Sales\Database\Seeders\SalesDatabaseSeeder::class,
         ]);
     }
 }
