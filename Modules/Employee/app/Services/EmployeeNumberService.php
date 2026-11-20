@@ -9,8 +9,8 @@ use Modules\Organization\Models\Branch;
  * Branch-scoped employee numbering — race-safe inside the caller's transaction.
  *
  * Format: EMP-{BRANCH_CODE}-{NNNNNN}  e.g. EMP-TZ-000001, EMP-DXB-000001
- * Each branch keeps its own sequence; codes are globally unique branches codes,
- * so generated numbers cannot collide across branches.
+ * The last issued row is locked (FOR UPDATE) so concurrent creators serialize;
+ * Postgres forbids FOR UPDATE on aggregates, so we lock the row itself.
  */
 class EmployeeNumberService
 {
@@ -25,7 +25,7 @@ class EmployeeNumberService
         $prefix = "EMP-{$code}-";
 
         $max = DB::table('employees')->where('employee_number', 'like', "{$prefix}%")
-            ->lockForUpdate()->max('employee_number');
+            ->orderByDesc('employee_number')->lockForUpdate()->value('employee_number');
 
         $seq = $max ? ((int) substr($max, -6)) + 1 : 1;
 
@@ -39,7 +39,7 @@ class EmployeeNumberService
         $prefix = "XERIN-EMP-{$year}-";
 
         $max = DB::table('employees')->where('employee_number', 'like', "{$prefix}%")
-            ->lockForUpdate()->max('employee_number');
+            ->orderByDesc('employee_number')->lockForUpdate()->value('employee_number');
 
         $seq = $max ? ((int) substr($max, -6)) + 1 : 1;
 
