@@ -97,6 +97,7 @@ class PackageBillingService
 
         $invoice = $this->receivables->createInvoice([
             'company_id' => $companyId, 'customer_id' => $package->customer_id,
+            'package_id' => $package->id,
             'invoice_date' => now()->toDateString(),
             'currency' => $opts['currency'] ?? $lines['freight']['currency'] ?? 'TZS',
             'lines' => $invoiceLines,

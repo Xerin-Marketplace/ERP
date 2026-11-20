@@ -26,6 +26,7 @@ class ReceivableService
                 'reference'    => $this->numbers->for('customer_invoice'),
                 'company_id'   => $data['company_id'],
                 'customer_id'  => $data['customer_id'],
+                'package_id'   => $data['package_id'] ?? null,
                 'type'         => $data['type'] ?? 'invoice',
                 'invoice_date' => $data['invoice_date'],
                 'due_date'     => $data['due_date'] ?? null,

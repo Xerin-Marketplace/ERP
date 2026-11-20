@@ -116,6 +116,7 @@ class ConsolidationController extends Controller
         return view('cargo::consolidation.trip-show', [
             'trip' => $trip,
             'weight' => $this->trips->weightCheck($trip),
+            'profit' => app(\Modules\Cargo\Services\ShipmentProfitService::class)->tripProfit($trip),
             'closedBoxes' => CargoBox::where('status', 'closed')->whereNull('trip_id')->get(),
         ]);
     }

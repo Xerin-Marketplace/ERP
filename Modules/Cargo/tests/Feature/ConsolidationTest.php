@@ -216,6 +216,47 @@ class ConsolidationTest extends TestCase
         $this->assertTrue(true);
     }
 
+    public function test_shipment_profit_revenue_minus_leg_and_delivery_costs(): void
+    {
+        $svc = app(ConsolidationService::class);
+        $billing = app(\Modules\Cargo\Services\PackageBillingService::class);
+        $profit = app(\Modules\Cargo\Services\ShipmentProfitService::class);
+
+        \Modules\Commercial\Models\RateCard::forceCreate([
+            'code' => 'RC-1', 'name' => 'Air', 'service_type' => 'air_cargo',
+            'currency' => 'TZS', 'base_rate' => 0, 'per_kg_rate' => 2000,
+            'minimum_charge' => 0, 'status' => 'active', 'priority' => 1,
+        ]);
+
+        $customer = $this->customer();
+        $p1 = $this->package(['customer_id' => $customer->id, 'gross_weight' => 10]);
+        $p2 = $this->package(['customer_id' => $customer->id, 'gross_weight' => 30]);
+        $box = $svc->createBox($this->dxb->id, [], $this->ops->id);
+        $svc->addPackage($box, $p1, 10, $this->ops->id);
+        $svc->addPackage($box, $p2, 30, $this->ops->id);
+        $box = $svc->close($box->fresh(), 40, 'SEAL-P', $this->ops->id);
+
+        $trip = app(TripService::class)->create([
+            'passenger_name' => 'F', 'origin_branch_id' => $this->dxb->id,
+            'destination_branch_id' => $this->tz->id, 'passenger_fee' => 40000, 'currency' => 'TZS',
+        ], $this->ops->id);
+        $svc->assignToTrip($box, $trip, $this->ops->id);
+
+        // Invoice p1 only → revenue 10kg×2000 = 20,000 posted.
+        $inv = $billing->invoice($p1, ['currency' => 'TZS'], $this->ops->id);
+        $inv->update(['status' => 'posted', 'received_amount' => $inv->total]);
+
+        $pp = $profit->packageProfit($p1);
+        $this->assertSame(20000.0, $pp['revenue']);
+        $this->assertSame(10000.0, $pp['trip_cost']); // 40000 × 10/40
+        $this->assertSame(10000.0, $pp['profit']);
+
+        $tp = $profit->tripProfit($trip->fresh());
+        $this->assertSame(20000.0, $tp['revenue']);
+        $this->assertSame(40000.0, $tp['leg_cost']);
+        $this->assertSame(-20000.0, $tp['profit']); // loss-making leg flagged
+    }
+
     public function test_guest_tracking_requires_xrn_and_contact_match(): void
     {
         $customer = $this->customer();

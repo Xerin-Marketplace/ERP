@@ -8,7 +8,7 @@ class CustomerInvoice extends Model
 {
     protected $table = 'customer_invoices';
 
-    protected $fillable = ['reference','company_id','customer_id','type','invoice_date','due_date','currency','subtotal','tax_amount','total','received_amount','status','journal_id','created_by'];
+    protected $fillable = ['reference','company_id','customer_id','package_id','type','invoice_date','due_date','currency','subtotal','tax_amount','total','received_amount','status','journal_id','created_by'];
 
     protected $casts = [
         'invoice_date' => 'date',

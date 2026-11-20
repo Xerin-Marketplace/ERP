@@ -41,6 +41,15 @@
                 @endif
             </div>
             @endcan
+            <div class="rounded-sm border border-gray-200 bg-white p-5 shadow-sm">
+                <h4 class="text-sm font-semibold mb-2">Profitability</h4>
+                <dl class="grid grid-cols-2 gap-2 text-xs">
+                    <div><dt class="text-gray-400">Revenue</dt><dd class="font-semibold">{{ number_format($profit['revenue']) }}</dd></div>
+                    <div><dt class="text-gray-400">Leg cost</dt><dd>{{ number_format($profit['leg_cost']) }}</dd></div>
+                    <div><dt class="text-gray-400">Delivery cost</dt><dd>{{ number_format($profit['delivery_cost']) }}</dd></div>
+                    <div><dt class="text-gray-400">Profit</dt><dd class="font-bold {{ $profit['profit'] >= 0 ? 'text-green-700' : 'text-red-600' }}">{{ number_format($profit['profit']) }}@if($profit['margin_pct'] !== null) ({{ $profit['margin_pct'] }}%)@endif</dd></div>
+                </dl>
+            </div>
             <div class="rounded-sm border border-gray-200 bg-white p-5 shadow-sm text-xs space-y-1">
                 <p><span class="text-gray-400">DXB handover:</span> {{ $trip->handover_dxb_at?->format('d M H:i') ?? '—' }}</p>
                 <p><span class="text-gray-400">Departed:</span> {{ $trip->departed_at?->format('d M H:i') ?? '—' }}</p>

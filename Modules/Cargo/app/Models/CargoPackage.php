@@ -11,6 +11,7 @@ class CargoPackage extends Model
     public const STATUSES = ['expected','received','identified','weighed','inspection_passed','on_hold','stored','ready','allocated','dispatched','cancelled'];
     public function receiving() { return $this->belongsTo(Receiving::class, 'receiving_id'); }
     public function booking() { return $this->belongsTo(CargoBooking::class, 'booking_id'); }
+    public function boxLine() { return $this->hasOne(CargoBoxLine::class, 'package_id')->latest(); }
     public function customer() { return $this->belongsTo(\Modules\Commercial\Models\Customer::class, 'customer_id'); }
     public function branch() { return $this->belongsTo(\Modules\Organization\Models\Branch::class); }
     public function location() { return $this->belongsTo(WarehouseLocation::class, 'location_id'); }
