@@ -24,6 +24,7 @@ class SystemAdministrationDatabaseSeeder extends Seeder
         'sysadmin.monitoring.view',
         'sysadmin.backups.view',
         'sysadmin.localization.manage',
+        'sysadmin.import.manage',
         'sysadmin.commands.view', 'sysadmin.commands.execute', 'sysadmin.commands.approve',
     ];
 

@@ -18,6 +18,27 @@ class NavItem
         public array $children = [],
     ) {}
 
+    /**
+     * Single translation point for every nav label: resolves
+     * ui.nav.{slug} and falls back to the raw English label.
+     */
+    public function displayLabel(): string
+    {
+        $key = 'ui.nav.' . \Illuminate\Support\Str::slug($this->label, '_');
+        $translated = __($key);
+
+        return $translated === $key ? $this->label : $translated;
+    }
+
+    /** Group/section headers are plain strings — translate the same way. */
+    public static function groupLabel(string $group): string
+    {
+        $key = 'ui.nav_group.' . \Illuminate\Support\Str::slug($group, '_');
+        $translated = __($key);
+
+        return $translated === $key ? $group : $translated;
+    }
+
     public function href(): ?string
     {
         return $this->route && \Illuminate\Support\Facades\Route::has($this->route)

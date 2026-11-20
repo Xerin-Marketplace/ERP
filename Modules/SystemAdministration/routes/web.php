@@ -149,4 +149,18 @@ Route::middleware(['web', 'auth', 'verified', 'account.active'])
         // Backups — honest status page
         Route::get('backups', [Controllers\BackupController::class, 'index'])
             ->name('backups')->middleware('permission:sysadmin.backups.view');
-    });
+    
+        // Master-data import (Excel/CSV migration + alias normalization).
+        Route::get('import', [Controllers\DataImportController::class, 'index'])
+            ->name('import.index')->middleware('permission:sysadmin.import.manage');
+        Route::post('import', [Controllers\DataImportController::class, 'store'])
+            ->name('import.store')->middleware('permission:sysadmin.import.manage');
+        Route::get('import/{import}', [Controllers\DataImportController::class, 'show'])
+            ->name('import.show')->middleware('permission:sysadmin.import.manage');
+        Route::post('import/{import}/preview', [Controllers\DataImportController::class, 'preview'])
+            ->name('import.preview')->middleware('permission:sysadmin.import.manage');
+        Route::post('import/{import}/commit', [Controllers\DataImportController::class, 'commit'])
+            ->name('import.commit')->middleware('permission:sysadmin.import.manage');
+        Route::post('import-alias', [Controllers\DataImportController::class, 'alias'])
+            ->name('import.alias')->middleware('permission:sysadmin.import.manage');
+});

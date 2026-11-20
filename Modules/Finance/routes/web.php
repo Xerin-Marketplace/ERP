@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Finance\Http\Controllers\FinanceController as Fin;
+use Modules\Finance\Http\Controllers\EfdController as Efd;
 
 Route::middleware(['auth', 'verified', 'account.active'])->prefix('finance')->name('finance.')->group(function () {
 
@@ -22,6 +23,10 @@ Route::middleware(['auth', 'verified', 'account.active'])->prefix('finance')->na
 
     Route::get('ledger', [Fin::class, 'ledger'])->name('ledger.index')->middleware('can:finance.ledger.view');
     Route::get('inter-branch', [Fin::class, 'interBranch'])->name('interbranch.index')->middleware('can:finance.ledger.view');
+    Route::get('efd', [Efd::class, 'index'])->name('efd.index')->middleware('can:finance.receivables.manage');
+    Route::post('efd/issue/{invoice}', [Efd::class, 'issue'])->name('efd.issue')->middleware('can:finance.receivables.manage');
+    Route::post('efd/{receipt}/queue', [Efd::class, 'queue'])->name('efd.queue')->middleware('can:finance.receivables.manage');
+    Route::post('efd/{receipt}/void', [Efd::class, 'void'])->name('efd.void')->middleware('can:finance.receivables.manage');
     Route::post('inter-branch', [Fin::class, 'interBranchStore'])->name('interbranch.store')->middleware('can:finance.interbranch.manage');
     Route::post('inter-branch/settle', [Fin::class, 'interBranchSettle'])->name('interbranch.settle')->middleware('can:finance.interbranch.manage');
 

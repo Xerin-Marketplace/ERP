@@ -98,6 +98,10 @@ class SettingCatalog
 
             /* ------------------------- Rules: Security ------------------------- */
             'security.mfa.required' => ['group' => 'Rules — Security', 'label' => 'Enforce MFA enrollment for privileged roles', 'type' => 'bool', 'default' => false, 'rules' => 'boolean', 'risk' => 'high', 'help' => 'When on, Finance/accounts/cashier, Release Approver, Branch Manager, CEO/management and admin-tier users are pushed to MFA enrollment before they can proceed. Accounts with MFA enabled are always challenged per session regardless of this switch.'],
+            'finance.efd.enabled' => ['group' => 'Finance', 'label' => 'EFD transmission enabled', 'type' => 'bool', 'default' => false, 'rules' => 'boolean', 'risk' => 'high', 'help' => 'When off, fiscal receipts stay queued locally with payload stored. Enable only after TRA gateway settings and tax-adviser requirements are confirmed.'],
+            'finance.efd.serial_number' => ['group' => 'Finance', 'label' => 'EFD device serial number', 'type' => 'string', 'default' => '', 'rules' => 'nullable|string|max:60', 'risk' => 'normal', 'help' => 'Serial number of the registered EFD device for this company.'],
+            'finance.efd.gateway_url' => ['group' => 'Finance', 'label' => 'EFD gateway URL', 'type' => 'string', 'default' => '', 'rules' => 'nullable|url|max:255', 'risk' => 'high', 'help' => 'Endpoint for the TRA EFD gateway. Leave empty to keep receipts queued locally.'],
+            'finance.efd.api_key' => ['group' => 'Finance', 'label' => 'EFD gateway API key', 'type' => 'secret', 'default' => '', 'rules' => 'nullable|string|max:255', 'risk' => 'high', 'help' => 'Credentials for the EFD gateway. Stored encrypted; never displayed.'],
             'security.mfa.session_ttl_hours' => ['group' => 'Rules — Security', 'label' => 'MFA session trust duration (hours)', 'type' => 'int', 'default' => 12, 'rules' => 'required|integer|min:1|max:168', 'risk' => 'medium'],
 
             /* ------------------------- Rules: Operational ------------------------- */

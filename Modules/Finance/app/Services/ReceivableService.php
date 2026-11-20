@@ -81,6 +81,11 @@ class ReceivableService
 
             $invoice->update(['status' => 'posted', 'journal_id' => $journal->id]);
             $this->audit->log('finance.receivable.posted', $invoice, new: ['journal' => $journal->reference]);
+
+            // EFD groundwork: draft a fiscal receipt for every posted invoice
+            // (stays draft until queued; transmission is a separate step).
+            app(EfdReceiptService::class)->issue($invoice, $userId);
+
             return $invoice->fresh();
         });
     }
