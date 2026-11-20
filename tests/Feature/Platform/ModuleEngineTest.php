@@ -34,10 +34,11 @@ class ModuleEngineTest extends TestCase
         $user = \App\Models\User::factory()->create();
         $token = $user->createToken('test')->plainTextToken;
 
-        $this->withHeader('Authorization', "Bearer {$token}")
+        // Module names are sorted alphabetically — assert membership, not position.
+        $response = $this->withHeader('Authorization', "Bearer {$token}")
             ->getJson('/api/v1/core/status')
             ->assertOk()
-            ->assertJson(['success' => true])
-            ->assertJsonPath('data.modules.0.name', 'Core');
+            ->assertJson(['success' => true]);
+        $this->assertContains('Core', collect($response->json('data.modules'))->pluck('name')->all());
     }
 }

@@ -1,0 +1,15 @@
+<x-app-layout>
+    <x-slot name="header">{{ $customer->exists ? 'Edit Customer' : 'New Customer' }}</x-slot>
+    <form method="POST" action="{{ $customer->exists ? route('commercial.customers.update', $customer) : route('commercial.customers.store') }}" class="max-w-3xl bg-white rounded-md border border-gray-200 p-6 grid md:grid-cols-2 gap-4">
+        @csrf @if($customer->exists) @method('PUT') @endif
+        @foreach ([['name','Name *','text',1],['trading_name','Trading name','text',0],['email','Email','email',0],['phone','Phone','text',0],['whatsapp','WhatsApp','text',0],['contact_person','Contact person','text',0],['country','Country','text',0],['city','City','text',0],['registration_no','Registration no.','text',0],['tin','TIN','text',0]] as [$f,$l,$t,$req])
+            <div><label class="text-xs font-medium text-gray-600">{{ $l }}</label><input type="{{ $t }}" name="{{ $f }}" value="{{ old($f, $customer->$f) }}" @if($req) required @endif class="mt-1 w-full rounded-sm border-gray-200 text-sm"></div>
+        @endforeach
+        <div><label class="text-xs font-medium text-gray-600">Type *</label><select name="type" class="mt-1 w-full rounded-sm border-gray-200 text-sm">@foreach(\Modules\Commercial\Models\Customer::TYPES as $t)<option value="{{ $t }}" @selected(old('type',$customer->type)===$t)>{{ ucfirst($t) }}</option>@endforeach</select></div>
+        <div><label class="text-xs font-medium text-gray-600">Status *</label><select name="status" class="mt-1 w-full rounded-sm border-gray-200 text-sm">@foreach(\Modules\Commercial\Models\Customer::STATUSES as $s)<option value="{{ $s }}" @selected(old('status',$customer->status ?? 'prospect')===$s)>{{ ucfirst(str_replace('_',' ',$s)) }}</option>@endforeach</select></div>
+        <div class="md:col-span-2"><label class="text-xs font-medium text-gray-600">Address</label><input name="address" value="{{ old('address', $customer->address) }}" class="mt-1 w-full rounded-sm border-gray-200 text-sm"></div>
+        <div><label class="text-xs font-medium text-gray-600">Source</label><select name="source" class="mt-1 w-full rounded-sm border-gray-200 text-sm"><option value="">—</option>@foreach(\Modules\Commercial\Models\Customer::SOURCES as $s)<option value="{{ $s }}" @selected(old('source',$customer->source)===$s)>{{ ucfirst($s) }}</option>@endforeach</select></div>
+        <div><label class="text-xs font-medium text-gray-600">Branch</label><select name="branch_id" class="mt-1 w-full rounded-sm border-gray-200 text-sm"><option value="">—</option>@foreach(\Modules\Organization\Models\Branch::orderBy('name')->get() as $b)<option value="{{ $b->id }}" @selected(old('branch_id',$customer->branch_id)===$b->id)>{{ $b->name }}</option>@endforeach</select></div>
+        <div class="md:col-span-2 flex gap-3"><button class="px-5 py-2 bg-xerin-700 text-white rounded-sm text-sm font-medium">Save</button><a href="{{ route('commercial.customers.index') }}" class="px-5 py-2 border border-gray-200 rounded-sm text-sm">Cancel</a></div>
+    </form>
+</x-app-layout>
