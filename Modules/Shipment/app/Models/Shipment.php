@@ -51,6 +51,7 @@ class Shipment extends Model
     public function originBranch() { return $this->belongsTo(\Modules\Organization\Models\Branch::class, 'origin_branch_id'); }
     public function destinationBranch() { return $this->belongsTo(\Modules\Organization\Models\Branch::class, 'destination_branch_id'); }
     public function parent() { return $this->belongsTo(Shipment::class, 'parent_id'); }
+    public function arrival() { return $this->hasOne(\Modules\Arrival\Models\ShipmentArrival::class, 'shipment_id'); }
     public function splits() { return $this->hasMany(Shipment::class, 'parent_id'); }
     public function scopeFor($q, $u) { return $u->can('shipment.all_branches') || ! $u->currentAssignment?->branch_id ? $q : $q->where('origin_branch_id', $u->currentAssignment->branch_id); }
     public function recalcTotals(): void

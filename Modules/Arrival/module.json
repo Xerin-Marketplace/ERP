@@ -1,0 +1,11 @@
+{
+    "name": "Arrival",
+    "alias": "arrival",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Arrival\\Providers\\ArrivalServiceProvider"
+    ],
+    "files": []
+}

@@ -10,5 +10,6 @@
     "Reception": true,
     "Commercial": true,
     "Cargo": true,
-    "Shipment": true
+    "Shipment": true,
+    "Arrival": true
 }

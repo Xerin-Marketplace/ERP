@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/arrival",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Arrival\\": "app/",
+            "Modules\\Arrival\\Database\\Factories\\": "database/factories/",
+            "Modules\\Arrival\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Arrival\\Tests\\": "tests/"
+        }
+    }
+}
