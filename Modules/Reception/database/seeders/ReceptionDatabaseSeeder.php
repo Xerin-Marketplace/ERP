@@ -28,14 +28,14 @@ class ReceptionDatabaseSeeder extends Seeder
         }
 
         // Reception may receive, verify and route — never provision or manage workflows.
-        $receptionist = Role::firstOrCreate(['name' => 'receptionist', 'guard_name' => 'web']);
+        $receptionist = Role::firstOrCreate(['name' => 'Customer Care', 'guard_name' => 'web']);
         $receptionist->givePermissionTo([
             'reception.access.view', 'reception.access.review', 'reception.access.verify',
             'reception.access.route', 'reception.access.audit.view',
         ]);
         // Provisioning + workflow admin live with IT administration, not reception.
-        Role::firstOrCreate(['name' => 'it-administrator', 'guard_name' => 'web'])->givePermissionTo(self::ACCESS_PERMISSIONS);
-        Role::firstOrCreate(['name' => 'group-administrator', 'guard_name' => 'web'])->givePermissionTo(self::ACCESS_PERMISSIONS);
+        Role::firstOrCreate(['name' => 'CTO and Admin', 'guard_name' => 'web'])->givePermissionTo(self::ACCESS_PERMISSIONS);
+        Role::firstOrCreate(['name' => 'CTO and Admin', 'guard_name' => 'web'])->givePermissionTo(self::ACCESS_PERMISSIONS);
 
         $this->seedDefaultWorkflows();
     }
@@ -45,19 +45,19 @@ class ReceptionDatabaseSeeder extends Seeder
         $defs = [
             ['name' => 'New Employee Access', 'request_type' => 'new_employee',
              'stages' => [
-                 ['name' => 'Department Manager', 'approver_role' => 'department-manager', 'sla_hours' => 48],
-                 ['name' => 'HR Confirmation', 'approver_role' => 'hr-administrator', 'sla_hours' => 48],
-                 ['name' => 'IT Approval', 'approver_role' => 'it-administrator', 'sla_hours' => 72],
+                 ['name' => 'Department Manager', 'approver_role' => 'Branch Manager', 'sla_hours' => 48],
+                 ['name' => 'HR Confirmation', 'approver_role' => 'CTO and Admin', 'sla_hours' => 48],
+                 ['name' => 'IT Approval', 'approver_role' => 'CTO and Admin', 'sla_hours' => 72],
              ]],
             ['name' => 'Existing Employee Access Change', 'request_type' => 'existing_employee',
              'stages' => [
-                 ['name' => 'Department Manager', 'approver_role' => 'department-manager', 'sla_hours' => 48],
-                 ['name' => 'IT Approval', 'approver_role' => 'it-administrator', 'sla_hours' => 72],
+                 ['name' => 'Department Manager', 'approver_role' => 'Branch Manager', 'sla_hours' => 48],
+                 ['name' => 'IT Approval', 'approver_role' => 'CTO and Admin', 'sla_hours' => 72],
              ]],
             ['name' => 'External Access', 'request_type' => 'external',
              'stages' => [
-                 ['name' => 'Sponsor Manager', 'approver_role' => 'department-manager', 'sla_hours' => 24],
-                 ['name' => 'IT Security', 'approver_role' => 'it-administrator', 'sla_hours' => 48],
+                 ['name' => 'Sponsor Manager', 'approver_role' => 'Branch Manager', 'sla_hours' => 24],
+                 ['name' => 'IT Security', 'approver_role' => 'CTO and Admin', 'sla_hours' => 48],
              ]],
         ];
 

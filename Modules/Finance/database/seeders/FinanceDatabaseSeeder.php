@@ -37,14 +37,8 @@ class FinanceDatabaseSeeder extends Seeder
         }
 
         $roles = [
-            'group_finance_director' => self::PERMISSIONS,
-            'finance_manager' => array_diff(self::PERMISSIONS, ['finance.periods.reopen', 'finance.settings.manage']),
-            'accountant' => ['finance.dashboard.view', 'finance.accounts.view', 'finance.journals.view',
-                'finance.journals.create', 'finance.journals.submit', 'finance.ledger.view',
-                'finance.payables.manage', 'finance.receivables.manage', 'finance.expenses.manage',
-                'finance.reports.view', 'finance.interbranch.manage'],
-            'cashier' => ['finance.dashboard.view', 'finance.payments.manage', 'finance.banks.manage'],
-            'finance_read_only' => ['finance.dashboard.view', 'finance.accounts.view', 'finance.journals.view',
+            'Finance and Accounting' => self::PERMISSIONS,
+            'Auditor' => ['finance.dashboard.view', 'finance.accounts.view', 'finance.journals.view',
                 'finance.ledger.view', 'finance.reports.view', 'finance.audit.view'],
         ];
         foreach ($roles as $name => $perms) {

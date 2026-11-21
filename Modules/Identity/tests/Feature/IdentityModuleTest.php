@@ -45,7 +45,7 @@ class IdentityModuleTest extends TestCase
     private function itOfficer(): User
     {
         $u = User::factory()->create(['status' => 'active']);
-        $u->assignRole('it-officer');
+        $u->assignRole('CTO and Admin');
         return $u;
     }
 
@@ -445,7 +445,7 @@ class IdentityModuleTest extends TestCase
     {
         $admin = $this->admin();
 
-        $this->actingAs($admin)->get('/identity/roles')->assertOk()->assertSee('it-officer');
+        $this->actingAs($admin)->get('/identity/roles')->assertOk()->assertSee('CTO and Admin');
 
         $this->actingAs($admin)->post('/identity/roles', [
             'name' => 'test-role', 'permissions' => ['user.view'],

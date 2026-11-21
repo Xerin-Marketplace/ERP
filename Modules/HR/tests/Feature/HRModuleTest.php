@@ -61,7 +61,7 @@ class HRModuleTest extends TestCase
     private function hrOfficer(): User
     {
         $u = User::factory()->create(['status' => 'active']);
-        $u->assignRole('hr-officer');
+        $u->assignRole('CTO and Admin');
         return $u;
     }
 
@@ -599,7 +599,7 @@ class HRModuleTest extends TestCase
     {
         $admin = $this->admin();
         $approver = User::factory()->create(['status' => 'active']);
-        $approver->assignRole('hr-administrator');
+        $approver->assignRole('CTO and Admin');
         $e = $this->emp();
 
         $rev1 = app(\Modules\HR\Services\CompensationService::class)
@@ -638,7 +638,7 @@ class HRModuleTest extends TestCase
     {
         $admin = $this->admin();
         $approver = User::factory()->create(['status' => 'active']);
-        $approver->assignRole('hr-administrator');
+        $approver->assignRole('CTO and Admin');
         $e = $this->emp();
         $e->update(['status' => 'active']);
         $rev = app(\Modules\HR\Services\CompensationService::class)

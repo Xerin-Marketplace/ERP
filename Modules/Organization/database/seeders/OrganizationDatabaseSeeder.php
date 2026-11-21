@@ -152,20 +152,21 @@ class OrganizationDatabaseSeeder extends Seeder
 
             $grantMap = [
                 'super-admin' => array_merge(self::LEGACY_PERMISSIONS, self::PERMISSIONS),
-                'group-administrator' => self::GROUP_ADMIN_PERMISSIONS,
-                'company-administrator' => self::GROUP_ADMIN_PERMISSIONS,
-                'branch-manager' => self::BRANCH_ADMIN_PERMISSIONS,
-                'department-manager' => [
-                    'organization.dashboard.view', 'organization.branches.view',
-                    'organization.departments.view', 'organization.positions.view',
+                'CTO and Admin' => self::GROUP_ADMIN_PERMISSIONS,
+                'CEO and Management' => [
+                    'organization.dashboard.view', 'organization.structure.view',
+                    'organization.company.view', 'organization.branches.view',
+                    'organization.locations.view', 'organization.departments.view',
+                    'organization.positions.view',
                 ],
+                'Branch Manager' => self::BRANCH_ADMIN_PERMISSIONS,
                 'admin' => [
                     'organization.dashboard.view', 'organization.structure.view',
                     'organization.company.view', 'organization.branches.view',
                     'organization.locations.view', 'organization.departments.view',
                     'organization.positions.view',
                 ],
-                'manager' => [
+                'Branch Manager' => [
                     'organization.dashboard.view', 'organization.structure.view',
                     'organization.company.view', 'organization.branches.view',
                     'organization.departments.view', 'organization.positions.view',

@@ -26,7 +26,7 @@ class ArrivalModuleTest extends TestCase
         $this->tz = Branch::where('code','TZ')->first() ?? Branch::factory()->create(['code'=>'TZ']);
         $this->user = \App\Models\User::factory()->create();
         $this->seed(\Modules\Arrival\Database\Seeders\ArrivalDatabaseSeeder::class);
-        $this->user->assignRole('TZ Operations Manager');
+        $this->user->assignRole('Tanzania Receiving');
     }
 
     private function shipment(array $pkgStatuses = ['stored','stored']): \Modules\Shipment\Models\Shipment

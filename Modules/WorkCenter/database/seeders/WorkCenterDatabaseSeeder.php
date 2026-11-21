@@ -22,7 +22,7 @@ class WorkCenterDatabaseSeeder extends Seeder
         Role::where('name','branch-admin')->first()?->givePermissionTo([
             'work.reports.create','work.reports.review','work.documents.upload',
             'work.documents.share','work.tasks.assign','work.tasks.review','work.analytics.view']);
-        Role::firstOrCreate(['name'=>'department-manager','guard_name'=>'web'])
+        Role::firstOrCreate(['name'=>'Branch Manager','guard_name'=>'web'])
             ->givePermissionTo(['work.reports.create','work.reports.review',
                 'work.documents.upload','work.tasks.assign','work.tasks.review']);
 

@@ -35,8 +35,8 @@ class OvertimeService
             $ot->reference = $this->numbers->for('overtime');
             $ot->save();
 
-            $ot->approvals()->create(['step' => 1, 'approver_role' => 'manager']);
-            $ot->approvals()->create(['step' => 2, 'approver_role' => 'hr_officer']);
+            $ot->approvals()->create(['step' => 1, 'approver_role' => 'Branch Manager']);
+            $ot->approvals()->create(['step' => 2, 'approver_role' => 'CTO and Admin']);
             $this->audit->log('overtime.requested', $ot, new: ['hours' => $ot->planned_hours]);
 
             User::permission('overtime.approve')->get()

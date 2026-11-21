@@ -29,7 +29,7 @@ class TaskService
     {
         $target = User::findOrFail($d['assignee_id']);
         $branch = $d['branch_id'] ?? $target->branch_id;
-        $global = $creator->hasAnyRole(['super-admin','group-administrator']);
+        $global = $creator->hasAnyRole(['super-admin','CEO and Management']);
         if (! $global && $branch !== $creator->branch_id && ! $creator->hasRole('branch-admin')) {
             throw ValidationException::withMessages(['branch' => 'Cannot assign outside your branch.']);
         }

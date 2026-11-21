@@ -31,61 +31,61 @@ class XerinStaffSeeder extends Seeder
         // ── DUBAI — Receiving & Cargo Operations ─────────────────────
         ['name' => 'Ezekiel',  'email' => 'ezekiel@xerinhub.com',  'branch' => 'DXB', 'dept' => 'WH',
          'position' => ['code' => 'DXB-CARGO-LEAD', 'title' => 'Cargo Operations Lead'],
-         'roles' => ['Cargo Receiving Officer', 'Cargo Operations', 'Warehouse Manager'], 'head' => true],
+         'roles' => ['Dubai Receiving', 'Dubai Warehouse and Cargo Operations'], 'head' => true],
         ['name' => 'Faisal',   'email' => 'faisal@xerinhub.com',   'branch' => 'DXB', 'dept' => 'WH',
          'position' => ['code' => 'DXB-RCV-OFF', 'title' => 'Dubai Receiving Officer'],
-         'roles' => ['Cargo Receiving Officer', 'Cargo Operations']],
+         'roles' => ['Dubai Receiving', 'Dubai Warehouse and Cargo Operations']],
         ['name' => 'Amina',    'email' => 'amina@xerinhub.com',    'branch' => 'DXB', 'dept' => 'WH',
          'position' => ['code' => 'DXB-RCV-OFF', 'title' => 'Dubai Receiving Officer'],
-         'roles' => ['Cargo Receiving Officer', 'Cargo Operations']],
+         'roles' => ['Dubai Receiving', 'Dubai Warehouse and Cargo Operations']],
         ['name' => 'Conrad',   'email' => 'conrad@xerinhub.com',   'branch' => 'DXB', 'dept' => 'WH',
          'position' => ['code' => 'DXB-RCV-OFF', 'title' => 'Dubai Receiving Officer'],
-         'roles' => ['Cargo Receiving Officer', 'Cargo Operations']],
+         'roles' => ['Dubai Receiving', 'Dubai Warehouse and Cargo Operations']],
 
         // ── TANZANIA — Receiving ─────────────────────────────────────
         ['name' => 'Faith',    'email' => 'faith@xerinhub.com',    'branch' => 'TZ', 'dept' => 'WH',
          'position' => ['code' => 'TZ-RCV-OFF', 'title' => 'Tanzania Receiving Officer'],
-         'roles' => ['Arrival Officer']],
+         'roles' => ['Tanzania Receiving']],
         ['name' => 'Abdul',    'email' => 'abdul@xerinhub.com',    'branch' => 'TZ', 'dept' => 'WH',
          'position' => ['code' => 'TZ-RCV-OFF', 'title' => 'Tanzania Receiving Officer'],
-         'roles' => ['Arrival Officer']],
+         'roles' => ['Tanzania Receiving']],
         ['name' => 'Wahida',   'email' => 'wahida@xerinhub.com',   'branch' => 'TZ', 'dept' => 'WH',
          'position' => ['code' => 'TZ-RCV-OFF', 'title' => 'Tanzania Receiving Officer'],
-         'roles' => ['Arrival Officer']],
+         'roles' => ['Tanzania Receiving']],
 
         // ── TANZANIA — Distribution Centre ───────────────────────────
         ['name' => 'Hashim',   'email' => 'hashim@xerinhub.com',   'branch' => 'TZ', 'dept' => 'OPS',
          'position' => ['code' => 'TZ-DC-OFF', 'title' => 'Distribution Centre Officer'],
-         'roles' => ['Distribution Officer'], 'head' => true],
+         'roles' => ['Distribution Centre Officer'], 'head' => true],
 
         // ── TANZANIA — Finance / Release ─────────────────────────────
         ['name' => 'Sabrina',  'email' => 'sabrina@xerinhub.com',  'branch' => 'TZ', 'dept' => 'FIN',
          'position' => ['code' => 'TZ-FIN-MGR', 'title' => 'Finance & Accounting Manager'],
-         'roles' => ['finance_manager', 'accountant'], 'head' => true],
+         'roles' => ['Finance and Accounting'], 'head' => true],
         ['name' => 'Jacqueline','email' => 'jacqueline@xerinhub.com','branch' => 'TZ', 'dept' => 'OPS',
          'position' => ['code' => 'TZ-REL-APP', 'title' => 'Release Approver'],
          'roles' => ['Release Approver']],
 
         // ── TANZANIA — Delivery ──────────────────────────────────────
         ['name' => 'Ubaya',    'email' => 'ubaya@xerinhub.com',    'branch' => 'TZ', 'dept' => 'FLT',
-         'position' => ['code' => 'TZ-DRIVER', 'title' => 'Delivery Driver'],
-         'roles' => ['Delivery Driver']],
+         'position' => ['code' => 'TZ-DRIVER', 'title' => 'Delivery'],
+         'roles' => ['Delivery']],
 
         // ── GROUP — Leadership / Admin ───────────────────────────────
         ['name' => 'Joseph',   'email' => 'joseph@xerinhub.com',   'branch' => 'HQ', 'dept' => 'IT',
          'position' => ['code' => 'HQ-CTO', 'title' => 'Chief Technology Officer'],
-         'roles' => ['it-administrator', 'admin'], 'head' => true],
+         'roles' => ['CTO and Admin', 'admin'], 'head' => true],
         ['name' => 'Chief Executive','email' => 'ceo@xerinhub.com','branch' => 'HQ', 'dept' => null,
          'position' => ['code' => 'HQ-CEO', 'title' => 'Chief Executive Officer'],
-         'roles' => ['ceo']],
+         'roles' => ['CEO and Management']],
 
         // ── Branch managers (functional seats, per spec matrix) ──────
         ['name' => 'Dubai Branch Manager',    'email' => 'manager.dxb@xerinhub.com', 'branch' => 'DXB', 'dept' => 'OPS',
          'position' => ['code' => 'DXB-BM', 'title' => 'Branch Manager — Dubai'],
-         'roles' => ['branch-manager'], 'head' => true],
+         'roles' => ['Branch Manager'], 'head' => true],
         ['name' => 'Tanzania Branch Manager', 'email' => 'manager.tz@xerinhub.com',  'branch' => 'TZ', 'dept' => 'OPS',
          'position' => ['code' => 'TZ-BM', 'title' => 'Branch Manager — Tanzania'],
-         'roles' => ['branch-manager']],
+         'roles' => ['Branch Manager']],
     ];
 
     public function run(): void
@@ -93,7 +93,7 @@ class XerinStaffSeeder extends Seeder
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         // CEO — group-wide view of every module, no mutations (spec §16.3).
-        Role::firstOrCreate(['name' => 'ceo', 'guard_name' => 'web'])
+        Role::firstOrCreate(['name' => 'CEO and Management', 'guard_name' => 'web'])
             ->syncPermissions(Permission::where('name', 'like', '%.view')->pluck('name'));
 
         $company = Company::where('code', 'XG')->firstOrFail();

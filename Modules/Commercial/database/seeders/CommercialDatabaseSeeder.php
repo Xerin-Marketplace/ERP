@@ -24,7 +24,7 @@ class CommercialDatabaseSeeder extends Seeder
         }
 
         // Sales Officer — operational commercial role
-        $sales = Role::firstOrCreate(['name' => 'Sales Officer', 'guard_name' => 'web']);
+        $sales = Role::firstOrCreate(['name' => 'Sales and CRM', 'guard_name' => 'web']);
         $sales->syncPermissions([
             'commercial.view', 'customer.view', 'customer.create', 'customer.update',
             'lead.view', 'lead.create', 'lead.update',
@@ -33,7 +33,7 @@ class CommercialDatabaseSeeder extends Seeder
         ]);
 
         // Sales Manager — approves quotations and rate cards
-        $mgr = Role::firstOrCreate(['name' => 'Sales Manager', 'guard_name' => 'web']);
+        $mgr = Role::firstOrCreate(['name' => 'Sales and CRM', 'guard_name' => 'web']);
         $mgr->syncPermissions(array_merge($sales->permissions->pluck('name')->all(), [
             'quotation.approve', 'pricing.manage', 'pricing.approve',
             'inquiry.assign', 'customer.manage', 'lead.manage', 'commercial.handover.view',

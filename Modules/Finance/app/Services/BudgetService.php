@@ -44,7 +44,7 @@ class BudgetService
             throw ValidationException::withMessages(['budget' => 'Only draft budgets can be submitted.']);
         }
         $budget->update(['status' => 'submitted']);
-        $this->approvals->createChain($budget, ['finance_manager']);
+        $this->approvals->createChain($budget, ['Finance and Accounting']);
         $this->audit->log('finance.budget.submitted', $budget);
         return $budget;
     }

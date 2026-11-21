@@ -14,9 +14,7 @@ class ShipmentDatabaseSeeder extends Seeder
             Permission::findOrCreate($p, 'web');
         }
         $map = [
-            'Shipment Officer' => ['shipment.view','shipment.create','shipment.update','shipment.allocate','shipment.booking.manage','shipment.awb.create','shipment.manifest.manage','shipment.dispatch.manage','shipment.handover.confirm'],
-            'Airline Coordinator' => ['shipment.view','shipment.booking.manage','shipment.booking.confirm','shipment.airline.manage','shipment.flight.manage'],
-            'Shipment Supervisor' => ['shipment.view','shipment.create','shipment.update','shipment.allocate','shipment.split','shipment.booking.manage','shipment.booking.confirm','shipment.awb.create','shipment.awb.issue','shipment.manifest.manage','shipment.manifest.approve','shipment.dispatch.manage','shipment.handover.confirm','shipment.exception.manage','shipment.all_branches'],
+            'Dubai Warehouse and Cargo Operations' => ['shipment.view','shipment.create','shipment.update','shipment.allocate','shipment.split','shipment.booking.manage','shipment.booking.confirm','shipment.airline.manage','shipment.flight.manage','shipment.awb.create','shipment.awb.issue','shipment.manifest.manage','shipment.manifest.approve','shipment.dispatch.manage','shipment.handover.confirm','shipment.exception.manage','shipment.all_branches'],
         ];
         foreach ($map as $role => $perms) { Role::findOrCreate($role, 'web')->syncPermissions($perms); }
     }

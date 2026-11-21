@@ -12,9 +12,7 @@ class DeliveryDatabaseSeeder extends Seeder
             Permission::findOrCreate($p, 'web');
         }
         $map = [
-            'Dispatch Officer' => ['delivery.view','delivery.create','delivery.update','delivery.dispatch'],
-            'Delivery Driver' => ['delivery.view'],
-            'Delivery Manager' => ['delivery.view','delivery.create','delivery.update','delivery.dispatch','delivery.returns','delivery.cod','delivery.drivers','delivery.vehicles','delivery.config','delivery.all_branches'],
+            'Delivery' => ['delivery.view','delivery.create','delivery.update','delivery.dispatch','delivery.returns','delivery.cod','delivery.drivers','delivery.vehicles','delivery.config','delivery.all_branches'],
         ];
         foreach ($map as $role => $perms) { Role::findOrCreate($role, 'web')->syncPermissions($perms); }
         // seed default services + Dar es Salaam zones

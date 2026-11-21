@@ -47,10 +47,10 @@ class AccessManagementTest extends TestCase
         $this->seed(EmployeeDatabaseSeeder::class);
         $this->seed(ReceptionDatabaseSeeder::class);
 
-        $this->receptionist = $this->userWithRole('receptionist');
-        $this->itAdmin = $this->userWithRole('it-administrator');
-        $this->deptManager = $this->userWithRole('department-manager');
-        $this->hrAdmin = $this->userWithRole('hr-administrator');
+        $this->receptionist = $this->userWithRole('Customer Care');
+        $this->itAdmin = $this->userWithRole('CTO and Admin');
+        $this->deptManager = $this->userWithRole('Branch Manager');
+        $this->hrAdmin = $this->userWithRole('CTO and Admin');
     }
 
     private function userWithRole(string $role): User
@@ -129,7 +129,7 @@ class AccessManagementTest extends TestCase
         $this->assertSame('in_approval', $r->status);
         $this->assertSame(1, $r->current_stage_seq);
         $this->assertSame(1, $r->tasks()->where('sequence', 1)->count());
-        $this->assertSame('department-manager', $r->tasks()->first()->approver_role);
+        $this->assertSame('Branch Manager', $r->tasks()->first()->approver_role);
     }
 
     public function test_approval_chain_advances_and_completes(): void
@@ -175,7 +175,7 @@ class AccessManagementTest extends TestCase
     {
         $user = User::factory()->create(['status' => AccountStatus::Active]);
         $employee = $this->employeeFor($user);
-        $user->assignRole('department-manager'); // they'd be eligible by role
+        $user->assignRole('Branch Manager'); // they'd be eligible by role
 
         $r = $this->submitRequest(['type' => 'existing_employee', 'employee_id' => $employee->id]);
         $r = app(AccessRequestService::class)->route($r, $this->receptionist->id);
@@ -283,9 +283,9 @@ class AccessManagementTest extends TestCase
         $r = app(AccessRequestService::class)->route($r, $this->receptionist->id);
         $taskSvc = app(ApprovalTaskService::class);
         $byRole = [
-            'department-manager' => $this->deptManager,
-            'hr-administrator' => $this->hrAdmin,
-            'it-administrator' => $this->itAdmin,
+            'Branch Manager' => $this->deptManager,
+            'CTO and Admin' => $this->hrAdmin,
+            'CTO and Admin' => $this->itAdmin,
         ];
         for ($i = 0; $i < 6; $i++) {
             $t = $r->fresh()->tasks()->where('status', 'pending')->first();

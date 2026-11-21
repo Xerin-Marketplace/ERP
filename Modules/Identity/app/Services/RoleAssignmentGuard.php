@@ -12,7 +12,7 @@ use Modules\Identity\Database\Seeders\IdentityDatabaseSeeder;
  * Rules:
  *  - Protected roles (super-admin) can only be granted by a super-admin,
  *    and never removed from the last super-admin.
- *  - Privileged roles (group-administrator, company-administrator) can only
+ *  - Privileged roles (CEO and Management, CTO and Admin) can only
  *    be granted by a principal holding that same privilege tier.
  *  - Nobody may elevate their own account beyond its current tier.
  */
@@ -21,8 +21,8 @@ class RoleAssignmentGuard
     /** Privileged tiers, strongest first. */
     private const PRIVILEGED = [
         'super-admin' => 100,
-        'group-administrator' => 80,
-        'company-administrator' => 70,
+        'CEO and Management' => 80,
+        'CTO and Admin' => 80,
     ];
 
     /** Highest privilege tier the user holds (0 = none). */

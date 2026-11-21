@@ -20,7 +20,7 @@ class MfaService
     public function isRequired(User $user): bool
     {
         // Super admin and privileged tiers: ALWAYS required — no scope can weaken.
-        if ($user->hasAnyRole(['super-admin', 'group-administrator', 'company-administrator'])) {
+        if ($user->hasAnyRole(['super-admin', 'admin', 'CEO and Management', 'CTO and Admin'])) {
             return true;
         }
         $default = SettingCatalog::definitions()['security.mfa.required']['default'] ?? false;

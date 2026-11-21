@@ -51,7 +51,7 @@ class ApprovalTaskService
             if ($request->employee?->user_id === $actor->id) {
                 throw ValidationException::withMessages(['task' => 'You cannot approve your own access request.']);
             }
-            if ($request->sponsor_id === $actor->id && $decision === 'approved' && $task->approver_role !== 'department-manager') {
+            if ($request->sponsor_id === $actor->id && $decision === 'approved' && $task->approver_role !== 'Branch Manager') {
                 // A sponsor can endorse at their own stage, but we flag it in audit.
             }
 

@@ -49,7 +49,6 @@ class RolePermissionSeeder extends Seeder
             'executive.command.view',
         ]);
 
-        Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web'])->syncPermissions(['files.view']);
 
         User::where('email', 'admin@xerinhub.com')->first()?->assignRole('super-admin');
     }

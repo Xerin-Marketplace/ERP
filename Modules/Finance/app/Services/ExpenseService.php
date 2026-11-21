@@ -39,7 +39,7 @@ class ExpenseService
                 'created_by'   => $userId,
             ]);
             $chain = $claim->category?->approval_threshold && $claim->amount > $claim->category->approval_threshold
-                ? ['finance_manager', 'finance_director'] : ['finance_manager'];
+                ? ['Finance and Accounting', 'CEO and Management'] : ['Finance and Accounting'];
             $this->approvals->createChain($claim, $chain);
             $this->audit->log('finance.expense.submitted', $claim, new: ['amount' => (float) $claim->amount]);
             return $claim;

@@ -59,7 +59,7 @@ class TicketingModuleTest extends TestCase
     private function agent(): User
     {
         $u = User::factory()->create(['status' => 'active']);
-        $u->assignRole('it-officer');
+        $u->assignRole('CTO and Admin');
         return $u;
     }
 
@@ -275,7 +275,7 @@ class TicketingModuleTest extends TestCase
 
     public function test_service_request_opens_approval_chain(): void
     {
-        $service = ServiceCatalogItem::where('code', 'laptop')->firstOrFail(); // manager → it → finance
+        $service = ServiceCatalogItem::where('code', 'laptop')->firstOrFail(); // manager → CTO and Admin → Finance and Accounting
         $requester = $this->requester();
 
         $t = app(TicketService::class)->createFromService($service, [
@@ -285,7 +285,7 @@ class TicketingModuleTest extends TestCase
 
         $approvals = $t->approvals;
         $this->assertCount(3, $approvals);
-        $this->assertSame(['manager', 'it', 'finance'], $approvals->pluck('approver_role')->all());
+        $this->assertSame(['manager', 'CTO and Admin', 'Finance and Accounting'], $approvals->pluck('approver_role')->all());
     }
 
     public function test_rejection_requires_reason_and_skips_remaining(): void

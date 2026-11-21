@@ -48,7 +48,7 @@ class MfaEnforcementTest extends TestCase
         $mw = new \App\Http\Middleware\RequireMfaChallenge();
 
         // Spec roles: Release Approver, finance, branch-manager → required.
-        foreach (['Release Approver', 'branch-manager', 'accountant'] as $role) {
+        foreach (['Release Approver', 'Branch Manager', 'Finance and Accounting'] as $role) {
             $u = $this->user($role);
             $this->assertTrue($svc->isRequired($u) || $this->specCheck($u), "$role must require MFA");
         }
@@ -60,7 +60,7 @@ class MfaEnforcementTest extends TestCase
     {
         foreach ($u->getRoleNames() as $r) {
             if (preg_match('/finance|accountant|cashier|accounts|ceo|management|admin/i', $r)
-                || in_array($r, ['branch-manager', 'Release Approver', 'TZ Operations Manager'], true)) return true;
+                || in_array($r, ['Branch Manager', 'Release Approver', 'Tanzania Receiving'], true)) return true;
         }
         return false;
     }
@@ -96,7 +96,7 @@ class MfaEnforcementTest extends TestCase
 
     public function test_middleware_redirects_enrolled_to_challenge_and_passes_after_verify(): void
     {
-        $u = $this->user('accountant');
+        $u = $this->user('Finance and Accounting');
         $svc = app(MfaService::class);
         $setup = $svc->beginEnrollment($u);
         $svc->confirmEnrollment($u, $this->code($setup['secret']));

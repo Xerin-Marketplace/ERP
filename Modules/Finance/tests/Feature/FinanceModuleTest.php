@@ -71,14 +71,14 @@ class FinanceModuleTest extends TestCase
     private function finManager(): User
     {
         $u = User::factory()->create(['status' => 'active']);
-        $u->assignRole('finance_manager');
+        $u->assignRole('Finance and Accounting');
         return $u;
     }
 
     private function accountant(): User
     {
         $u = User::factory()->create(['status' => 'active']);
-        $u->assignRole('accountant');
+        $u->assignRole('Finance and Accounting');
         return $u;
     }
 

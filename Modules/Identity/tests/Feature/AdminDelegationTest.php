@@ -46,11 +46,11 @@ class AdminDelegationTest extends TestCase
 
     public function test_super_admin_assigns_branch_admin_with_delegation(): void
     {
-        $admin = $this->branchAdmin($this->dubai, ['employee', 'department-manager'], ['users.view']);
+        $admin = $this->branchAdmin($this->dubai, ['employee', 'Branch Manager'], ['users.view']);
         $this->assertTrue($admin->hasRole('branch-admin'));
         $this->assertSame($this->dubai->id, $this->svc->adminBranchId($admin));
         $del = BranchAdministrator::where('user_id', $admin->id)->first();
-        $this->assertEquals(['employee', 'department-manager'], $del->delegable_roles);
+        $this->assertEquals(['employee', 'Branch Manager'], $del->delegable_roles);
     }
 
     public function test_non_super_admin_cannot_delegate(): void
@@ -82,7 +82,7 @@ class AdminDelegationTest extends TestCase
         $admin = $this->branchAdmin($this->dubai, ['employee']);
         $target = User::factory()->create(['status' => 'active', 'branch_id' => $this->dubai->id]);
         $this->expectException(ValidationException::class);
-        $this->svc->assertCanAssignRole($admin, 'department-manager', $target);
+        $this->svc->assertCanAssignRole($admin, 'Branch Manager', $target);
     }
 
     public function test_branch_admin_cannot_act_on_other_branch_user(): void
@@ -160,7 +160,7 @@ class AdminDelegationTest extends TestCase
 
     public function test_seeded_roles_exist_and_reseeding_idempotent(): void
     {
-        foreach (['branch-admin', 'department-admin', 'system-auditor', 'super-admin'] as $r) {
+        foreach (['branch-admin', 'Branch Manager', 'Auditor', 'super-admin'] as $r) {
             $this->assertTrue(Role::where('name', $r)->exists(), "missing role {$r}");
         }
         $count = Role::count();

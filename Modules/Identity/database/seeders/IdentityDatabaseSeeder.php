@@ -59,45 +59,25 @@ class IdentityDatabaseSeeder extends Seeder
      * super-admin is handled globally — never seeded grants here.
      */
     public const ROLES = [
-        'it-administrator' => self::PERMISSIONS,
-        'it-officer' => [
-            'identity.view', 'registration.view', 'registration.review',
-            'registration.request-info', 'registration.approve', 'registration.reject',
-            'users.view', 'users.assignments.view',
+        'CTO and Admin' => self::PERMISSIONS,
+        'CEO and Management' => [
+            'identity.view', 'registration.view', 'users.view', 'identity.audit.view',
         ],
-        'group-administrator' => [
-            'identity.view', 'registration.view', 'users.view', 'roles.view',
-            'users.assign_roles', 'users.invite', 'users.reset_password', 'users.delete',
-            'permissions.view', 'access.audit.view', 'identity.audit.view',
-        ],
-        'company-administrator' => [
-            'identity.view', 'registration.view', 'users.view', 'users.assignments.view',
-        ],
-        'branch-manager' => [
+        'Branch Manager' => [
             'identity.view', 'users.view', 'users.assignments.view',
-        ],
-        'department-manager' => [
-            'identity.view', 'users.view',
         ],
         'branch-admin' => [
             'identity.view', 'users.view', 'users.assignments.view', 'roles.view',
             'admin.console.view', 'admin.settings.branch', 'admin.audit.view',
             'users.assign_roles',
         ],
-        'department-admin' => [
-            'identity.view', 'users.view',
-        ],
-        'system-auditor' => [
+        'Auditor' => [
             'access.audit.view', 'identity.audit.view', 'admin.audit.view',
+            'identity.view', 'registration.view', 'users.view', 'roles.view',
+            'permissions.view',
         ],
         'employee' => [],
-        'hr-administrator' => [
-            'identity.view', 'users.view', 'users.assignments.view',
-        ],
-        'hr-officer' => [
-            'identity.view', 'users.view',
-        ],
-        'receptionist' => [
+        'Customer Care' => [
             'identity.view', 'users.view',
             'reception.dashboard.view', 'reception.visitors.create',
             'reception.visitors.view', 'reception.requests.manage',
@@ -108,13 +88,6 @@ class IdentityDatabaseSeeder extends Seeder
             'reception.tickets.view_branch', 'reception.tickets.track',
             'reception.tickets.comment', 'reception.tickets.attachments.upload',
             'reception.it_availability.view',
-        ],
-        'auditor' => [
-            'identity.view', 'registration.view', 'users.view', 'roles.view',
-            'permissions.view', 'access.audit.view', 'identity.audit.view',
-        ],
-        'management-viewer' => [
-            'identity.view', 'registration.view', 'users.view', 'identity.audit.view',
         ],
     ];
 

@@ -21,7 +21,7 @@ use Modules\SystemAdministration\Services\MfaService;
 class RequireMfaChallenge
 {
     private const SPEC_ROLES = [
-        'branch-manager', 'Release Approver', 'TZ Operations Manager',
+        'Branch Manager', 'Release Approver',
     ];
 
     private const SPEC_REGEX = '/finance|accountant|cashier|accounts|ceo|management|admin/i';

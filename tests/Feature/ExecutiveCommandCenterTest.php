@@ -63,7 +63,7 @@ class ExecutiveCommandCenterTest extends TestCase
     public function test_unauthorized_user_blocked(): void
     {
         $staff = User::factory()->create(['status' => AccountStatus::Active]);
-        $staff->assignRole('staff');
+        $staff->assignRole('employee');
         $this->actingAs($staff)->get('/executive')->assertForbidden();
     }
 
@@ -75,10 +75,10 @@ class ExecutiveCommandCenterTest extends TestCase
 
     public function test_ceo_lands_on_command_center_not_staff_dashboard(): void
     {
-        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'ceo', 'guard_name' => 'web'])
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'CEO and Management', 'guard_name' => 'web'])
             ->givePermissionTo('executive.command.view');
         $ceo = User::factory()->create(['status' => AccountStatus::Active]);
-        $ceo->assignRole('ceo');
+        $ceo->assignRole('CEO and Management');
 
         $this->actingAs($ceo)->get('/dashboard')->assertRedirect(route('executive.dashboard'));
         $this->actingAs($ceo)->get('/executive')->assertOk();
@@ -113,7 +113,7 @@ class ExecutiveCommandCenterTest extends TestCase
     public function test_api_denied_without_permission(): void
     {
         $staff = User::factory()->create(['status' => AccountStatus::Active]);
-        $staff->assignRole('staff');
+        $staff->assignRole('employee');
         Sanctum::actingAs($staff);
         $this->getJson('/api/v1/executive/dashboard')->assertForbidden();
     }

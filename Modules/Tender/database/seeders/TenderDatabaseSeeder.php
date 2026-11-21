@@ -20,15 +20,8 @@ class TenderDatabaseSeeder extends Seeder
             Permission::firstOrCreate(['name' => $p, 'guard_name' => 'web']);
         }
         Role::where('name', 'super-admin')->first()?->givePermissionTo(self::PERMISSIONS);
-        Role::firstOrCreate(['name' => 'tender-manager', 'guard_name' => 'web'])
-            ->syncPermissions(['tenders.view','tenders.create','tenders.assess','tenders.decide',
-                'tenders.boq.manage','tenders.submit','tenders.evaluate','tenders.award',
-                'tenders.contract.manage','tenders.reports.view']);
-        Role::firstOrCreate(['name' => 'tender-officer', 'guard_name' => 'web'])
-            ->syncPermissions(['tenders.view','tenders.create','tenders.assess','tenders.boq.manage']);
-        Role::firstOrCreate(['name' => 'quantity-surveyor', 'guard_name' => 'web'])
-            ->syncPermissions(['tenders.view','tenders.boq.manage']);
-        Role::firstOrCreate(['name' => 'compliance-officer', 'guard_name' => 'web'])
-            ->syncPermissions(['tenders.view','tenders.assess']);
+        // Spec §16: tender work sits inside "Sales and CRM".
+        Role::firstOrCreate(['name' => 'Sales and CRM', 'guard_name' => 'web'])
+            ->givePermissionTo(self::PERMISSIONS);
     }
 }

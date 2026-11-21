@@ -42,7 +42,7 @@ class InterBranchTest extends TestCase
         $this->tz = Branch::firstOrCreate(['company_id' => $this->company->id, 'code' => 'TZ'],
             ['name' => 'Tanzania', 'status' => 'active']);
         $this->finance = User::factory()->create(['status' => AccountStatus::Active]);
-        $this->finance->assignRole('finance_manager');
+        $this->finance->assignRole('Finance and Accounting');
     }
 
     public function test_record_and_reconcile_month(): void

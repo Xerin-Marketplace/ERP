@@ -26,19 +26,8 @@ class EmployeeDatabaseSeeder extends Seeder
     ];
 
     public const ROLES = [
-        'it-administrator' => self::PERMISSIONS,
-        'group-administrator' => [
-            'employee.view_all', 'employee.create', 'employee.update', 'employee.export',
-            'employee.approve', 'employee.suspend', 'employee.terminate',
-            'employee.profile.view', 'employee.profile.update',
-            'employee.document.view', 'employee.document.upload', 'employee.document.delete',
-            'employee.position.manage', 'employee.grade.manage',
-            'employee.transfer.request', 'employee.transfer.approve',
-            'employee.promotion.request', 'employee.promotion.approve',
-            'employee.onboarding.manage', 'employee.offboarding.manage',
-            'employee.history.view', 'employee.reports.view',
-        ],
-        'company-administrator' => [
+        'CTO and Admin' => self::PERMISSIONS,
+        'Branch Manager' => [
             'employee.view', 'employee.create', 'employee.update', 'employee.export',
             'employee.suspend',
             'employee.profile.view', 'employee.profile.update',
@@ -47,20 +36,13 @@ class EmployeeDatabaseSeeder extends Seeder
             'employee.onboarding.manage', 'employee.offboarding.manage',
             'employee.history.view', 'employee.reports.view',
         ],
-        'branch-manager' => [
-            'employee.view', 'employee.profile.view', 'employee.document.view',
-            'employee.transfer.request', 'employee.history.view',
-        ],
-        'department-manager' => [
-            'employee.view', 'employee.profile.view', 'employee.history.view',
-        ],
-        'employee' => ['employee.profile.update_own'],
-        'auditor' => [
+        'Auditor' => [
             'employee.view_all', 'employee.profile.view', 'employee.document.view',
             'employee.history.view', 'employee.reports.view',
         ],
-        'management-viewer' => ['employee.view_all', 'employee.reports.view'],
-        'it-officer' => ['employee.view', 'employee.profile.view'],
+        'CEO and Management' => ['employee.view_all', 'employee.reports.view'],
+        'Customer Care' => ['employee.view', 'employee.profile.view'],
+        'employee' => ['employee.profile.update_own'],
     ];
 
     public const DOCUMENT_CATEGORIES = [

@@ -65,7 +65,7 @@ class AutomationService
 
     private function notifyManagers(Ticket $ticket, TicketAutomationRule $rule): void
     {
-        $managers = User::role(['it-administrator', 'group-administrator'])->get();
+        $managers = User::role(['CTO and Admin', 'super-admin'])->get();
         $specific = isset($rule->action_params['user_id']) ? User::whereKey($rule->action_params['user_id'])->first() : null;
         $managers->push($specific)->filter()->unique('id')->each(fn ($u) =>
             $u->notify(new TicketNotification("{$ticket->priority} ticket {$ticket->ticket_number}", $ticket->subject, route('ticketing.show', $ticket))));

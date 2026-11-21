@@ -26,8 +26,7 @@ class AdministrationRoleSeeder extends Seeder
 {
     /** Roles whose full permission sync is owned by this seeder. */
     private const GOVERNANCE_ROLES = [
-        'super-admin', 'admin', 'branch-admin',
-        'department-manager', 'department-admin', 'system-auditor',
+        'super-admin', 'admin', 'branch-admin', 'Auditor',
     ];
 
     public function run(): void
@@ -58,22 +57,8 @@ class AdministrationRoleSeeder extends Seeder
                 'role.view', 'role.create', 'role.update', 'role.delete',
             ], denyPrefixes: ['sysadmin.'], denySuffixes: ['.impersonate']),
 
-            // Department manager — full read visibility + people-ops manage.
-            'department-manager' => $this->only($all,
-                suffixes: ['.view', '.view_branch', '.view_department', '.approve', '.review', '.export'],
-                prefixes: [
-                    'hr.', 'leave.', 'attendance.', 'overtime.', 'shift.',
-                    'performance.', 'disciplinary.', 'employee.', 'department.',
-                    'recruitment.', 'users.view',
-                ]),
-
-            // Department admin — departmental settings + read access.
-            'department-admin' => $this->only($all,
-                suffixes: ['.view'],
-                prefixes: ['department.', 'employee.', 'attendance.', 'leave.', 'shift.']),
-
             // Read-only auditor — views + every audit surface.
-            'system-auditor' => $this->only($all,
+            'Auditor' => $this->only($all,
                 suffixes: ['.view', '.export'],
                 contains: ['audit']),
         ];

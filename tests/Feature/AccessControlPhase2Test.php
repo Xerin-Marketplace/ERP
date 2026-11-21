@@ -29,7 +29,7 @@ class AccessControlPhase2Test extends TestCase
             ->givePermissionTo(Permission::pluck('name')));
 
         $this->groupAdmin = User::factory()->create(['status' => 'active']);
-        $this->groupAdmin->assignRole('group-administrator');
+        $this->groupAdmin->assignRole('CTO and Admin');
     }
 
     private function plainUser(): User
@@ -41,9 +41,9 @@ class AccessControlPhase2Test extends TestCase
 
     public function test_spec_roles_exist(): void
     {
-        foreach (['super-admin', 'group-administrator', 'branch-manager',
-                  'hr-administrator', 'it-administrator', 'it-officer',
-                  'receptionist', 'department-manager', 'employee'] as $role) {
+        foreach (['super-admin', 'CEO and Management', 'Branch Manager',
+                  'CTO and Admin', 'CTO and Admin', 'CTO and Admin',
+                  'Customer Care', 'Branch Manager', 'employee'] as $role) {
             $this->assertTrue(Role::where('name', $role)->exists(), "missing role {$role}");
         }
     }
@@ -62,9 +62,16 @@ class AccessControlPhase2Test extends TestCase
         $this->seed(OrganizationDatabaseSeeder::class); // re-run
         $this->seed(IdentityDatabaseSeeder::class);     // re-run — must not wipe org perms
 
-        $role = Role::where('name', 'group-administrator')->first();
+        // CTO and Admin holds org.manage (org seeder) + users.assign_roles
+        // (identity seeder) — re-running either must not strip the other's.
+        $role = Role::where('name', 'CTO and Admin')->first();
         $this->assertTrue($role->hasPermissionTo('organization.branches.manage'));
         $this->assertTrue($role->hasPermissionTo('users.assign_roles'));
+        // CEO stays read-only per spec §16.
+        $this->assertTrue(Role::where('name', 'CEO and Management')->first()
+            ->hasPermissionTo('organization.branches.view'));
+        $this->assertFalse(Role::where('name', 'CEO and Management')->first()
+            ->hasPermissionTo('users.assign_roles'));
     }
 
     /* ------------------------- User management ------------------------- */
@@ -134,7 +141,7 @@ class AccessControlPhase2Test extends TestCase
         $plain = $this->plainUser();
 
         $this->expectException(\Illuminate\Validation\ValidationException::class);
-        $guard->assertCanAssign($plain, 'group-administrator', $plain);
+        $guard->assertCanAssign($plain, 'CEO and Management', $plain);
     }
 
     public function test_group_admin_can_assign_same_or_lower_tier(): void
@@ -142,8 +149,8 @@ class AccessControlPhase2Test extends TestCase
         $guard = app(RoleAssignmentGuard::class);
         $target = $this->plainUser();
 
-        // group-administrator (80) may assign group-administrator (80) to others
-        $guard->assertCanAssign($this->groupAdmin, 'group-administrator', $target);
+        // CTO and Admin (80) may assign CEO and Management (80) to others
+        $guard->assertCanAssign($this->groupAdmin, 'CEO and Management', $target);
         // but not super-admin (100)
         $this->expectException(\Illuminate\Validation\ValidationException::class);
         $guard->assertCanAssign($this->groupAdmin, 'super-admin', $target);
@@ -168,8 +175,10 @@ class AccessControlPhase2Test extends TestCase
     public function test_matrix_rejects_overreach_for_non_super_admin(): void
     {
         $role = Role::firstOrCreate(['name' => 'limited', 'guard_name' => 'web']);
-        // group-admin has users.assign_roles but NOT permissions.manage → route 403
-        $this->actingAs($this->groupAdmin)
+        // Branch Manager has branch people-ops but NOT permissions.manage → route 403
+        $bm = User::factory()->create(['status' => 'active']);
+        $bm->assignRole('Branch Manager');
+        $this->actingAs($bm)
             ->put("/identity/permissions/matrix/{$role->id}", ['permissions' => ['users.view']])
             ->assertForbidden();
     }

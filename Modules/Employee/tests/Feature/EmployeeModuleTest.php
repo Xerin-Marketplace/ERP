@@ -132,7 +132,7 @@ class EmployeeModuleTest extends TestCase
     public function test_directory_scoped_for_non_privileged_viewer(): void
     {
         $viewerUser = User::factory()->create(['status' => 'active']);
-        $viewerUser->assignRole('branch-manager');
+        $viewerUser->assignRole('Branch Manager');
         $viewerEmp = $this->makeEmployee([], $viewerUser);
 
         // Employee in a different company

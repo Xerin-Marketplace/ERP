@@ -9,7 +9,7 @@ use Modules\Finance\Models\FinanceApproval;
 /** Polymorphic approval steps for financial documents. Self-approval blocked. */
 class FinApprovalService
 {
-    /** steps: ordered list of role names, e.g. ['finance_manager','finance_director'] */
+    /** steps: ordered list of role names, e.g. ['Finance and Accounting','CEO and Management'] */
     public function createChain(Model $approvable, array $steps): void
     {
         $approvable->approvals()->delete();

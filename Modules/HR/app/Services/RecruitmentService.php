@@ -28,7 +28,7 @@ class RecruitmentService
             $r->requested_by = $requester->id;
             $r->reference = $this->numbers->for('requisition');
             $r->save();
-            $r->approvals()->create(['step' => 1, 'approver_role' => 'hr_manager']);
+            $r->approvals()->create(['step' => 1, 'approver_role' => 'CTO and Admin']);
             $this->audit->log('recruitment.requisition_created', $r, new: ['title' => $r->title]);
             return $r->fresh();
         });

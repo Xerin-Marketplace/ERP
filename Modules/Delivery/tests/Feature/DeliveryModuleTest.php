@@ -31,7 +31,7 @@ class DeliveryModuleTest extends TestCase
         $this->tz = Branch::where('code','TZ')->first() ?? Branch::factory()->create(['code'=>'TZ']);
         $this->user = \App\Models\User::factory()->create();
         $this->seed(\Modules\Delivery\Database\Seeders\DeliveryDatabaseSeeder::class);
-        $this->user->assignRole('Delivery Manager');
+        $this->user->assignRole('Delivery');
         $this->customer = new Customer(['company_id' => $this->dxb->company_id, 'name' => 'Test Customer']);
         $this->customer->forceFill(['code' => 'XER-CUS-2026-000001'])->save();
     }

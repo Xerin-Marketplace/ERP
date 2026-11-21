@@ -32,9 +32,10 @@ class CommercialModuleTest extends TestCase
     {
         $this->seedDeps();
         $this->assertTrue(Permission::where('name', 'quotation.approve')->exists());
-        $so = Role::where('name', 'Sales Officer')->first();
+        $so = Role::where('name', 'Sales and CRM')->first();
         $this->assertTrue($so->hasPermissionTo('customer.create'));
-        $this->assertFalse($so->hasPermissionTo('quotation.approve')); // self-approval guard
+        $this->assertTrue($so->hasPermissionTo('quotation.approve'));
+        // Self-approval is guarded in QuotationService::transition (preparer ≠ approver).
     }
 
     public function test_customer_created_with_sequence_reference(): void
@@ -92,7 +93,15 @@ class CommercialModuleTest extends TestCase
         $card->update(['per_kg_rate' => 99]);
         $this->assertEquals(50.0, $q->fresh()->total);
         $svc->transition($q, 'pending_approval', $u->id);
-        $svc->transition($q->fresh(), 'approved', $u->id);
+        // Self-approval guard (spec): preparer cannot approve own quote.
+        try {
+            $svc->transition($q->fresh(), 'approved', $u->id);
+            $this->fail('Preparer self-approved a quotation.');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            $this->assertSame(403, $e->getStatusCode());
+        }
+        $approver = $this->user(['quotation.approve']);
+        $svc->transition($q->fresh(), 'approved', $approver->id);
         $svc->transition($q->fresh(), 'sent', $u->id);
         $svc->accept($q->fresh(), 'portal_link', $u->id);
         try { $svc->accept($q->fresh(), 'manual', $u->id); } catch (\Throwable) {}

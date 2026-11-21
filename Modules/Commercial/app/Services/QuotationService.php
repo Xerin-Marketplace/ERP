@@ -81,6 +81,9 @@ class QuotationService
     public function transition(Quotation $q, string $to, int $userId, array $meta = []): Quotation
     {
         abort_unless(in_array($to, Quotation::TRANSITIONS[$q->status] ?? [], true), 422, "Cannot move quotation from {$q->status} to {$to}");
+        // Spec: no self-approval — the preparer cannot approve own quotation.
+        abort_if($to === 'approved' && (int) $q->prepared_by === (int) $userId,
+            403, 'Preparer cannot approve their own quotation.');
         $q->update(['status' => $to] + match ($to) {
             'approved' => ['approved_by' => $userId, 'approved_at' => now()],
             'sent' => ['sent_at' => now()],

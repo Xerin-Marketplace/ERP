@@ -32,7 +32,7 @@ class OrganizationPhase1Test extends TestCase
         $this->company = Company::where('code', 'XG')->first();
         $this->groupAdmin = User::factory()->create(['status' => 'active']);
         $this->groupAdmin->assignRole(
-            tap(Role::firstOrCreate(['name' => 'group-administrator', 'guard_name' => 'web']),
+            tap(Role::firstOrCreate(['name' => 'CEO and Management', 'guard_name' => 'web']),
                 fn ($r) => $r->givePermissionTo(OrganizationDatabaseSeeder::GROUP_ADMIN_PERMISSIONS))
         );
     }

@@ -29,41 +29,11 @@ class HRDatabaseSeeder extends Seeder
     ];
 
     public const ROLES = [
-        'hr-administrator' => self::PERMISSIONS,
-        'payroll-officer' => [
-            'hr.dashboard.view', 'hr.employee.view',
-            'hr.bank_details.view', 'hr.bank_details.manage', 'hr.bank_details.verify',
-            'hr.compensation.view', 'hr.compensation.manage',
-            'hr.payroll.view', 'hr.payroll.process', 'hr.payroll.export',
-        ],
-        'payroll-approver' => [
-            'hr.dashboard.view', 'hr.compensation.view', 'hr.compensation.approve',
-            'hr.payroll.view', 'hr.payroll.approve',
-        ],
-        'hr-officer' => [
-            'hr.dashboard.view', 'hr.employee.view',
-            'attendance.view', 'attendance.correct', 'attendance.approve', 'attendance.reports.view',
-            'leave.view', 'leave.approve', 'overtime.approve',
-            'shift.view', 'shift.create', 'shift.assign',
-            'recruitment.view', 'recruitment.manage',
-            'performance.view', 'training.view', 'training.manage',
-            'welfare.view', 'welfare.manage',
-        ],
-        'manager' => [
-            'attendance.view', 'leave.view', 'leave.approve',
-            'overtime.approve', 'shift.view', 'performance.view', 'performance.assess',
-            'training.view',
-        ],
-        'employee' => [
-            'attendance.clock_in', 'attendance.clock_out',
-            'leave.request', 'leave.view',
-            'overtime.request', 'shift.view',
-            'performance.view', 'training.view', 'welfare.view',
-        ],
-        'it-administrator' => self::PERMISSIONS,
+        // Spec §16: HR administration falls to CTO and Admin; branch-level
+        // people management to Branch Manager; payroll to Finance.
+        'CTO and Admin' => self::PERMISSIONS,
         'super-admin' => self::PERMISSIONS,
-        'group-administrator' => self::PERMISSIONS,
-        'company-administrator' => [
+        'Branch Manager' => [
             'hr.dashboard.view', 'hr.employee.view', 'hr.employee.manage',
             'attendance.view', 'attendance.approve', 'attendance.correct', 'attendance.reports.view',
             'leave.view', 'leave.approve', 'leave.manage',
@@ -73,6 +43,25 @@ class HRDatabaseSeeder extends Seeder
             'performance.view', 'performance.assess',
             'training.view', 'training.manage', 'welfare.view', 'welfare.manage',
             'disciplinary.view',
+        ],
+        'Finance and Accounting' => [
+            'hr.dashboard.view', 'hr.employee.view',
+            'hr.bank_details.view', 'hr.bank_details.manage', 'hr.bank_details.verify',
+            'hr.compensation.view', 'hr.compensation.manage', 'hr.compensation.approve',
+            'hr.payroll.view', 'hr.payroll.process', 'hr.payroll.approve', 'hr.payroll.export',
+        ],
+        'Auditor' => [
+            'hr.dashboard.view', 'hr.employee.view',
+            'attendance.view', 'attendance.reports.view',
+            'leave.view', 'shift.view', 'recruitment.view',
+            'performance.view', 'training.view', 'welfare.view', 'disciplinary.view',
+            'hr.bank_details.view', 'hr.compensation.view', 'hr.payroll.view',
+        ],
+        'employee' => [
+            'attendance.clock_in', 'attendance.clock_out',
+            'leave.request', 'leave.view',
+            'overtime.request', 'shift.view',
+            'performance.view', 'training.view', 'welfare.view',
         ],
     ];
 
@@ -90,14 +79,14 @@ class HRDatabaseSeeder extends Seeder
 
         // Tanzanian-aligned leave types (configurable — not hardcoded in code)
         $leaveTypes = [
-            ['code' => 'AL',  'name' => 'Annual Leave',        'annual_days' => 28, 'carry_forward_max' => 10, 'max_consecutive_days' => 28, 'approval_chain' => ['manager']],
-            ['code' => 'SL',  'name' => 'Sick Leave',          'annual_days' => 126, 'requires_document' => true, 'approval_chain' => ['manager', 'hr_officer']],
-            ['code' => 'ML',  'name' => 'Maternity Leave',     'annual_days' => 84, 'eligibility' => ['gender' => 'female'], 'requires_document' => true, 'approval_chain' => ['manager', 'hr_officer']],
-            ['code' => 'PL',  'name' => 'Paternity Leave',     'annual_days' => 3, 'eligibility' => ['gender' => 'male'], 'requires_document' => true, 'approval_chain' => ['manager']],
-            ['code' => 'CL',  'name' => 'Compassionate Leave', 'annual_days' => 7, 'max_consecutive_days' => 7, 'approval_chain' => ['manager']],
-            ['code' => 'STL', 'name' => 'Study Leave',         'annual_days' => 15, 'requires_document' => true, 'approval_chain' => ['manager', 'hr_officer']],
-            ['code' => 'UPL', 'name' => 'Unpaid Leave',        'annual_days' => 30, 'paid' => false, 'approval_chain' => ['manager', 'hr_manager']],
-            ['code' => 'SPL', 'name' => 'Special Leave',       'annual_days' => 5, 'approval_chain' => ['manager', 'hr_officer']],
+            ['code' => 'AL',  'name' => 'Annual Leave',        'annual_days' => 28, 'carry_forward_max' => 10, 'max_consecutive_days' => 28, 'approval_chain' => ['Branch Manager']],
+            ['code' => 'SL',  'name' => 'Sick Leave',          'annual_days' => 126, 'requires_document' => true, 'approval_chain' => ['Branch Manager', 'CTO and Admin']],
+            ['code' => 'ML',  'name' => 'Maternity Leave',     'annual_days' => 84, 'eligibility' => ['gender' => 'female'], 'requires_document' => true, 'approval_chain' => ['Branch Manager', 'CTO and Admin']],
+            ['code' => 'PL',  'name' => 'Paternity Leave',     'annual_days' => 3, 'eligibility' => ['gender' => 'male'], 'requires_document' => true, 'approval_chain' => ['Branch Manager']],
+            ['code' => 'CL',  'name' => 'Compassionate Leave', 'annual_days' => 7, 'max_consecutive_days' => 7, 'approval_chain' => ['Branch Manager']],
+            ['code' => 'STL', 'name' => 'Study Leave',         'annual_days' => 15, 'requires_document' => true, 'approval_chain' => ['Branch Manager', 'CTO and Admin']],
+            ['code' => 'UPL', 'name' => 'Unpaid Leave',        'annual_days' => 30, 'paid' => false, 'approval_chain' => ['Branch Manager', 'CTO and Admin']],
+            ['code' => 'SPL', 'name' => 'Special Leave',       'annual_days' => 5, 'approval_chain' => ['Branch Manager', 'CTO and Admin']],
         ];
         foreach ($leaveTypes as $lt) {
             LeaveType::firstOrCreate(['code' => $lt['code']], $lt);

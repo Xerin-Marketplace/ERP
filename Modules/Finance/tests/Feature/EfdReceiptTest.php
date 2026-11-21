@@ -39,7 +39,7 @@ class EfdReceiptTest extends TestCase
         \DB::table('financial_settings')->update(['require_journal_approval' => false]);
         $this->company = Company::where('code', 'XG')->firstOrFail();
         $this->user = User::factory()->create(['status' => AccountStatus::Active]);
-        $this->user->assignRole('finance_manager');
+        $this->user->assignRole('Finance and Accounting');
     }
 
     private function postedInvoice()

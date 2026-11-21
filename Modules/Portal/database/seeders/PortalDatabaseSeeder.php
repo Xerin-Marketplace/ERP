@@ -13,9 +13,7 @@ class PortalDatabaseSeeder extends Seeder
         }
         $map = [
             'Customer' => ['portal.access'],
-            'Customer Service Officer' => ['portal.staff','complaints.view','complaints.investigate','complaints.resolve','claims.view'],
-            'Claims Investigator' => ['portal.staff','claims.view','claims.investigate'],
-            'Claims Approver' => ['portal.staff','claims.view','claims.approve','claims.settle','privacy.manage'],
+            'Customer Care' => ['portal.staff','complaints.view','complaints.investigate','complaints.resolve','claims.view','claims.investigate','claims.approve','claims.settle','privacy.manage'],
         ];
         foreach ($map as $role => $perms) { Role::findOrCreate($role, 'web')->syncPermissions($perms); }
     }

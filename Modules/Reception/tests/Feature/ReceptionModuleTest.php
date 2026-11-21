@@ -48,7 +48,7 @@ class ReceptionModuleTest extends TestCase
     private function receptionist(?int $branchId = null): User
     {
         $u = User::factory()->create(['status' => 'active']);
-        $u->assignRole('receptionist');
+        $u->assignRole('Customer Care');
         app(EmployeeService::class)->create([
             'first_name' => 'Re', 'last_name' => 'Ception', 'employment_type' => 'permanent',
             'user_id' => $u->id, 'company_id' => $this->company()->id,

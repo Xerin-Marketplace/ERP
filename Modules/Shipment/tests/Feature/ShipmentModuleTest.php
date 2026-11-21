@@ -23,7 +23,7 @@ class ShipmentModuleTest extends TestCase
         $this->tz = Branch::where('code','TZ')->first() ?? Branch::factory()->create(['code'=>'TZ']);
         $this->user = \App\Models\User::factory()->create();
         $this->seed(\Modules\Shipment\Database\Seeders\ShipmentDatabaseSeeder::class);
-        $this->user->assignRole('Shipment Officer');
+        $this->user->assignRole('Dubai Warehouse and Cargo Operations');
     }
 
     private function shipment(): Shipment

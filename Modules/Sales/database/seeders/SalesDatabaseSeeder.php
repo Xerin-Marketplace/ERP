@@ -17,9 +17,8 @@ class SalesDatabaseSeeder extends Seeder
             'campaigns.manage','revenue.analytics.view'];
         foreach ($perms as $p) Permission::firstOrCreate(['name' => $p]);
 
-        $map = ['Sales Officer' => ['commercial.dashboard.view','sales.pipeline.manage','sales.opportunities.create','pricing.simulate'],
-            'Commercial Manager' => $perms,
-            'Finance Reviewer' => ['commercial.dashboard.view','commissions.approve','commissions.settle','revenue.analytics.view']];
+        $map = ['Sales and CRM' => array_merge(['commercial.dashboard.view','sales.pipeline.manage','sales.opportunities.create','pricing.simulate'], $perms),
+            'Finance and Accounting' => ['commercial.dashboard.view','commissions.approve','commissions.settle','revenue.analytics.view']];
         foreach ($map as $role => $ps) { $r = Role::firstOrCreate(['name' => $role]); $r->givePermissionTo($ps); }
 
         $stages = [['New','new',1,5],['Contacted','contacted',2,10],['Qualification','qualification',3,20],

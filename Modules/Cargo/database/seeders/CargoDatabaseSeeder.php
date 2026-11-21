@@ -26,29 +26,17 @@ class CargoDatabaseSeeder extends Seeder
     {
         foreach (self::PERMISSIONS as $p) Permission::firstOrCreate(['name' => $p, 'guard_name' => 'web']);
 
-        $officer = Role::firstOrCreate(['name' => 'Cargo Receiving Officer', 'guard_name' => 'web']);
+        $officer = Role::firstOrCreate(['name' => 'Dubai Receiving', 'guard_name' => 'web']);
         $officer->syncPermissions(['cargo.dashboard.view','cargo.pre_alerts.view','cargo.pre_alerts.create',
             'cargo.receiving.view','cargo.receiving.create','cargo.packages.view','cargo.packages.scan',
             'cargo.packages.print_labels','cargo.weighing.view','cargo.weighing.create','warehouse.view',
             'warehouse.movements.create','cargo.incidents.view']);
 
-        $whOfficer = Role::firstOrCreate(['name' => 'Warehouse Officer', 'guard_name' => 'web']);
-        $whOfficer->syncPermissions(['cargo.dashboard.view','cargo.packages.view','cargo.packages.scan',
-            'cargo.packages.print_labels','cargo.weighing.view','warehouse.view','warehouse.movements.create','cargo.incidents.view']);
-
-        $inspector = Role::firstOrCreate(['name' => 'Cargo Inspector', 'guard_name' => 'web']);
-        $inspector->syncPermissions(['cargo.dashboard.view','cargo.packages.view','cargo.packages.scan',
-            'cargo.inspection.view','cargo.inspection.perform','cargo.weighing.view','warehouse.view','cargo.incidents.view']);
-
-        $mgr = Role::firstOrCreate(['name' => 'Warehouse Manager', 'guard_name' => 'web']);
-        $mgr->syncPermissions(self::PERMISSIONS);
-
-        // Cargo Operations — consolidation boxes and MCO trips (spec 12.4).
-        Role::firstOrCreate(['name' => 'Cargo Operations', 'guard_name' => 'web'])
-            ->syncPermissions(['cargo.dashboard.view', 'cargo.receiving.view',
-                'cargo.packages.view', 'cargo.consolidation.view', 'cargo.consolidation.manage',
-                'cargo.trips.view', 'cargo.trips.manage', 'cargo.bookings.view',
-                'warehouse.view', 'cargo.incidents.view']);
+        // Warehouse + cargo operations — full module scope (spec §16: "Dubai
+        // Warehouse and Cargo Operations" covers warehouse, inspection,
+        // consolidation boxes and MCO trips).
+        Role::firstOrCreate(['name' => 'Dubai Warehouse and Cargo Operations', 'guard_name' => 'web'])
+            ->syncPermissions(self::PERMISSIONS);
 
         Role::where('name', 'super-admin')->first()?->givePermissionTo(self::PERMISSIONS);
 

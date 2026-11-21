@@ -36,7 +36,7 @@ Route::middleware(['auth', 'verified', 'account.active'])->group(function () {
 
     Route::get('/dashboard', function () {
         // CEO lands on the Executive Command Center, not the staff dashboard.
-        if (auth()->user()->hasRole('ceo')) {
+        if (auth()->user()->hasRole('CEO and Management')) {
             return redirect()->route('executive.dashboard');
         }
         $stats = [
